@@ -1,11 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <p>dean</p>
-</body>
+<?php 
+include "../db_connect.php";
+?>
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <title>Dean-Panel</title>
+        <!-- Required meta tags -->
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <!-- Bootstrap CSS v5.3.8 -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+            crossorigin="anonymous"
+        />
+    </head> 
+
+    <body>  <header>
+        <nav class="navbar navbar-dark bg-dark shadow">
+            <div class="container-fluid">
+                <span class="navbar-brand mb-0 h1 fs-3 fw-bold">Mhu-AMS <sub class="text-primary">Dean</sub></span>
+                <a href="index.php" class="--bs-body-bg">Home</a>
+                <div class="right"><a href=""></a></div>
+            </div>
+        </nav>
+    </header>
+     
+    <main>
+        <div class="container">
+            <div class="row">
+                <div class="col mt-4"><a href="subject_Teacher_Allotment.php">
+                    <button type="button" class="btn btn-info">Assign-Subject</button>
+                </a></div>
+            </div>
+        </div>
+    </main>
+
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+            crossorigin="anonymous"
+        ></script>
+    </body>
 </html>

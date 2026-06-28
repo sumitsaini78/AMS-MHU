@@ -1,6 +1,5 @@
 <?php
 include "../db_connect.php";
-echo "<script>alert('ff');</script>";
 ?>
 <!doctype html>
 <html lang="en" data-bs-theme="light">
@@ -20,9 +19,19 @@ echo "<script>alert('ff');</script>";
     </head>
 
     <body>
-     
+     <header>
+        <nav class="navbar navbar-dark bg-dark shadow">
+            <div class="container-fluid">
+                <span class="navbar-brand mb-0 h1 fs-3 fw-bold">Mhu-AMS</span>
+                <a href="index.php" class="--bs-body-bg">Home</a>
+                <div class="right"><a href=""></a></div>
+            </div>
+        </nav>
+    </header>
     <main>
-      <h2>aa</h2>
+        <div class="container">
+            
+        </div>
     </main>
         <!-- Bootstrap JavaScript Bundle (includes Popper) -->
         <script

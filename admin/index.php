@@ -36,9 +36,8 @@ include "../db_connect.php";
                         <div class="col"><a href="All_Dept_Details.php"  class="btn btn-primary">All Departments</a></div>
                         <div class="col">
                         <div class="col"><a href="add_teacher.php"  class="btn btn-primary">Add Teachers</a></div>
-
                         </div>
-                        <div class="col"></div>
+                        <div class="col"><a href="add_subjects.php"  class="btn btn-primary">Add Subjects</a></div>
         </div>
  
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"

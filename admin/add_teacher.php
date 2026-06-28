@@ -1,5 +1,13 @@
 <?php 
 include "../db_connect.php";
+if(isset($_POST['add_teacher'])){
+    $teacher_name=$_POST['teacher_name'];
+    $dept_name=$_POST['dept_name'];
+    $query="insert into `teachers`(name,faculty) VALUES('$teacher_name','$dept_name')";
+    if(mysqli_query($conn,$query)){
+        echo "Aaaaaaa";
+    }
+}
 ?>
 <!doctype html>
 <html lang="en" data-bs-theme="light">
@@ -29,7 +37,25 @@ include "../db_connect.php";
     </header>
      
 <main>
-
+   <div class="container w-50 my-5 border p-3">
+        <form method="post">
+            <div class="mb-3">
+                <label for="teacher_name" class="form-label">Teacher name</label>
+                <input type="text" class="form-control" name="teacher_name" id="teacher_name" required>
+                     <select class="form-select" name="dept_name" aria-label="Default select example">
+                        <option selected disabled>Open this select menu</option>
+                        <?php
+                        $query = "SELECT dep_name FROM `departments`";
+                        $result = mysqli_query($conn, $query);
+                        while ($row = mysqli_fetch_assoc($result)) {
+                            $val = $row['dep_name'];
+                            echo "<option value='" . htmlspecialchars($val) . "' name='dept_name'>" . htmlspecialchars($val) . "</option>";
+                        }
+                        ?>
+                    </select>
+                <input type="submit" class="btn btn-primary mt-3" name="add_teacher">
+        </form>
+    </div>
 </main>
         <script
             src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"

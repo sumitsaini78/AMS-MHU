@@ -1,4 +1,7 @@
-<?php include "db_connect.php"; ?>
+<?php include "db_connect.php";
+
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -25,10 +28,18 @@
         </div>
 
         <div class="d-flex justify-content-center gap-3 mb-5 flex-wrap">
-            <button class="btn btn-primary px-4 py-2" onclick="showForm('adminForm')">Admin</button>
-            <button class="btn btn-success px-4 py-2" onclick="showForm('deanForm')">Dean</button>
-            <button class="btn btn-warning px-4 py-2 text-dark" onclick="showForm('teacherForm')">Teachers</button>
-            <button class="btn btn-info px-4 py-2 text-dark" onclick="showForm('studentForm')">Students</button>
+            <a href="./admin/index.php">
+                <button class="btn btn-primary px-4 py-2" onclick="showForm('adminForm')">Admin</button>
+            </a>
+            <a href="./dean/index.php">
+                <button class="btn btn-success px-4 py-2" onclick="showForm('deanForm')">Dean</button>
+            </a>
+            <a href="./teacher/index.php">
+                <button class="btn btn-warning px-4 py-2 text-dark" onclick="showForm('teacherForm')">Teachers</button>
+            </a>
+            <a href="student/index.php">
+                <button class="btn btn-info px-4 py-2 text-dark" onclick="showForm('studentForm')">Students</button>
+            </a>
         </div>
 
         <div class="row justify-content-center">
@@ -40,18 +51,17 @@
                         <h4>Admin Login</h4>
                     </div>
                     <div class="card-body">
-                        <form action="admin/index.php" method="POST">
+                        <form method="POST">
                             <div class="mb-3">
-                                <label>Admin ID</label>
-                                <input type="text" name="admin_id" class="form-control" placeholder="Enter Admin ID"
-                                    required>
+                                <label>Admin Name</label>
+                                <input type="text" name="name" class="form-control" placeholder="Admin name" required>
                             </div>
                             <div class="mb-3">
-                                <label>Password</label>
-                                <input type="password" name="password" class="form-control" placeholder="Enter Password"
+                                <label>Admin Number</label>
+                                <input type="password" name="number" class="form-control" placeholder="Enter number"
                                     required>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100">Login</button>
+                            <input type="submit" name="admin-login" class="btn btn-success w-100">
                         </form>
                     </div>
                 </div>
@@ -122,19 +132,6 @@
                     </div>
                 </div>
 
-                <?php
-                include "./db_connect.php";
-                if (isset($_POST['stu_submit'])) {
-                    $student_id = $_POST['student_id'];
-                    $password = $_POST['password'];
-                    $query = "select id, pwd from students";
-                    $result = mysqli_query($conn, $query);
-                    $data = mysqli_fetch_assoc($result);
-                    if ($student_id == $data['id'] and $password = $data['pwd']) {
-                        echo "<script>alert('hi,$student_id')</script>";
-                    }
-                }
-                ?>
 
             </div>
         </div>
