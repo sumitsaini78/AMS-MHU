@@ -1,11 +1,27 @@
 <?php
 include "../db_connect.php";
-if(isset($_POST['Allocate_Subject'])){
-    // $query="insert into `subjected_teacher`(teacher_id,sub_id,teacher_name,subject_name,course_name,year,semester) VALUES('')";
+if (isset($_POST['Allocate_Subject'])) {
+    $selected_teacher = $_POST['selected_teacher'];
+    // getting teacher name and id separate
+     $parts = explode('--', $selected_teacher, 2);
+     $teacher_name=$parts[0];
+     $teacher_id=$parts[1];
+    $selected_course = $_POST['selected_course'];
+    // geeting sub id and name seprately
+      $parts = explode('--', $selected_course, 2);
+     $course_name=$parts[0];
+     $sub_id=$parts[1];
+    $year = $_POST['year'];
+    $semester = $_POST['semester'];
+    echo  $teacher_name ,$teacher_id, $sub_id,$course_name,$year,$semester ;
+    $query="insert into `subjected_teacher` (teacher_id,sub_id,teacher_name,subject_name,year,semester) VALUES('$teacher_id','$sub_id','$teacher_name','$course_name','$year','$semester')";
+    if(mysqli_query($conn,$query)){
+        echo "successfully added";
+    }
 }
 ?>
 <!doctype html>
-<html lang="en" data-bs-theme="light"> 
+<html lang="en" data-bs-theme="light">
 
 <head>
     <title>Assign-Subject</title>
@@ -34,7 +50,7 @@ if(isset($_POST['Allocate_Subject'])){
             <form method="post">
                 <!-- select teacher -->
                 <label for="select_teacher">Select Teacher</label>
-                <select class="form-select" name="selected_course" id="select_course"
+                <select class="form-select" name="selected_teacher" id="select_course"
                     aria-label="Default select example">
                     <option selected disabled>Select Teacher</option>
                     <?php
@@ -44,8 +60,10 @@ if(isset($_POST['Allocate_Subject'])){
                     if ($result1) {
                         while ($row = mysqli_fetch_assoc($result1)) {
                             $val = $row['name'];
+                            $teacher_id = $row['id'];
+                            $combined_value = $val. "--"  .$teacher_id ;
                             // Wrap the value in HTML option tags
-                            echo "<option value='" . htmlspecialchars($val) . "'>" . htmlspecialchars($val) . "</option>";
+                            echo "<option value='$combined_value'>" . htmlspecialchars($val) . "</option> ";
                         }
                     }
                     ?>
@@ -56,17 +74,18 @@ if(isset($_POST['Allocate_Subject'])){
                     <option selected disabled>Select course</option>
                     <?php
                     // 1. Fixed the SQL operator from '==' to '='
-                    $query = "SELECT course_name,subject_name FROM `courses` WHERE dept_name = 'FOCBS'";
+                    $query = "SELECT course_id,subject_name FROM `courses` WHERE dept_name = 'FOCBS'";
                     $result = mysqli_query($conn, $query);
 
                     if ($result) {
                         while ($row = mysqli_fetch_assoc($result)) {
                             // 2. Fixed the array key to match the columns selected in your query
-                            $val = $row['course_name'];
-                            $text = $row['subject_name'];
+                            $course_id = $row['course_id'];
+                            $subject_name = $row['subject_name'];
+                            $combined_sub_id=$subject_name. "--" .$course_id;
                             // 3. Removed duplicate 'name' attribute inside <option>
-                        echo "<option>$val - $text</option> ";
-                            }
+                            echo "<option value='$combined_sub_id'>$subject_name</option> ";
+                        }
                     }
                     ?>
                 </select>
