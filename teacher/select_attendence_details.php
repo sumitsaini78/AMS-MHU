@@ -46,7 +46,7 @@ if ($result && mysqli_num_rows($result) == 1) {
     <main>
         <div class="container mt-5 w-25 border p-3 bg-light shadow rounded">
             <!--  form  -->
-            <form action="inser_attendence.php" method="POST">
+            <form action="insert_attendence.php" method="POST">
                 <div class="mb-3">
                     <label for="exampleInputEmail1" class="form-label">Subject</label>
 
