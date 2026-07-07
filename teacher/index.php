@@ -43,7 +43,7 @@ if ($result && mysqli_num_rows($result) == 1) {
                         class="fa-solid fa-graduation-cap me-2"></i>MOTHERHOOD</a>
                 <!-- Example single danger button -->
                 <div class="btn-group">
-                    <button type="button" class="btn btn-danger dropdown-toggle" data-bs-toggle="dropdown"
+                    <button type="button" class="btn btn-danger dropdown-toggle me-2" data-bs-toggle="dropdown"
                         aria-expanded="false">
                         Attendence
                     </button>
@@ -54,7 +54,7 @@ if ($result && mysqli_num_rows($result) == 1) {
                     </button>
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="attendence.php">Mark Attendence</a></li>
+                        <li><a class="dropdown-item" href="select_attendence_details.php">Mark Attendence</a></li>
                         <li><a class="dropdown-item" href="#">View Attendence</a></li>
                         <li><a class="dropdown-item" href="#">Request For Correction</a></li>
                         <li><a class="dropdown-item" href="insert_subject.php">insert subjects</a></li>

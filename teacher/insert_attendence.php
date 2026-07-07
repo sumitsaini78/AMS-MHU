@@ -43,36 +43,9 @@ if ($result && mysqli_num_rows($result) == 1) {
             </div>
         </nav>
     </header>
-    <main>
-        <div class="container mt-5 w-25 border p-3 bg-light shadow rounded">
-            <!--  form  -->
-            <form>
-                <div class="mb-3">
-                    <label for="exampleInputEmail1" class="form-label">Subject</label>
-                    <select class="form-select" aria-label="Default select example">
-                        <option selected>Open this select menu</option>
-                        <option value="1">One</option>
-                        <option value="2">Two</option>
-                        <option value="3">Three</option>
-                    </select>
-                    <!--php to get subjects -->
-
-                    <?php
-
-                    ?>
-                    <!--  end subject geting-->
-                </div>
-                <div class="mb-3">
-                    <label for="exampleInputPassword1" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="exampleInputPassword1">
-                </div>
-
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </form>
-
-
-        </div>
-    </main>
+   ]<main>
+    
+   </main>
     <!-- Bootstrap JavaScript Bundle (includes Popper) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"

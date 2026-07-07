@@ -135,7 +135,7 @@ if (isset($_POST['teacher-login'])) {
                         <h4>Dean Login</h4>
                     </div>
                     <div class="card-body">
-                        <form action="dean_login.php" method="POST">
+                        <form method="POST">
                             <div class="mb-3">
                                 <label>Dean ID</label>
                                 <input type="text" name="dean_id" class="form-control" placeholder="Enter Dean ID"
@@ -143,10 +143,10 @@ if (isset($_POST['teacher-login'])) {
                             </div>
                             <div class="mb-3">
                                 <label>Password</label>
-                                <input type="text" name="password" class="form-control" placeholder="Enter Password"
+                                <input type="text" name="number" class="form-control" placeholder="Enter number"
                                     required>
                             </div>
-                            <button type="submit" class="btn btn-success w-100">Login</button>
+                            <input type="submit" name="dean-login" class="btn btn-success w-100">
                         </form>
                     </div>
                 </div>

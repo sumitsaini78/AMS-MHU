@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 07, 2026 at 11:51 AM
+-- Generation Time: Jul 07, 2026 at 01:46 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -68,17 +68,18 @@ CREATE TABLE `courses` (
   `Year` int(11) NOT NULL,
   `semester` int(11) NOT NULL,
   `subject_name` varchar(255) NOT NULL,
-  `dept_name` varchar(235) NOT NULL
+  `dept_name` varchar(235) NOT NULL,
+  `subject_code` varchar(55) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `courses`
 --
 
-INSERT INTO `courses` (`course_id`, `course_name`, `Year`, `semester`, `subject_name`, `dept_name`) VALUES
-(38, 'BBA', 1, 1, ' Principles and Practice of Management', 'FOCBS'),
-(39, 'BBA', 1, 1, ' Financial Accountin', 'FOCBS'),
-(40, 'bba', 1, 2, 'kaka', 'FOE');
+INSERT INTO `courses` (`course_id`, `course_name`, `Year`, `semester`, `subject_name`, `dept_name`, `subject_code`) VALUES
+(38, 'BBA', 1, 1, ' Principles and Practice of Management', 'FOCBS', 'mubba22-504'),
+(39, 'BBA', 1, 1, ' Financial Accountin', 'FOCBS', 'mpmba33-601'),
+(40, 'bba', 1, 2, 'kaka', 'FOE', 'mpbba11-211');
 
 -- --------------------------------------------------------
 
@@ -89,18 +90,19 @@ INSERT INTO `courses` (`course_id`, `course_name`, `Year`, `semester`, `subject_
 CREATE TABLE `deans` (
   `id` int(11) NOT NULL,
   `Dean_name` varchar(222) NOT NULL,
-  `Dept_name` varchar(222) NOT NULL
+  `Dept_name` varchar(222) NOT NULL,
+  `number` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `deans`
 --
 
-INSERT INTO `deans` (`id`, `Dean_name`, `Dept_name`) VALUES
-(17, 'Prof. P.K. Agarwal', 'focbs'),
-(18, 'Prof. P.K. Agarwal', 'focbs'),
-(19, 'dr. seema tomar', 'FOPS'),
-(20, 'test', 'FOE');
+INSERT INTO `deans` (`id`, `Dean_name`, `Dept_name`, `number`) VALUES
+(17, 'Prof. P.K. Agarwal', 'focbs', 177),
+(18, 'Prof. P.K. Agarwal', 'focbs', 0),
+(19, 'dr. seema tomar', 'FOPS', 0),
+(20, 'test', 'FOE', 0);
 
 -- --------------------------------------------------------
 
@@ -155,20 +157,17 @@ CREATE TABLE `subjected_teacher` (
   `subject_name` varchar(255) NOT NULL,
   `course_name` varchar(255) NOT NULL,
   `year` int(11) NOT NULL,
-  `semester` int(11) NOT NULL
+  `semester` int(11) NOT NULL,
+  `subject_code` varchar(66) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `subjected_teacher`
 --
 
-INSERT INTO `subjected_teacher` (`id`, `teacher_id`, `sub_id`, `teacher_name`, `subject_name`, `course_name`, `year`, `semester`) VALUES
-(12, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8),
-(13, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8),
-(14, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8),
-(16, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8),
-(17, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8),
-(18, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8);
+INSERT INTO `subjected_teacher` (`id`, `teacher_id`, `sub_id`, `teacher_name`, `subject_name`, `course_name`, `year`, `semester`, `subject_code`) VALUES
+(12, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8, 'mpmba'),
+(13, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8, 'kdskjdfs');
 
 -- --------------------------------------------------------
 
