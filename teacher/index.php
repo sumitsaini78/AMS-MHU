@@ -1,3 +1,25 @@
+<?php
+include "../db_connect.php";
+session_start();
+
+// 1. Secure the page: Check if the teacher is actually logged in
+if (!isset($_SESSION['teacher_id'])) {
+    // Redirect them to your login page if the session is missing
+    header("Location: ./index.php"); 
+    exit;
+}
+
+// 2. Safely assign the variable now that we know it exists
+$id = $_SESSION['teacher_id'];
+$query = "SELECT * FROM teachers WHERE id = '$id'";
+$result = mysqli_query($conn, $query);
+
+if ($result && mysqli_num_rows($result) == 1) {
+    $teacher = mysqli_fetch_assoc($result);
+    $teacher_name = $teacher['name'];
+}
+?>
+
 <!doctype html>
 <html lang="en" data-bs-theme="light">
 
@@ -42,8 +64,9 @@
                     </ul>
                 </div>
                 <span class="navbar-text text-white bg-secondary px-3 py-1 rounded-pill small">
-                    <i class="fa-solid fa-user-tie me-1"></i> Welcome,
+                    <i class="fa-solid fa-user-tie me-1"></i> Welcome, <?php echo $teacher_name; ?>
                 </span>
+                <a href="../logout.php" class="btn btn-outline-light ms-3">Logout</a>
             </div>
         </nav>
     </header>

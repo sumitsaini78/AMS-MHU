@@ -1,10 +1,29 @@
 <?php
 include "../db_connect.php";
+session_start();
+
+// 1. Secure the page: Check if the admin is actually logged in
+if (!isset($_SESSION['admin_id'])) {
+    // Redirect them to your login page if the session is missing
+    header("Location: ./index.php"); 
+    exit;
+}
+
+// 2. Safely assign the variable now that we know it exists
+$id = $_SESSION['admin_id'];
+$query = "SELECT * FROM admin WHERE id = '$id'";
+$result = mysqli_query($conn, $query);
+
+if ($result && mysqli_num_rows($result) == 1) {
+    $admin = mysqli_fetch_assoc($result);
+    $admin_name = $admin['name'];
+}
 ?>
 <!doctype html>
 <html lang="en" data-bs-theme="light">
 
-<head><title>Admin</title>
+<head>
+    <title>Admin</title>
 
     <!-- Required meta tags -->
     <meta charset="utf-8" />
@@ -21,7 +40,10 @@ include "../db_connect.php";
             <div class="container-fluid">
                 <span class="navbar-brand mb-0 h1 fs-3 fw-bold">Mhu-AMS</span>
                 <a href="index.php" class="--bs-body-bg">Home</a>
-                <div class="right"><a href=""></a></div>
+                <div class="right"><a href=""><span class="navbar-text text-white bg-secondary px-3 py-1 rounded-pill small">
+                    <i class="fa-solid fa-user-tie me-1"></i> Welcome, <?php echo $admin_name; ?>
+                </span>
+                <a href="../logout.php" class="btn btn-outline-light ms-3">Logout</a></a></div>
             </div>
         </nav>
     </header>
@@ -32,17 +54,17 @@ include "../db_connect.php";
             <div class="col"> <a href="add_department.php" target="_blank"><button type="button"
                         class="btn btn-primary">Add
                         Department</button></a></div>
-                        <div class="col"><a href="All_Dean_Details.php"  class="btn btn-primary">All Dean</a></div>
-                        <div class="col"><a href="All_Dept_Details.php"  class="btn btn-primary">All Departments</a></div>
-                        <div class="col">
-                        <div class="col"><a href="add_teacher.php"  class="btn btn-primary">Add Teachers</a></div>
-                        </div>
-                        <div class="col"><a href="add_subjects.php"  class="btn btn-primary">Add Subjects</a></div>
+            <div class="col"><a href="All_Dean_Details.php" class="btn btn-primary">All Dean</a></div>
+            <div class="col"><a href="All_Dept_Details.php" class="btn btn-primary">All Departments</a></div>
+            <div class="col">
+                <div class="col"><a href="add_teacher.php" class="btn btn-primary">Add Teachers</a></div>
+            </div>
+            <div class="col"><a href="add_subjects.php" class="btn btn-primary">Add Subjects</a></div>
         </div>
- 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-        crossorigin="anonymous"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+            crossorigin="anonymous"></script>
 </body>
 
 </html>
