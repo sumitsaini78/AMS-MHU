@@ -1,0 +1,297 @@
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Jul 07, 2026 at 11:51 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `mhu-ams`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `admin`
+--
+
+CREATE TABLE `admin` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `gmail` varchar(255) NOT NULL,
+  `number` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `admin`
+--
+
+INSERT INTO `admin` (`id`, `name`, `gmail`, `number`) VALUES
+(10, 'Sup-Admin', 'super@admin', 10),
+(11, 'super-admin', 'super@admin', 11);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `attendance`
+--
+
+CREATE TABLE `attendance` (
+  `id` int(11) NOT NULL,
+  `allotment_id` int(11) DEFAULT NULL,
+  `student_id` int(11) DEFAULT NULL,
+  `attendance_date` date NOT NULL,
+  `status` enum('Present','Absent') NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `courses`
+--
+
+CREATE TABLE `courses` (
+  `course_id` int(11) NOT NULL,
+  `course_name` varchar(233) NOT NULL,
+  `Year` int(11) NOT NULL,
+  `semester` int(11) NOT NULL,
+  `subject_name` varchar(255) NOT NULL,
+  `dept_name` varchar(235) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `courses`
+--
+
+INSERT INTO `courses` (`course_id`, `course_name`, `Year`, `semester`, `subject_name`, `dept_name`) VALUES
+(38, 'BBA', 1, 1, ' Principles and Practice of Management', 'FOCBS'),
+(39, 'BBA', 1, 1, ' Financial Accountin', 'FOCBS'),
+(40, 'bba', 1, 2, 'kaka', 'FOE');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `deans`
+--
+
+CREATE TABLE `deans` (
+  `id` int(11) NOT NULL,
+  `Dean_name` varchar(222) NOT NULL,
+  `Dept_name` varchar(222) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `deans`
+--
+
+INSERT INTO `deans` (`id`, `Dean_name`, `Dept_name`) VALUES
+(17, 'Prof. P.K. Agarwal', 'focbs'),
+(18, 'Prof. P.K. Agarwal', 'focbs'),
+(19, 'dr. seema tomar', 'FOPS'),
+(20, 'test', 'FOE');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `departments`
+--
+
+CREATE TABLE `departments` (
+  `id` int(11) NOT NULL,
+  `dep_name` varchar(255) NOT NULL,
+  `full_name` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `departments`
+--
+
+INSERT INTO `departments` (`id`, `dep_name`, `full_name`) VALUES
+(4, 'FOCBS', 'Faculty of Commerce and Business Studies'),
+(5, 'FOECS', 'Faculty of Engineering and Computing Sciences'),
+(6, 'FOPS', 'Faculty of Pharmaceutical Sciences'),
+(7, 'FOS', 'Faculty of Science'),
+(8, 'FOLS', 'Faculty of Legal Studies'),
+(9, 'FOE', 'Faculty of Education'),
+(10, 'FOAH', 'Faculty of Arts and Humanities'),
+(11, 'FOA', 'Faculty of Agriculture'),
+(12, 'FOPAHS', 'Faculty of Paramedical and Allied Health Sciences');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `students`
+--
+
+CREATE TABLE `students` (
+  `id` int(11) NOT NULL,
+  `student_name` varchar(100) NOT NULL,
+  `course_name` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `subjected_teacher`
+--
+
+CREATE TABLE `subjected_teacher` (
+  `id` int(11) NOT NULL,
+  `teacher_id` int(11) NOT NULL,
+  `sub_id` int(11) NOT NULL,
+  `teacher_name` varchar(255) NOT NULL,
+  `subject_name` varchar(255) NOT NULL,
+  `course_name` varchar(255) NOT NULL,
+  `year` int(11) NOT NULL,
+  `semester` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `subjected_teacher`
+--
+
+INSERT INTO `subjected_teacher` (`id`, `teacher_id`, `sub_id`, `teacher_name`, `subject_name`, `course_name`, `year`, `semester`) VALUES
+(12, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8),
+(13, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8),
+(14, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8),
+(16, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8),
+(17, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8),
+(18, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `teachers`
+--
+
+CREATE TABLE `teachers` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `faculty` varchar(255) NOT NULL,
+  `number` int(13) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `teachers`
+--
+
+INSERT INTO `teachers` (`id`, `name`, `faculty`, `number`) VALUES
+(5, 'dr. brajkishore bharti', 'FOCBS', 555),
+(6, 'dr. snehashish bhardwaj', 'FOCBS', 666);
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `admin`
+--
+ALTER TABLE `admin`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `attendance`
+--
+ALTER TABLE `attendance`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `allotment_id` (`allotment_id`),
+  ADD KEY `student_id` (`student_id`);
+
+--
+-- Indexes for table `courses`
+--
+ALTER TABLE `courses`
+  ADD PRIMARY KEY (`course_id`);
+
+--
+-- Indexes for table `deans`
+--
+ALTER TABLE `deans`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `departments`
+--
+ALTER TABLE `departments`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `students`
+--
+ALTER TABLE `students`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `subjected_teacher`
+--
+ALTER TABLE `subjected_teacher`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `teachers`
+--
+ALTER TABLE `teachers`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `attendance`
+--
+ALTER TABLE `attendance`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `courses`
+--
+ALTER TABLE `courses`
+  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+
+--
+-- AUTO_INCREMENT for table `deans`
+--
+ALTER TABLE `deans`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+
+--
+-- AUTO_INCREMENT for table `departments`
+--
+ALTER TABLE `departments`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT for table `students`
+--
+ALTER TABLE `students`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `subjected_teacher`
+--
+ALTER TABLE `subjected_teacher`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `teachers`
+--
+ALTER TABLE `teachers`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

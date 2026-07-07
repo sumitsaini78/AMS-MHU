@@ -1,4 +1,25 @@
 <?php include "db_connect.php";
+// Dean login
+if (isset($_POST['dean-login'])) {
+   
+    $dean_id = $_POST['dean_id'];
+    $number = $_POST['number'];
+    $query = "SELECT * FROM deans WHERE id = '$dean_id' AND number = '$number'";
+
+
+    $result = mysqli_query($conn, $query);
+
+    if (mysqli_num_rows($result) == 1) {
+        // Successful login
+        session_start();
+        $_SESSION['dean_id'] = $dean_id;
+        header("Location: dean/index.php");
+        exit();
+    } else {
+        // Invalid credentials
+        echo "<script>alert('Invalid Dean ID or Password');</script>";
+    }
+}
 // admin login
 if (isset($_POST['admin-login'])) {
    
@@ -122,7 +143,7 @@ if (isset($_POST['teacher-login'])) {
                             </div>
                             <div class="mb-3">
                                 <label>Password</label>
-                                <input type="password" name="password" class="form-control" placeholder="Enter Password"
+                                <input type="text" name="password" class="form-control" placeholder="Enter Password"
                                     required>
                             </div>
                             <button type="submit" class="btn btn-success w-100">Login</button>
