@@ -24,7 +24,7 @@ if ($result && mysqli_num_rows($result) == 1) {
 <html lang="en" data-bs-theme="light">
 
 <head>
-    <title>Dean-Panel</title>
+    <title>Dean</title>
     <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -55,13 +55,24 @@ if ($result && mysqli_num_rows($result) == 1) {
     <main>
         <div class="container">
             <div class="row">
+                
                 <div class="col mt-4">
+                      <a href="add_Faculty.php">
+                        <button type="button" class="btn btn-info">Add Faculty</button>
+                    </a>
+                      <a href="add_Students.php">
+                        <button type="button" class="btn btn-info">Add Students</button>
+                    </a>
+                      <a href="add_Subjects.php">
+                        <button type="button" class="btn btn-info">Add Subjects</button>
+                    </a>
+                      <a href="add_Teacher.php">
+                        <button type="button" class="btn btn-info">Add Teachers</button>
+                    </a>
                     <a href="subject_Teacher_Allotment.php">
                         <button type="button" class="btn btn-info">Assign-Subject</button>
                     </a>
-                    <a href="add_Students.php">
-                        <button type="button" class="btn btn-success">Insert Students</button>
-                    </a>
+              
                 </div>
             </div>
         </div>

@@ -5,7 +5,7 @@ session_start();
 // 1. Secure the page: Check if the admin is actually logged in
 if (!isset($_SESSION['admin_id'])) {
     // Redirect them to your login page if the session is missing
-    header("Location: ./index.php"); 
+    header("Location: ./index.php");
     exit;
 }
 
@@ -40,31 +40,60 @@ if ($result && mysqli_num_rows($result) == 1) {
             <div class="container-fluid">
                 <span class="navbar-brand mb-0 h1 fs-3 fw-bold">Mhu-AMS</span>
                 <a href="index.php" class="--bs-body-bg">Home</a>
-                <div class="right"><a href=""><span class="navbar-text text-white bg-secondary px-3 py-1 rounded-pill small">
-                    <i class="fa-solid fa-user-tie me-1"></i> Welcome, <?php echo $admin_name; ?>
-                </span>
-                <a href="../logout.php" class="btn btn-outline-light ms-3">Logout</a></a></div>
+                <div class="right"><a href=""><span
+                            class="navbar-text text-white bg-secondary px-3 py-1 rounded-pill small">
+                            <i class="fa-solid fa-user-tie me-1"></i> Welcome, <?php echo $admin_name; ?>
+                        </span>
+                        <a href="../logout.php" class="btn btn-outline-light ms-3">Logout</a></a></div>
             </div>
         </nav>
     </header>
     <div class="container my-5">
         <div class="row">
-            <div class="col"> <a href="add_dean.php" target="_blank"> <button type="button" class="btn btn-primary">Add
-                        Dean</button></a></div>
-            <div class="col"> <a href="add_department.php" target="_blank"><button type="button"
-                        class="btn btn-primary">Add
-                        Department</button></a></div>
-            <div class="col"><a href="All_Dean_Details.php" class="btn btn-primary">All Dean</a></div>
-            <div class="col"><a href="All_Dept_Details.php" class="btn btn-primary">All Departments</a></div>
-            <div class="col">
-                <div class="col"><a href="add_teacher.php" class="btn btn-primary">Add Teachers</a></div>
-            </div>
-            <div class="col"><a href="add_subjects.php" class="btn btn-primary">Add Subjects</a></div>
-        </div>
+            <div class="col"> </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-            crossorigin="anonymous"></script>
+            <div class="col"></div>
+            <div class="col"></div>
+            <div class="col">
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div
+                class="col border border-danger d-flex m-4 p-5 justify-content-center align-items-center flex-wrap gap-3">
+                <h2 class="text-center w-100">Create</h2>
+                <a href="add_dean.php" target="_blank"> <button type="button" class="btn btn-outline-danger">Add
+                        Dean</button></a>
+                <a href="add_Faculty.php">
+                    <button type="button" class="btn btn-outline-danger">Add Faculty</button>
+                </a>
+                <a href="add_Students.php">
+                    <button type="button" class="btn btn-outline-danger">Add Students</button>
+                </a>
+                <a href="add_Subjects.php">
+                    <button type="button" class="btn btn-outline-danger">Add Subjects</button>
+                </a>
+                <a href="add_Teacher.php">
+                    <button type="button" class="btn btn-outline-danger">Add Teachers</button>
+                </a>
+                <a href="subject_Teacher_Allotment.php">
+                    <button type="button" class="btn btn-outline-danger">Assign-Subject</button>
+                </a>
+            </div>
+            <div
+                class="col border border-success d-flex m-4 p-5 justify-content-center align-items-center flex-wrap gap-3">
+                <h2 class="text-center w-100">Read</h2>
+
+                <a href="All_Dept_Details.php" class="btn btn-outline-success">All Departments</a>
+                <a href="All_Dept_Details.php" class="btn btn-outline-success">All Departments</a>
+                <a href="All_Dean_Details.php" class="btn btn-outline-success">All Dean</a>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
 </body>
 
 </html>
