@@ -45,23 +45,23 @@ if ($result && mysqli_num_rows($result) == 1) {
     </header>
     <main>
         <div class="container w-25">
-        <h2 class="text-align-center my-3" >My Subjects</h2>
+            <h2 class="text-align-center my-3">My Subjects</h2>
             <ul class="list-group">
-               <div class="mb-3">
+                <div class="mb-3">
                     <label for="exampleInputEmail1" class="form-label">Select A Subject for Marking Attendance</label>
-      
+
                     <!-- get subjects dropdown -->
-                        <?php
-                        $query = "SELECT subject_name FROM `subjected_teacher` WHERE teacher_id = '$id'";
-                        $result = mysqli_query($conn, $query);
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            $val = $row['subject_name'];
-                            echo "<form action='select_attendence_details.php' method='POST'>";
-                            echo "<input type='hidden' name='subject_name' value='" . htmlspecialchars($val) . "'>";
-                            echo "<button type='submit' class='btn btn-outline-primary w-100 mb-2'>" . htmlspecialchars($val) . "</button>";
-                            echo "</form>";
-                        }
-                        ?>
+                    <?php
+                    $query = "SELECT subject_name FROM `subjected_teacher` WHERE teacher_id = '$id'";
+                    $result = mysqli_query($conn, $query);
+                    while ($row = mysqli_fetch_assoc($result)) {
+                        $val = $row ['subject_name'];
+                        echo "<form action='select_attendence_details.php' method='POST'>";
+                        echo "<input type='hidden' name='subject_name' value='" . htmlspecialchars($val) . "'>";
+                        echo "<button type='submit' class='btn btn-outline-primary w-100 mb-2'>" . htmlspecialchars($val) . "</button>";
+                        echo "</form>";
+                    }
+                    ?>
                     </select>
                     <!--  end subject geting-->
                 </div>
