@@ -18,12 +18,19 @@ if ($result && mysqli_num_rows($result) == 1) {
     $teacher = mysqli_fetch_assoc($result);
     $teacher_name = $teacher['name'];
 }
+$subject_name = $_POST['subject_name'];
+// if subject not selected for attendance, redirect to the previous page    
+if(!isset($subject_name) || empty($subject_name)) {
+    // Redirect to the previous page or show an error message
+    header("Location: teacher_subjects.php");
+    exit;
+}
 ?>
 <!doctype html>
 <html lang="en" data-bs-theme="light">
 
 <head>
-    <title>Mark_attendance</title>
+    <title>Select Attendance Details</title>
     <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -48,22 +55,22 @@ if ($result && mysqli_num_rows($result) == 1) {
             <!--  form  -->
             <form action="insert_attendence.php" method="POST">
                 <div class="mb-3">
-                    <label for="exampleInputEmail1" class="form-label">Subject</label>
+                    <p><mark><?php echo $subject_name; ?></mark></p>
+                    <input type="hidden" name="subject_name" value="<?php echo htmlspecialchars($subject_name); ?>">
+                    <label for="exampleInputEmail1" class="form-label">Select Subject Code</label>
 
                     <!-- get subjects dropdown -->
                     <select class="form-select" name="subject_name" id="subject_name" required>
-                        <option selected disabled value="">Select Subject</option>
+                        <option selected disabled value="">Subject-Code</option>
                         <?php
-                        $query = "SELECT subject_name, subject_code FROM `subjected_teacher` WHERE teacher_id = '$id'";
+                        $query = "SELECT subject_code FROM `subjected_teacher` WHERE teacher_id = '$id'";
                         $result = mysqli_query($conn, $query);
                         while ($row = mysqli_fetch_assoc($result)) {
-                            $val = $row['subject_name'];
                             $code = $row['subject_code'];
-                            echo "<option value='" . htmlspecialchars($val) . "'>" . htmlspecialchars($val) . " (" . htmlspecialchars($code) . ")</option>";
+                            echo "<option value='" . htmlspecialchars($code) . "'>" . htmlspecialchars($code) . "</option>";
                         }
                         ?>
                     </select>
-
                     <!--  end subject geting-->
                 </div>
                 <div class="mb-3">
