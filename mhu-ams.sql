@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 07, 2026 at 01:46 PM
+-- Generation Time: Jul 08, 2026 at 11:21 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -50,11 +50,32 @@ INSERT INTO `admin` (`id`, `name`, `gmail`, `number`) VALUES
 
 CREATE TABLE `attendance` (
   `id` int(11) NOT NULL,
-  `allotment_id` int(11) DEFAULT NULL,
-  `student_id` int(11) DEFAULT NULL,
-  `attendance_date` date NOT NULL,
-  `status` enum('Present','Absent') NOT NULL
+  `student_name` varchar(55) NOT NULL,
+  `roll_number` varchar(22) NOT NULL,
+  `subject_name` varchar(122) NOT NULL,
+  `subject_code` varchar(55) NOT NULL,
+  `course` varchar(55) NOT NULL,
+  `year` int(11) NOT NULL,
+  `semester` int(11) NOT NULL,
+  `date_of_attendence` int(11) NOT NULL,
+  `attendance_status` varchar(12) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `attendance`
+--
+
+INSERT INTO `attendance` (`id`, `student_name`, `roll_number`, `subject_name`, `subject_code`, `course`, `year`, `semester`, `date_of_attendence`, `attendance_status`) VALUES
+(7, 'a', '0', ' Principles and Practice of Management', 'mpmba', 'BBA', 4, 3, 2026, 'Present'),
+(8, 'sumit saini', '121212', ' Principles and Practice of Management', 'mpmba', 'BBA', 4, 3, 2026, 'Present'),
+(9, 'a', '0', ' Principles and Practice of Management', 'mpmba', 'BBA', 4, 3, 2026, 'Present'),
+(10, 'sumit saini', '121212', ' Principles and Practice of Management', 'mpmba', 'BBA', 4, 3, 2026, 'Absent'),
+(11, 'a', '0', ' Principles and Practice of Management', 'mpmba', 'BBA', 4, 4, 2026, 'Absent'),
+(12, 'sumit saini', '121212', ' Principles and Practice of Management', 'mpmba', 'BBA', 4, 4, 2026, 'Present'),
+(13, 'a', '0', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 3, 2026, 'Absent'),
+(14, 'sumit saini', '121212', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 3, 2026, 'Present'),
+(15, 'a', '0', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 3, 80726, 'Absent'),
+(16, 'sumit saini', '121212', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 3, 80726, 'Absent');
 
 -- --------------------------------------------------------
 
@@ -139,9 +160,24 @@ INSERT INTO `departments` (`id`, `dep_name`, `full_name`) VALUES
 
 CREATE TABLE `students` (
   `id` int(11) NOT NULL,
-  `student_name` varchar(100) NOT NULL,
-  `course_name` varchar(50) NOT NULL
+  `name` varchar(122) NOT NULL,
+  `roll_number` varchar(122) NOT NULL,
+  `faculty` varchar(111) NOT NULL,
+  `course` varchar(111) NOT NULL,
+  `year` int(11) NOT NULL,
+  `sem` int(11) NOT NULL,
+  `subject_code` varchar(244) NOT NULL,
+  `subject_name` varchar(234) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `students`
+--
+
+INSERT INTO `students` (`id`, `name`, `roll_number`, `faculty`, `course`, `year`, `sem`, `subject_code`, `subject_name`) VALUES
+(1, 'a', 'a', 'FOECS', 'BBA', 2, 5, 'ad', 'as'),
+(2, 'sumit saini', '121212', 'FOCBS', 'bba', 2, 6, 'mba', ''),
+(3, 'sumit saini', '121212', 'FOCBS', 'bba', 2, 6, 'mba', '');
 
 -- --------------------------------------------------------
 
@@ -204,9 +240,7 @@ ALTER TABLE `admin`
 -- Indexes for table `attendance`
 --
 ALTER TABLE `attendance`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `allotment_id` (`allotment_id`),
-  ADD KEY `student_id` (`student_id`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `courses`
@@ -252,7 +286,7 @@ ALTER TABLE `teachers`
 -- AUTO_INCREMENT for table `attendance`
 --
 ALTER TABLE `attendance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `courses`
@@ -276,7 +310,7 @@ ALTER TABLE `departments`
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `subjected_teacher`

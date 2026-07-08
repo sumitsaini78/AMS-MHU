@@ -25,7 +25,7 @@ $faculty_name = $_POST['faculty_name'];
 $course_name = $_POST['course_name'];
 $year = $_POST['year'];
 $semester = $_POST['semester'];
-
+$date_of_attendance = date('dmy'); 
 ?>
 <!doctype html>
 <html lang="en" data-bs-theme="light">
@@ -56,38 +56,71 @@ $semester = $_POST['semester'];
     <main class="container my-4">
         <!-- Centering Row Wrapper -->
         <div class="row justify-content-center">
-            <!-- Table and Details Column (Width restricted to 8 out of 12 columns for cleaner look) -->
-            <div class="col-md-8 col-lg-6">
+            <!-- Table and Details Column -->
+            <div class="col-md-10 col-lg-8">
                 
                 <!-- showing details for the selected subject -->
                 <div class="bg-warning-subtle border p-3 rounded mb-3 text-center">
-                    <strong><?php echo "$subject_name ($subject_code)"; ?></strong><br>
-                    <small class="text-muted"><?php echo "$faculty_name | $course_name | Year $year | Sem $semester"; ?></small>
+                    <strong><?php echo htmlspecialchars($subject_name) . " (" . htmlspecialchars($subject_code) . ")"; ?></strong><br>
+                    <small class="text-muted"><?php echo htmlspecialchars($faculty_name) . " | " . htmlspecialchars($course_name) . " | Year " . htmlspecialchars($year) . " | Sem " . htmlspecialchars($semester); ?></small>
                 </div>
 
                 <!-- students list for marking attendance -->
-                <?php
-                $query = "SELECT * FROM students";
-                $result = mysqli_query($conn, $query);
-                
-                echo "
-                <table class='table table-striped table-bordered text-center align-middle'> 
-                    <thead class='table-dark'>
-                        <tr>
-                            <th>Student Name</th>
-                            <th>Roll Number</th>
-                            <th>attendance_status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>John Doe</td>
-                            <td>[ Attendance Options ]</td>
-                        </tr>
-                    </tbody>
-                </table>";
-                ?>
+                <form action="save_attendance.php" method="POST">
+                    <!-- Forward metadata parameters as hidden payload fields -->
+                    <input type="hidden" name="subject_name" value="<?php echo htmlspecialchars($subject_name); ?>">
+                    <input type="hidden" name="subject_code" value="<?php echo htmlspecialchars($subject_code); ?>">
+                    <input type="hidden" name="course_name" value="<?php echo htmlspecialchars($course_name); ?>">
+                    <input type="hidden" name="year" value="<?php echo htmlspecialchars($year); ?>">
+                    <input type="hidden" name="semester" value="<?php echo htmlspecialchars($semester); ?>">
+
+                    <table class='table table-striped table-bordered text-center align-middle'> 
+                        <thead class='table-dark'>
+                            <tr>
+                                <th>Roll Number</th>
+                                <th>Student Name</th>
+                                <th>Attendance Status (Checked = Present)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $query = "SELECT * FROM students";
+                            $result = mysqli_query($conn, $query);
+                            
+                            if ($result && mysqli_num_rows($result) > 0) {
+                                while ($row = mysqli_fetch_assoc($result)) {
+                                    // Map row data using your database's column names
+                                    $roll_number = isset($row['roll_number']) ? $row['roll_number'] : $row['id'];
+                                    $student_name = $row['name'];
+                                    
+                                    echo "
+                                    <tr>
+                                        <td>" . htmlspecialchars($roll_number) . "</td>
+                                        <td class='text-start ps-3'>
+                                            " . htmlspecialchars($student_name) . "
+                                            <input type='hidden' name='student_names[" . htmlspecialchars($roll_number) . "]' value='" . htmlspecialchars($student_name) . "'>
+                                        </td>
+                                        <td>
+                                            <!-- Fallback input tracking mechanism: Unchecked defaults to Absent -->
+                                            <input type='hidden' name='attendance[" . htmlspecialchars($roll_number) . "]' value='Absent'>
+                                            <div class='form-check d-flex justify-content-center'>
+                                                <input class='form-check-input p-2 border border-secondary' type='checkbox' style='transform: scale(1.3);' name='attendance[" . htmlspecialchars($roll_number) . "]' value='Present' >
+                                            </div>
+                                        </td>
+                                    </tr>";
+                                }
+                            } else {
+                                echo "<tr><td colspan='3' class='text-muted py-3'>No students found.</td></tr>";
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+    <input type="hidden" name="date_of_attendance" id="date_of_attendance" value="<?php echo htmlspecialchars($date_of_attendance); ?>">
+                    <!-- Action control submit block -->
+                    <div class="text-center my-4">
+                        <button type="submit" name="insert_attendance" class="btn btn-success px-5 py-2 fw-bold shadow-sm">Save Attendance</button>
+                    </div>
+                </form>
                 
             </div>
         </div>
