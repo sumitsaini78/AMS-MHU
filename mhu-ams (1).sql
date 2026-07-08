@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 08, 2026 at 11:21 AM
+-- Generation Time: Jul 08, 2026 at 01:54 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -120,7 +120,7 @@ CREATE TABLE `deans` (
 --
 
 INSERT INTO `deans` (`id`, `Dean_name`, `Dept_name`, `number`) VALUES
-(17, 'Prof. P.K. Agarwal', 'focbs', 177),
+(2, 'Prof. P.K. Agarwal', 'focbs', 22),
 (18, 'Prof. P.K. Agarwal', 'focbs', 0),
 (19, 'dr. seema tomar', 'FOPS', 0),
 (20, 'test', 'FOE', 0);
@@ -202,8 +202,8 @@ CREATE TABLE `subjected_teacher` (
 --
 
 INSERT INTO `subjected_teacher` (`id`, `teacher_id`, `sub_id`, `teacher_name`, `subject_name`, `course_name`, `year`, `semester`, `subject_code`) VALUES
-(12, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8, 'mpmba'),
-(13, 6, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8, 'kdskjdfs');
+(12, 3, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8, 'mpmba'),
+(13, 3, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8, 'kdskjdfs');
 
 -- --------------------------------------------------------
 
@@ -223,8 +223,8 @@ CREATE TABLE `teachers` (
 --
 
 INSERT INTO `teachers` (`id`, `name`, `faculty`, `number`) VALUES
-(5, 'dr. brajkishore bharti', 'FOCBS', 555),
-(6, 'dr. snehashish bhardwaj', 'FOCBS', 666);
+(3, 'dr. snehashish bhardwaj', 'FOCBS', 333),
+(5, 'dr. brajkishore bharti', 'FOCBS', 555);
 
 --
 -- Indexes for dumped tables

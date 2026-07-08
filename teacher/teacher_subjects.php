@@ -49,7 +49,7 @@ if ($result && mysqli_num_rows($result) == 1) {
             <ul class="list-group">
                <div class="mb-3">
                     <label for="exampleInputEmail1" class="form-label">Select A Subject for Marking Attendance</label>
-
+      
                     <!-- get subjects dropdown -->
                         <?php
                         $query = "SELECT subject_name FROM `subjected_teacher` WHERE teacher_id = '$id'";
