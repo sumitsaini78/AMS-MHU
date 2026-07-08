@@ -4,40 +4,41 @@ session_start();
 
 // 1. Secure the page: Check if the teacher is actually logged in
 if (!isset($_SESSION['teacher_id'])) {
-    // Redirect them to your login page if the session is missing
     header("Location: ../index.php");
     exit;
 }
 
-// 2. Safely assign the variable now that we know it exists
 $id = $_SESSION['teacher_id'];
-$query = "SELECT * FROM teachers WHERE id = '$id'";
-$result = mysqli_query($conn, $query);
+$teacher_name = "";
 
-if ($result && mysqli_num_rows($result) == 1) {
-    $teacher = mysqli_fetch_assoc($result);
-    $teacher_name = $teacher['name'];
+// Use prepared statement to fetch Teacher info
+$query = "SELECT name FROM teachers WHERE id = ?";
+if ($stmt = mysqli_prepare($conn, $query)) {
+    mysqli_stmt_bind_param($stmt, "i", $id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    if ($teacher = mysqli_fetch_assoc($result)) {
+        $teacher_name = $teacher['name'];
+    }
+    mysqli_stmt_close($stmt);
 }
-$subject_name = $_POST['subject_name'];
-// if subject not selected for attendance, redirect to the previous page    
-if(!isset($subject_name) || empty($subject_name)) {
-    // Redirect to the previous page or show an error message
+
+// 2. Safely check if subject_name was posted BEFORE assigning it
+if (!isset($_POST['subject_name']) || empty(trim($_POST['subject_name']))) {
     header("Location: teacher_subjects.php");
     exit;
 }
+
+$subject_name = $_POST['subject_name'];
 ?>
 <!doctype html>
 <html lang="en" data-bs-theme="light">
 
 <head>
     <title>Select Attendance Details</title>
-    <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <!-- Bootstrap CSS v5.3.8 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
 </head>
 
 <body>
@@ -45,37 +46,50 @@ if(!isset($subject_name) || empty($subject_name)) {
         <nav class="navbar navbar-dark bg-dark shadow">
             <div class="container-fluid">
                 <span class="navbar-brand mb-0 h1 fs-3 fw-bold">Mhu-AMS</span>
-                <a href="index.php" class="--bs-body-bg">Home</a>
-                <div class="right"><a href=""></a></div>
+                <div class="right d-flex align-items-center">
+                    <span class="navbar-text text-white bg-secondary px-3 py-1 rounded-pill small me-3">
+                        Welcome, <?php echo htmlspecialchars($teacher_name); ?>
+                    </span>
+                    <a href="index.php" class="btn btn-outline-light btn-sm">Home</a>
+                </div>
             </div>
         </nav>
     </header>
+    
     <main>
-        <div class="container mt-5 w-25 border p-3 bg-light shadow rounded">
-            <!--  form  -->
+        <!-- Adjusted width class from w-25 to handle responsive viewports -->
+        <div class="container mt-5 col-12 col-md-6 col-lg-4 border p-4 bg-light shadow rounded">
             <form action="insert_attendence.php" method="POST">
+                
                 <div class="mb-3">
-                    <p><mark><?php echo $subject_name; ?></mark></p>
+                    <label class="form-label d-block">Selected Subject</label>
+                    <p class="fs-5 fw-semibold text-primary"><mark class="px-2 rounded"><?php echo htmlspecialchars($subject_name); ?></mark></p>
                     <input type="hidden" name="subject_name" value="<?php echo htmlspecialchars($subject_name); ?>">
-                    <label for="exampleInputEmail1" class="form-label">Select Subject Code</label>
+                </div>
 
-                    <!-- get subjects dropdown -->
-                    <select class="form-select" name="subject_name" id="subject_name" required>
+                <div class="mb-3">
+                    <label for="subject_code" class="form-label">Select Subject Code</label>
+                    <select class="form-select" name="subject_code" id="subject_code" required>
                         <option selected disabled value="">Subject-Code</option>
                         <?php
-                        $query = "SELECT subject_code FROM `subjected_teacher` WHERE teacher_id = '$id'";
-                        $result = mysqli_query($conn, $query);
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            $code = $row['subject_code'];
-                            echo "<option value='" . htmlspecialchars($code) . "'>" . htmlspecialchars($code) . "</option>";
+                        // Prepared statement for dynamic user query
+                        $query = "SELECT subject_code FROM `subjected_teacher` WHERE teacher_id = ?";
+                        if ($stmt = mysqli_prepare($conn, $query)) {
+                            mysqli_stmt_bind_param($stmt, "i", $id);
+                            mysqli_stmt_execute($stmt);
+                            $result = mysqli_stmt_get_result($stmt);
+                            while ($row = mysqli_fetch_assoc($result)) {
+                                $code = $row['subject_code'];
+                                echo "<option value='" . htmlspecialchars($code) . "'>" . htmlspecialchars($code) . "</option>";
+                            }
+                            mysqli_stmt_close($stmt);
                         }
                         ?>
                     </select>
-                    <!--  end subject geting-->
                 </div>
-                <div class="mb-3">
-                    <label for="exampleInputEmail1" class="form-label">Faculty</label>
 
+                <div class="mb-3">
+                    <label for="faculty_name" class="form-label">Faculty</label>
                     <select class="form-select" name="faculty_name" id="faculty_name" required>
                         <option selected disabled value="">Select Faculty</option>
                         <?php
@@ -88,9 +102,9 @@ if(!isset($subject_name) || empty($subject_name)) {
                         ?>
                     </select>
                 </div>
-                <div class="mb-3">
-                    <label for="exampleInputEmail1" class="form-label">Course</label>
 
+                <div class="mb-3">
+                    <label for="course_name" class="form-label">Course</label>
                     <select class="form-select" name="course_name" id="course_name" required>
                         <option selected disabled value="">Select Course</option>
                         <?php
@@ -103,9 +117,9 @@ if(!isset($subject_name) || empty($subject_name)) {
                         ?>
                     </select>
                 </div>
-                <div class="mb-3">
-                    <label for="exampleInputEmail1" class="form-label">Year</label>
 
+                <div class="mb-3">
+                    <label for="year" class="form-label">Year</label>
                     <select class="form-select" name="year" id="year" required>
                         <option selected disabled value="">Year</option>
                         <option value="1">1st Year</option>
@@ -113,33 +127,29 @@ if(!isset($subject_name) || empty($subject_name)) {
                         <option value="3">3rd Year</option>
                         <option value="4">4th Year</option>
                         <option value="5">5th Year</option>
-
                     </select>
-                    <div class="mb-3">
-
-                        <select class="form-select" name="semester" id="semester" required>
-                            <option selected disabled value="">Semester</option>
-                            <option value="1">1st sem</option>
-                            <option value="2">2nd sem</option>
-                            <option value="3">3rd sem</option>
-                            <option value="4">4th sem</option>
-                            <option value="5">5th sem</option>
-
-                        </select>
-                    </div>
                 </div>
 
-                <input type="submit" class="btn btn-primary" value="Submit">
+                <!-- Fixed unclosed and nested div structural bug here -->
+                <div class="mb-4">
+                    <label for="semester" class="form-label">Semester</label>
+                    <select class="form-select" name="semester" id="semester" required>
+                        <option selected disabled value="">Semester</option>
+                        <option value="1">1st sem</option>
+                        <option value="2">2nd sem</option>
+                        <option value="3">3rd sem</option>
+                        <option value="4">4th sem</option>
+                        <option value="5">5th sem</option>
+                    </select>
+                </div>
+
+                <div class="d-grid">
+                    <input type="submit" class="btn btn-primary" value="Proceed to Attendance">
+                </div>
             </form>
-
-
         </div>
     </main>
-    <!-- Bootstrap JavaScript Bundle (includes Popper) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-        crossorigin="anonymous"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 </body>
-
 </html>
