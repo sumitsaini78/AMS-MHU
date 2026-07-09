@@ -23,7 +23,7 @@ if ($result && mysqli_num_rows($result) == 1) {
 <html lang="en" data-bs-theme="light">
 
 <head>
-    <title>Title</title>
+    <title>Subject Selection</title>
     <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />

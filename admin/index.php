@@ -31,6 +31,14 @@ if ($result && mysqli_num_rows($result) == 1) {
     <!-- Bootstrap CSS v5.3.8 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+    <style>
+        .logo {
+            font-family: "Times New Roman", Times, serif !important;
+        }
+        .navbar{
+            background-color: rgb(50 116 181) !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -38,8 +46,8 @@ if ($result && mysqli_num_rows($result) == 1) {
     <header>
         <nav class="navbar navbar-dark bg-dark shadow">
             <div class="container-fluid">
-                <span class="navbar-brand mb-0 h1 fs-3 fw-bold">Mhu-AMS</span>
-                <a href="index.php" class="--bs-body-bg">Home</a>
+                <span class="navbar-brand mb-0 h1 fs-3 fw-bold logo ">MHU-AMS<sub>Admin</sub></span>
+                <!-- <a href="index.php" class="link-offset-2 link-underline link-underline-opacity-0">Home</a> -->
                 <div class="right"><a href=""><span
                             class="navbar-text text-white bg-secondary px-3 py-1 rounded-pill small">
                             <i class="fa-solid fa-user-tie me-1"></i> Welcome, <?php echo $admin_name; ?>
