@@ -72,6 +72,9 @@ if ($result && mysqli_num_rows($result) == 1) {
                     <a href="subject_Teacher_Allotment.php">
                         <button type="button" class="btn btn-info">Assign-Subject</button>  
                     </a>
+                    <a href="add_bulk_subject.php">
+                        <button type="button" class="btn btn-info">Add Subjects(Bulk)</button>  
+                    </a>
               
                 </div>
             </div>
