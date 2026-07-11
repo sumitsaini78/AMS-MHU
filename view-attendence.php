@@ -7,7 +7,6 @@ if (!isset($_SESSION['dean_id'])) {
     header("Location: ./index.php");
     exit;
 }
-kk
 // Variables initialization
 $selected_dept = isset($_GET['dept_name']) ? mysqli_real_escape_string($conn, $_GET['dept_name']) : '';
 $selected_course = isset($_GET['course_name']) ? mysqli_real_escape_string($conn, $_GET['course_name']) : '';
@@ -115,10 +114,10 @@ if ($selected_dept && $selected_course && $selected_subject && $selected_semeste
                         <select class="form-select form-select-sm" name="course_name" required>
                             <option value="">Select Course</option>
                             <?php
-                            $q = mysqli_query($conn, "SELECT course_name FROM courses");
+                            $q = mysqli_query($conn, "SELECT course_name FROM courses_list");
                             while($r = mysqli_fetch_assoc($q)){
                                 $sel = ($selected_course == $r['course_name']) ? 'selected' : '';
-                                echo "<option value='".htmlspecialchars($r['course_name'])."' $sel>".htmlspecialchars($r['course_name'])."</option>";
+                                echo "<option value='".htmlspecialchars($r['course_name'])."' $sel>".htmlspecialchars($r['faculty_name'].' - '.$r['course_name'])."</option>";
                             }
                             ?>
                         </select>
