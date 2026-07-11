@@ -79,15 +79,15 @@ if (isset($_POST['teacher-login'])) {
 <!-- new commit -->
     <nav class="navbar navbar-dark bg-dark shadow">
         <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1 fs-3 fw-bold">Mhu-AMS</span>
+            <span class="navbar-brand mb-0 h1 fs-3 fw-bold">MHU-AMS</span>
             <a href="admin/index.php" class="--bs-body-bg">Admin</a>
         </div>
     </nav>
 
     <div class="container mt-5">
         <div class="text-center mb-4">
-            <h3>Select Your Role to Login</h3>
-            <p class="text-muted">Please click on your respective role below.</p>
+            <h3>Welcome to MHU-AMS</h3>
+            <p class="text-muted">Please Click on Your Respective Role Below.</p>
         </div>
 
         <div class="d-flex justify-content-center gap-3 mb-5 flex-wrap">

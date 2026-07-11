@@ -1,12 +1,11 @@
 <?php
 include "../db_connect.php";
-
 ?>
 <!doctype html>
 <html lang="en" data-bs-theme="light">
 
 <head>
-    <title>Title</title>
+    <title>View Attendence</title>
     <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -20,18 +19,13 @@ include "../db_connect.php";
     <header>
         <nav class="navbar navbar-dark bg-dark shadow">
             <div class="container-fluid">
-                <span class="navbar-brand mb-0 h1 fs-3 fw-bold">Mhu-AMS</span>
-                <a href="index.php" class="--bs-body-bg">Home</a>
+                <span class="navbar-brand mb-0 h1 fs-3 fw-bold">MHU-AMS</span>
+                <P></P>
                 <div class="right"><a href=""></a></div>
             </div>
         </nav>
     </header>
-    <main>
-        <h2 class="text-center bg-success p-2 text-dark bg-opacity-25">
-            View Attendance
-        </h2>
-     
-    </main>
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"

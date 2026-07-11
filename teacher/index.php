@@ -55,7 +55,7 @@ if ($result && mysqli_num_rows($result) == 1) {
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="teacher_subjects.php">Mark Attendence</a></li>
-                        <li><a class="dropdown-item" href="view_attendance.php">View Attendence</a></li>
+                        <li><a class="dropdown-item" href="view_attendence.php">View Attendence</a></li>
                         <li><a class="dropdown-item" href="#">Request For Correction</a></li>
                         <li>
                             <hr class="dropdown-divider">

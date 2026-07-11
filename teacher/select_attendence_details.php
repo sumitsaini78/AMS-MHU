@@ -108,11 +108,12 @@ $subject_name = $_POST['subject_name'];
                     <select class="form-select" name="course_name" id="course_name" required>
                         <option selected disabled value="">Select Course</option>
                         <?php
-                        $query = "SELECT course_name FROM `courses`";
+                        $query = "SELECT course_name FROM `courses_list`";
                         $result = mysqli_query($conn, $query);
                         while ($row = mysqli_fetch_assoc($result)) {
                             $val = $row['course_name'];
-                            echo "<option value='" . htmlspecialchars($val) . "'>" . htmlspecialchars($val) . "</option>";
+                            $faculty = $row['faculty_name'];
+                            echo "<option value='" . htmlspecialchars($val) . "'>" . htmlspecialchars($faculty) . " - " . htmlspecialchars($val) . "</option>";
                         }
                         ?>
                     </select>
