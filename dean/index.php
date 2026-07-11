@@ -70,7 +70,7 @@ if ($result && mysqli_num_rows($result) == 1) {
                         <button type="button" class="btn btn-info">Add Teachers</button>
                     </a>
                     <a href="subject_Teacher_Allotment.php">
-                        <button type="button" class="btn btn-info">Assign-Subject</button>
+                        <button type="button" class="btn btn-info">Assign-Subject</button>  
                     </a>
               
                 </div>

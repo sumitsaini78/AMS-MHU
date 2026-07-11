@@ -76,7 +76,7 @@ if (isset($_POST['teacher-login'])) {
 
 <body class="bg-light">
 
-
+<!-- new commit -->
     <nav class="navbar navbar-dark bg-dark shadow">
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1 fs-3 fw-bold">Mhu-AMS</span>
