@@ -62,7 +62,6 @@ if ($result && mysqli_num_rows($result) == 1) {
                         echo "</form>";
                     }
                     ?>
-                    </select>
                     <!--  end subject geting-->
                 </div>
             </ul>
