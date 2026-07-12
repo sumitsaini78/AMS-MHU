@@ -18,7 +18,7 @@ if (isset($_POST['insert_subject'])) {
 <html lang="en" data-bs-theme="light">
 
 <head>
-    <title>Title</title>
+    <title>Add Subjects</title>
     <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -63,14 +63,28 @@ if (isset($_POST['insert_subject'])) {
 
                 <!-- Course Name Input -->
                 <div class="mb-3">
-                    <label for="course_name" class="form-label">Course Name (3 Letters)</label>
                     <!-- 2. Moved validation attributes here into the input field -->
-                    <input type="text" class="form-control" name="course_name" id="course_name" minlength="3"
-                        maxlength="3" pattern="[A-Za-z]{3}" required>
+                    <div class="mb-3">
+                        <label for="course_name" class="form-label">Course</label>
+                        <select class="form-select" name="course_name" id="course_name" required>
+                            <option selected disabled value="">Select Course</option>
+                            <?php
+                            $query = "SELECT course_name,faculty_name FROM `courses_list`";
+                            $result = mysqli_query($conn, $query);
+                            while ($row = mysqli_fetch_assoc($result)) {
+                                $val = $row['course_name'];
+                                $faculty = $row['faculty_name'];
+                                echo $faculty;
+                                echo "<option value='" . htmlspecialchars($val) . "'>" . htmlspecialchars($faculty) . "-" . htmlspecialchars($val) . "</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+
                     <div class="invalid-feedback">Please enter exactly 3 letters (A-Z or a-z).</div>
                 </div>
                 <div class="mb-3">
-                    <label for="year" class="form-label">Semester</label>
+                    <label for="year" class="form-label">Year</label>
                     <!-- 2. Moved validation attributes here into the input field -->
                     <select class="form-select" aria-label="Default select example" name="year">
                         <option selected>Open this select menu</option>
