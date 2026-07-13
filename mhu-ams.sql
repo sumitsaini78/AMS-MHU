@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 12, 2026 at 05:50 PM
+-- Generation Time: Jul 13, 2026 at 01:38 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -58,15 +58,45 @@ CREATE TABLE `attendance` (
   `year` int(11) NOT NULL,
   `semester` int(11) NOT NULL,
   `date_of_attendence` int(11) NOT NULL,
-  `attendance_status` varchar(12) NOT NULL
+  `attendance_status` varchar(12) NOT NULL,
+  `teacher_name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `attendance`
 --
 
-INSERT INTO `attendance` (`id`, `student_name`, `roll_number`, `subject_name`, `subject_code`, `course`, `year`, `semester`, `date_of_attendence`, `attendance_status`) VALUES
-(18, 'new name', '123', ' Principles and Practice of Management', 'mpmba', 'BBA', 2, 3, 120726, 'Absent');
+INSERT INTO `attendance` (`id`, `student_name`, `roll_number`, `subject_name`, `subject_code`, `course`, `year`, `semester`, `date_of_attendence`, `attendance_status`, `teacher_name`) VALUES
+(23, 'Aarav Sharma', '26CSE001', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
+(24, 'Ananya Iyer', '25ECE024', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
+(25, 'Rohan Verma', '24MECH015', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
+(26, 'Diya Nair', '23CSE042', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
+(27, 'Ishaan Gupta', '26BBA009', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
+(28, 'Meera Joshi', '25MBA054', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Absent', ''),
+(29, 'Aditya Rao', '26BCA012', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Absent', ''),
+(30, 'Kavya Patel', '24MCA031', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Absent', ''),
+(31, 'Vivaan Saxena', '25LAW004', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Absent', ''),
+(32, 'Sanya Mirza', '23LAW048', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Absent', ''),
+(33, 'Aarav Sharma', '26CSE001', 'sub1', 'mpmba', 'BBA', 3, 4, 130726, 'Absent', ''),
+(34, 'Ananya Iyer', '25ECE024', 'sub1', 'mpmba', 'BBA', 3, 4, 130726, 'Absent', ''),
+(35, 'Rohan Verma', '24MECH015', 'sub1', 'mpmba', 'BBA', 3, 4, 130726, 'Absent', ''),
+(36, 'Diya Nair', '23CSE042', 'sub1', 'mpmba', 'BBA', 3, 4, 130726, 'Present', ''),
+(37, 'Ishaan Gupta', '26BBA009', 'sub1', 'mpmba', 'BBA', 3, 4, 130726, 'Present', ''),
+(38, 'Meera Joshi', '25MBA054', 'sub1', 'mpmba', 'BBA', 3, 4, 120726, 'Present', ''),
+(39, 'Aditya Rao', '26BCA012', 'sub1', 'mpmba', 'BBA', 3, 4, 130726, 'Present', ''),
+(40, 'Kavya Patel', '24MCA031', 'sub1', 'mpmba', 'BBA', 3, 4, 130726, 'Present', ''),
+(41, 'Vivaan Saxena', '25LAW004', 'sub1', 'mpmba', 'BBA', 3, 4, 130726, 'Present', ''),
+(42, 'Sanya Mirza', '23LAW048', 'sub1', 'mpmba', 'BBA', 3, 4, 130726, 'Present', ''),
+(43, 'Aarav Sharma', '26CSE001', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
+(44, 'Ananya Iyer', '25ECE024', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
+(45, 'Rohan Verma', '24MECH015', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
+(46, 'Diya Nair', '23CSE042', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Absent', ''),
+(47, 'Ishaan Gupta', '26BBA009', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
+(48, 'Meera Joshi', '25MBA054', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Absent', ''),
+(49, 'Aditya Rao', '26BCA012', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
+(50, 'Kavya Patel', '24MCA031', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
+(51, 'Vivaan Saxena', '25LAW004', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
+(52, 'Sanya Mirza', '23LAW048', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', '');
 
 -- --------------------------------------------------------
 
@@ -192,9 +222,31 @@ CREATE TABLE `students` (
 --
 
 INSERT INTO `students` (`id`, `name`, `enrollment_number`, `roll_number`, `faculty`, `course`, `year`, `sem`, `subject_code`, `subject_name`) VALUES
-(45, '', 0, '123', '123', 'nf', 0, 1, '', ''),
-(46, '1', 0, '123', '123', 'nf', 0, 1, '', ''),
-(47, 'new name', 123, '123', 'nf', 'nc', 1, 2, '', '');
+(70, 'Aarav Sharma', 0, '26CSE001', 'Faculty of Engineering', 'B.Tech CSE', 1, 1, '', ''),
+(71, 'Ananya Iyer', 0, '25ECE024', 'Faculty of Engineering', 'B.Tech ECE', 2, 3, '', ''),
+(72, 'Rohan Verma', 0, '24MECH015', 'Faculty of Engineering', 'B.Tech ME', 3, 5, '', ''),
+(73, 'Diya Nair', 0, '23CSE042', 'Faculty of Engineering', 'B.Tech CSE', 4, 7, '', ''),
+(74, 'Ishaan Gupta', 0, '26BBA009', 'Faculty of Management', 'BBA', 1, 1, '', ''),
+(75, 'Meera Joshi', 0, '25MBA054', 'Faculty of Management', 'MBA', 2, 3, '', ''),
+(76, 'Aditya Rao', 0, '26BCA012', 'Faculty of Computer Apps', 'BCA', 1, 1, '', ''),
+(77, 'Kavya Patel', 0, '24MCA031', 'Faculty of Computer Apps', 'MCA', 3, 5, '', ''),
+(78, 'Vivaan Saxena', 0, '25LAW004', 'Faculty of Law', 'BA LLB', 2, 3, '', ''),
+(79, 'Sanya Mirza', 0, '23LAW048', 'Faculty of Law', 'BA LLB', 4, 7, '', '');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `subjected_student`
+--
+
+CREATE TABLE `subjected_student` (
+  `id` int(11) NOT NULL,
+  `student_name` varchar(122) NOT NULL,
+  `subject_name` varchar(122) NOT NULL,
+  `subject_code` varchar(122) NOT NULL,
+  `faculty` varchar(122) NOT NULL,
+  `course` varchar(122) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -221,7 +273,7 @@ CREATE TABLE `subjected_teacher` (
 INSERT INTO `subjected_teacher` (`id`, `teacher_id`, `sub_id`, `teacher_name`, `subject_name`, `course_name`, `year`, `semester`, `subject_code`) VALUES
 (12, 3, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8, 'mpmba'),
 (13, 3, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8, 'kdskjdfs'),
-(19, 3, 39, 'dr. snehashish bhardwaj', ' Financial Accountin', '', 3, 6, ''),
+(19, 3, 39, 'dr. snehashish bhardwaj', 'fa', '', 3, 6, ''),
 (20, 3, 45, 'dr. snehashish bhardwaj', 'sub1', '', 2, 7, '');
 
 -- --------------------------------------------------------
@@ -286,6 +338,12 @@ ALTER TABLE `students`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `subjected_student`
+--
+ALTER TABLE `subjected_student`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `subjected_teacher`
 --
 ALTER TABLE `subjected_teacher`
@@ -305,7 +363,7 @@ ALTER TABLE `teachers`
 -- AUTO_INCREMENT for table `attendance`
 --
 ALTER TABLE `attendance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
 -- AUTO_INCREMENT for table `courses`
@@ -329,7 +387,13 @@ ALTER TABLE `departments`
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
+
+--
+-- AUTO_INCREMENT for table `subjected_student`
+--
+ALTER TABLE `subjected_student`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `subjected_teacher`
