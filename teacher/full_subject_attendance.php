@@ -52,6 +52,37 @@ $result = mysqli_query($conn, $query);
         <blockquote class="blockquote">
             <p class="text-center"><?php echo $subject_name; ?></p>
         </blockquote>
+        <div class="container w-100 d-flex border">
+            <div class="container w-50 border border-warning mt-4">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Student Name</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $query = "SELECT * FROM `attendance` WHERE subject_name = '$subject_name'";
+                        $result = mysqli_query($conn, $query);
+                        $index = 1; // Start numbering table rows at 1
+                        // Loop through each distinct subject
+                        while ($val = mysqli_fetch_assoc($result)) {
+                            echo "<tr>";
+                            echo "<th scope='row'>" . $index . "</th>";
+                            echo "<td>" . htmlspecialchars($val['student_name']) . "</td>";
+                            echo "<td>" . htmlspecialchars($val['date_of_attendence']) . "</td>";
+                            echo "<td>" . htmlspecialchars($val['attendance_status']) . "</td>";
+                            echo "</tr>";
+                            $index++; // Increment the index for the next row
+                        }
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </main>
 
 
