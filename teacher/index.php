@@ -84,6 +84,10 @@ if ($result && mysqli_num_rows($result) == 1) {
                     <li class="nav-item mx-2">
                         <a href="request_correction.php" class="btn btn-primary">Request For Correction</a>
                     </li>
+                    <li class="nav-item mx-2">
+                        <a href="assign_student_subject.php" class="btn btn-primary">Assign Student Subject</a>
+                    </li>
+
                 </ul>
                 <span class="btn btn-secondary px-3 py-1 rounded-pill small disabled"
                     style="cursor: default; opacity: 1;">

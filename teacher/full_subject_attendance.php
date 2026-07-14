@@ -65,20 +65,31 @@ $result = mysqli_query($conn, $query);
                     </thead>
                     <tbody>
                         <?php
-                        $query = "SELECT * FROM `attendance` WHERE subject_name = '$subject_name'";
+                        // Added ORDER BY to sort by date_of_attendence in descending order (latest first)
+                        $query = "SELECT * FROM `attendance` WHERE subject_name = '$subject_name' ORDER BY date_of_attendence DESC";
                         $result = mysqli_query($conn, $query);
                         $index = 1; // Start numbering table rows at 1
+                        
                         // Loop through each distinct subject
                         while ($val = mysqli_fetch_assoc($result)) {
+                           
                             echo "<tr>";
                             echo "<th scope='row'>" . $index . "</th>";
                             echo "<td>" . htmlspecialchars($val['student_name']) . "</td>";
-                            echo "<td>" . htmlspecialchars($val['date_of_attendence']) . "</td>";
+                            // date in format d-m-Y
+                             // Parse the 8-digit string using the DMY format, then output it with slashes
+                            $dateStr = $val['date_of_attendence'];
+                            $dateObj = DateTime::createFromFormat('dmY', $dateStr);
+                            $formattedDate = $dateObj ? $dateObj->format('d/m/y') : $dateStr;
+                            echo "<td>" . htmlspecialchars($formattedDate) . "</td>";
+                            // echo "<td>" . htmlspecialchars($val['date_of_attendence']) . "</td>";
                             echo "<td>" . htmlspecialchars($val['attendance_status']) . "</td>";
                             echo "</tr>";
+
                             $index++; // Increment the index for the next row
                         }
                         ?>
+
                     </tbody>
                 </table>
             </div>

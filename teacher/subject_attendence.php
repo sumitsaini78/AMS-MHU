@@ -2,15 +2,43 @@
 include "../db_connect.php";
 
 session_start();
-if($_SESSION['teacher_name'] == null){
+if ($_SESSION['teacher_name'] == null) {
     header("Location: ../index.php");
 }
 
 // On view attendance submission
 if (isset($_POST['post_faculty'])) {
     $faculty_name = $_POST['faculty'];
-    // Fixed: Added quotes and addslashes to prevent JavaScript syntax errors with strings
     echo "<script>alert('" . addslashes($faculty_name) . "');</script>";
+}
+
+// Track if a date search filter is active
+$is_set = 0;
+$start_search_int = null;
+$end_search_int = null;
+
+if (isset($_POST['search_in_dates'])) {
+    $html_start = $_POST['trip-start']; // Format: YYYY-MM-DD
+    $html_end = $_POST['trip-end'];     // Format: YYYY-MM-DD
+    
+    if (!empty($html_start) && !empty($html_end)) {
+        $is_set = 1;
+        // Save raw HTML date strings into the session for form retention
+        $_SESSION['start_date'] = $html_start;
+        $_SESSION['end_date'] = $html_end;
+
+        // FIXED CONVERSION: Convert YYYY-MM-DD to your exact DB integer format: DDMMYY
+        $start_search_int = (int)date('dmy', strtotime($html_start));
+        $end_search_int = (int)date('dmy', strtotime($html_end));
+    } else {
+        echo "<script>alert('Please select both start and end dates.');</script>";
+        unset($_SESSION['start_date']);
+        unset($_SESSION['end_date']);
+    }
+} elseif (isset($_SESSION['start_date']) && isset($_SESSION['end_date'])) {
+    $is_set = 1;
+    $start_search_int = (int)date('dmy', strtotime($_SESSION['start_date']));
+    $end_search_int = (int)date('dmy', strtotime($_SESSION['end_date']));
 }
 
 // Getting distinct subject data using GROUP BY to prevent duplicate subject rows
@@ -52,60 +80,123 @@ $result = mysqli_query($conn, $query);
                 <a href="../logout.php" class="btn btn-outline-light ms-3">Logout</a>
             </div>
         </nav>
+        <nav class="navbar navbar-dark bg-white shadow">
+            <div class="container-fluid d-flex align-items-center justify-content-between">
+                <div class="left"><a href=""></a></div>
+
+                <div class="center d-flex align-items-center gap-3">
+                    <span class="small"></span>
+                    <form class="d-flex" method="POST" action="subject_attendence.php">
+                        <label for="start-date" class="m-2">Date From:</label>
+                        <input type="date" id="start-date" name="trip-start" value="<?php echo isset($_SESSION['start_date']) ? htmlspecialchars($_SESSION['start_date']) : ''; ?>">
+                        <label for="end-date" class="m-2"> To:</label>
+                        <input type="date" id="end-date" name="trip-end" value="<?php echo isset($_SESSION['end_date']) ? htmlspecialchars($_SESSION['end_date']) : ''; ?>">
+                        <button class="btn btn-outline-success mx-2" type="submit"
+                            name="search_in_dates">Search</button>
+                    </form>
+                </div>
+
+                <div class="right"><a href=""></a></div>
+            </div>
+        </nav>
     </header>
 
     <main>
-        <div class="container w-50 border border-warning mt-4">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Subject Name</th>
-                        <th scope="col">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    $index = 1; // Start numbering table rows at 1
-                    
-                    // Loop through each distinct subject
-                    while ($val = mysqli_fetch_assoc($result)) {
+        <div class="container w-50 border border-warning mt-4 "></div>
+        
+        <!-- FIXED: Removed CSS display mixups. Table stays visible when filtering data -->
+        <table class="table table-striped table-hover d-table w-50 m-auto mt-4">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Subject Name</th>
+                    <th scope="col">Total Lectures</th>
+                    <th scope="col">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $index = 1; // Start numbering table rows at 1
+                
+                // Loop through each distinct subject
+                while ($val = mysqli_fetch_assoc($result)) {
 
-                        // 1. Fetch all attendance records for this specific subject using a unique variable name
-                        $subject_escaped = mysqli_real_escape_string($conn, $val['subject_name']);
-                        $status_query = "SELECT attendance_status FROM `attendance` WHERE subject_name = '$subject_escaped'";
-                        $status_result = mysqli_query($conn, $status_query);
+                    $subject_escaped = mysqli_real_escape_string($conn, $val['subject_name']);
 
-                        $total_records = 0;
-                        $present_count = 0;
+                    // Choose date range strategy
+                    if ($is_set && $start_search_int !== null && $end_search_int !== null) {
+                        $start_date = $start_search_int;
+                        $end_date = $end_search_int;
+                    } else {
+                        // Fallback: Dynamically pull bounds directly from active dataset rows
+                        $range_query = "SELECT MIN(date_of_attendence) as start_date, MAX(date_of_attendence) as end_date FROM `attendance` WHERE subject_name = '$subject_escaped'";
+                        $range_result = mysqli_query($conn, $range_query);
+                        $range_row = mysqli_fetch_assoc($range_result);
 
-                        // 2. Fetch the individual status rows from the secondary query
-                        while ($status_row = mysqli_fetch_assoc($status_result)) {
-                            $attendance_status = $status_row['attendance_status'];
-
-                            // Count total records and check if the student was present
-                            $total_records++;
-                            if (strtolower($attendance_status) === 'present' || $attendance_status == '1') {
-                                $present_count++;
-                            }
-                        }
-
-                        // 3. Calculate the attendance percentage safely to avoid division by zero
-                        $percentage = ($total_records > 0) ? round(($present_count / $total_records) * 100, 2) : 0;
-
-                        // 4. Output the completed table row HTML
-                        echo "<tr>";
-                        echo "<td>" . $index . "</td>";
-                        echo "<td><form method='post' action='full_subject_attendance.php'><input type='submit' name='subject_name' value='" . htmlspecialchars($val['subject_name'], ENT_QUOTES, 'UTF-8') . "'></form></td>";
-                        echo "<td>" . $percentage . "%</td>";
-                        echo "</tr>";
-
-                        $index++; // Increment the counter for the next subject row
+                        $start_date = $range_row['start_date'];
+                        $end_date = $range_row['end_date'];
                     }
-                    ?>
-                </tbody>
-            </table>
-        </div>
+
+                    // Since dates are saved as integers, we convert both user input numbers into strings to securely run standard string-value evaluations 
+                    if ($start_date && $end_date) {
+                        // Padding ensure numbers like "10726" stay standardized as string formats like "010726" 
+                        $start_str = str_pad($start_date, 6, "0", STR_PAD_LEFT);
+                        $end_str = str_pad($end_date, 6, "0", STR_PAD_LEFT);
+
+                        // Convert string presentation layout arrays to standardized sortable parameters (YYYYMMDD) inside SQL
+                        $date_condition = "AND STR_TO_DATE(LPAD(date_of_attendence, 6, '0'), '%d%m%y') BETWEEN STR_TO_DATE('$start_str', '%d%m%y') AND STR_TO_DATE('$end_str', '%d%m%y')";
+                    } else {
+                        $date_condition = "";
+                    }
+
+                    // Query to fetch DISTINCT lecture dates to get accurate lecture count
+                    $lecture_count_query = "SELECT COUNT(DISTINCT `date_of_attendence`) as total_lectures FROM `attendance` WHERE subject_name = '$subject_escaped' $date_condition";
+                    $lecture_count_result = mysqli_query($conn, $lecture_count_query);
+                    $lecture_count_row = mysqli_fetch_assoc($lecture_count_result);
+                    $total_lectures = isset($lecture_count_row['total_lectures']) ? $lecture_count_row['total_lectures'] : 0;
+
+                    // Query individual record markers strictly for overall raw metrics calculations
+                    $status_query = "SELECT attendance_status FROM `attendance` WHERE subject_name = '$subject_escaped' $date_condition";
+                    $status_result = mysqli_query($conn, $status_query);
+
+                    $total_student_records = 0;
+                    $present_count = 0;
+
+                    while ($status_row = mysqli_fetch_assoc($status_result)) {
+                        $attendance_status = $status_row['attendance_status'];
+                        $total_student_records++;
+                        if (strtolower($attendance_status) === 'present' || $attendance_status == '1') {
+                            $present_count++;
+                        }
+                    }
+
+                    // Calculate the aggregate metrics cleanly using the student count dataset
+                    $percentage = ($total_student_records > 0) ? round(($present_count / $total_student_records) * 100, 2) : 0;
+
+                    // Format human text layout labels properly (DD-MM-YYYY)
+                    $date_display = "";
+                    if ($start_date && $end_date) {
+                        $p_start = str_pad($start_date, 6, "0", STR_PAD_LEFT);
+                        $p_end = str_pad($end_date, 6, "0", STR_PAD_LEFT);
+                        
+                        $d_start = substr($p_start, 0, 2) . "-" . substr($p_start, 2, 2) . "-20" . substr($p_start, 4, 2);
+                        $d_end = substr($p_end, 0, 2) . "-" . substr($p_end, 2, 2) . "-20" . substr($p_end, 4, 2);
+                        
+                        $date_display = " <small class='text-muted ms-2'>(" . $d_start . " to " . $d_end . ")</small>";
+                    }
+
+                    echo "<tr>";
+                    echo "<td>" . $index . "</td>";
+                    echo "<td>" . htmlspecialchars($val['subject_name']) . $date_display . "</td>";
+                    echo "<td><span class='badge bg-secondary'>" . $total_lectures . "</span></td>";
+                    echo "<td>" . $percentage . "%</td>";
+                    echo "</tr>";
+
+                    $index++;
+                }
+                ?>
+            </tbody>
+        </table>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
