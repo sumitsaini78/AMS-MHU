@@ -165,7 +165,7 @@ while ($val = mysqli_fetch_assoc($result)) {
         $total_student_records++;
         if (strtolower($attendance_status) === 'present' || $attendance_status == '1') {
             $present_count++;
-        }
+        } 
     }
 
     // Calculate the aggregate metrics cleanly using the student count dataset
