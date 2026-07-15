@@ -9,9 +9,9 @@ if (isset($_POST['dean-login'])) {
 
     $result = mysqli_query($conn, $query);
 
-    if (mysqli_num_rows($result) == 1) {
+    if (mysqli_num_rows($result) == 1) {  
         // Successful login
-        session_start();
+        session_start(); 
         $_SESSION['dean_id'] = $dean_id;
         header("Location: dean/index.php");
         exit();
