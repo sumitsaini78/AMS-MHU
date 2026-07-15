@@ -20,7 +20,6 @@ if (isset($_POST['insert_attendance'])) {
     $student_names    = $_POST['student_names'];
 
   $date_of_attendance =$_POST['date_of_attendance']; // Use the date passed from the form
-    echo "<script>alert('Date of Attendance: " . $date_of_attendance . "');</script>";
     $success = true;
 
     // Loop through associative parameters
