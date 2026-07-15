@@ -118,7 +118,7 @@ $result = mysqli_query($conn, $query);
                     ?>
                     <div class="col-12 col-md-6 col-lg-4">
                         <!-- Wraps the entire card interface element into a clean operational submission module form -->
-                        <form action="select_attendence_details.php" method="POST" class="h-100 m-0">
+                        <form action="insert_attendance.php" method="POST" class="h-100 m-0">
                             <input type="hidden" name="subject_name" value="<?php echo htmlspecialchars($subject, ENT_QUOTES, 'UTF-8'); ?>">
                             
                             <button type="submit" class="card-submit-btn h-100">

@@ -8,7 +8,7 @@ if (!isset($_SESSION['dean_id'])) {
     exit; 
 }
 
-// 2. Capture Course Name
+// 2. Capture and Validate Course Name
 $course = mysqli_real_escape_string($conn, $_POST['course_name'] ?? $_GET['course_name'] ?? '');
 
 if (empty($course)) { 
@@ -16,33 +16,38 @@ if (empty($course)) {
     exit(); 
 }
 
-// 3. Logic for Date Filtering (Default: Today's Date)
-$today_dmy = date('dmy'); // Format: 150726
-$sql_where = "WHERE course = '$course'";
+// 3. Logic for Date Filtering
+$today_dmy = date('dmy');
 $filter_text = "Showing records for: Today (" . date('d/m/Y') . ")";
+
+// Dynamic WHERE clause construction
+$where_clauses = ["course = '$course'"];
 
 if (!empty($_GET['date_from'])) {
     $d_from = date('dmy', strtotime($_GET['date_from']));
     if (!empty($_GET['date_to'])) {
         $d_to = date('dmy', strtotime($_GET['date_to']));
-        $sql_where .= " AND date_of_attendence BETWEEN $d_from AND $d_to";
-        $filter_text = "From " . $_GET['date_from'] . " to " . $_GET['date_to'];
+        $where_clauses[] = "date_of_attendence BETWEEN $d_from AND $d_to";
+        $filter_text = "From " . htmlspecialchars($_GET['date_from']) . " to " . htmlspecialchars($_GET['date_to']);
     } else {
-        $sql_where .= " AND date_of_attendence = $d_from";
-        $filter_text = "For date: " . $_GET['date_from'];
+        $where_clauses[] = "date_of_attendence = $d_from";
+        $filter_text = "For date: " . htmlspecialchars($_GET['date_from']);
     }
 } else {
-    // Apply today's filter automatically
-    $sql_where .= " AND date_of_attendence = $today_dmy";
+    $where_clauses[] = "date_of_attendence = $today_dmy";
 }
 
-// 4. Get Summary Stats (Calculated dynamically based on filter)
+$sql_where = "WHERE " . implode(" AND ", $where_clauses);
+
+// 4. Get Summary Stats
 $stats_query = "SELECT 
                     COUNT(DISTINCT date_of_attendence) as total_lectures,
                     COUNT(*) as total_entries,
                     SUM(CASE WHEN LOWER(attendance_status) IN ('present', '1') THEN 1 ELSE 0 END) as present_count
                 FROM `attendance` $sql_where";
-$stats = mysqli_fetch_assoc(mysqli_query($conn, $stats_query));
+
+$stats_result = mysqli_query($conn, $stats_query);
+$stats = mysqli_fetch_assoc($stats_result);
 $percentage = ($stats['total_entries'] > 0) ? round(($stats['present_count'] / $stats['total_entries']) * 100, 2) : 0;
 
 // 5. Get Detailed Records
@@ -70,7 +75,7 @@ $list_res = mysqli_query($conn, "SELECT * FROM `attendance` $sql_where ORDER BY 
             <div class="col-md-4">
                 <div class="card p-3 border-start border-primary border-4 shadow-sm">
                     <small class="text-muted">Total Lectures Conducted</small>
-                    <h2 class="fw-bold mt-1"><?php echo $stats['total_lectures']; ?></h2>
+                    <h2 class="fw-bold mt-1"><?php echo $stats['total_lectures'] ?? 0; ?></h2>
                 </div>
             </div>
             <div class="col-md-4">
@@ -82,7 +87,7 @@ $list_res = mysqli_query($conn, "SELECT * FROM `attendance` $sql_where ORDER BY 
             <div class="col-md-4">
                 <div class="card p-3 border-start border-info border-4 shadow-sm">
                     <small class="text-muted">Total Student Records</small>
-                    <h2 class="fw-bold mt-1"><?php echo $stats['total_entries']; ?></h2>
+                    <h2 class="fw-bold mt-1"><?php echo $stats['total_entries'] ?? 0; ?></h2>
                 </div>
             </div>
         </div>
@@ -92,16 +97,17 @@ $list_res = mysqli_query($conn, "SELECT * FROM `attendance` $sql_where ORDER BY 
             <div class="card-body">
                 <form method="GET" class="row g-3 align-items-end">
                     <input type="hidden" name="course_name" value="<?php echo htmlspecialchars($course); ?>">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label small">From Date</label>
                         <input type="date" name="date_from" class="form-control" value="<?php echo $_GET['date_from'] ?? ''; ?>">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label small">To Date</label>
                         <input type="date" name="date_to" class="form-control" value="<?php echo $_GET['date_to'] ?? ''; ?>">
                     </div>
-                    <div class="col-md-4 d-flex gap-2">
+                    <div class="col-md-6 d-flex gap-2">
                         <button type="submit" class="btn btn-primary flex-grow-1">Apply Filter</button>
+                        <a href="course_details.php?course_name=<?php echo urlencode($course); ?>" class="btn btn-success">Today</a>
                         <a href="course_details.php?course_name=<?php echo urlencode($course); ?>" class="btn btn-outline-danger">Reset</a>
                     </div>
                 </form>
@@ -123,7 +129,7 @@ $list_res = mysqli_query($conn, "SELECT * FROM `attendance` $sql_where ORDER BY 
                 </thead>
                 <tbody>
                     <?php 
-                    if (mysqli_num_rows($list_res) > 0) {
+                    if ($list_res && mysqli_num_rows($list_res) > 0) {
                         while($row = mysqli_fetch_assoc($list_res)) { 
                             $status_color = (strtolower($row['attendance_status']) == 'present') ? 'text-success' : 'text-danger';
                             echo "<tr>
@@ -135,7 +141,7 @@ $list_res = mysqli_query($conn, "SELECT * FROM `attendance` $sql_where ORDER BY 
                                   </tr>";
                         }
                     } else {
-                        echo "<tr><td colspan='5' class='text-center py-4 text-muted'>No records found for this period.</td></tr>";
+                        echo "<tr><td colspan='5' class='text-center py-4 text-muted'>No records found.</td></tr>";
                     }
                     ?>
                 </tbody>
