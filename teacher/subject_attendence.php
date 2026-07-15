@@ -4,6 +4,7 @@ include "../db_connect.php";
 session_start();
 if ($_SESSION['teacher_name'] == null) {
     header("Location: ../index.php");
+    exit();
 }
 
 // On view attendance submission
@@ -12,30 +13,64 @@ if (isset($_POST['post_faculty'])) {
     echo "<script>alert('" . addslashes($faculty_name) . "');</script>";
 }
 
-// Track if a date search filter is active
+// ==========================================
+// PRG PATTERN: PROCESS POST AND REDIRECT
+// ==========================================
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 1. Handle Single Date Search Submission
+    if (isset($_POST['search_single_date'])) {
+        $html_single = $_POST['single-date'] ?? ''; 
+        if (!empty($html_single)) {
+            $_SESSION['search_type'] = 'single';
+            $_SESSION['single_date'] = $html_single;
+            
+            // Clear conflicting date ranges
+            unset($_SESSION['start_date']);
+            unset($_SESSION['end_date']);
+        } else {
+            $_SESSION['flash_error'] = 'Please select a date.';
+            unset($_SESSION['single_date']);
+            unset($_SESSION['search_type']);
+        }
+    } 
+    // 2. Handle Date Range Search Submission
+    elseif (isset($_POST['search_in_dates'])) {
+        $html_start = $_POST['trip-start'] ?? ''; 
+        $html_end = $_POST['trip-end'] ?? '';     
+
+        if (!empty($html_start) && !empty($html_end)) {
+            $_SESSION['search_type'] = 'range';
+            $_SESSION['start_date'] = $html_start;
+            $_SESSION['end_date'] = $html_end;
+            
+            // Clear conflicting single date
+            unset($_SESSION['single_date']);
+        } else {
+            $_SESSION['flash_error'] = 'Please select both start and end dates.';
+            unset($_SESSION['start_date']);
+            unset($_SESSION['end_date']);
+            unset($_SESSION['search_type']);
+        }
+    }
+    
+    // Redirect back to itself to eliminate the POST state
+    header("Location: subject_attendence.php");
+    exit();
+}
+
+// ==========================================
+// READ FILTERS FROM SESSION (GET STATE)
+// ==========================================
 $is_set = 0;
 $start_search_int = null;
 $end_search_int = null;
+$single_search_int = null;
+$search_type = $_SESSION['search_type'] ?? '';
 
-if (isset($_POST['search_in_dates'])) {
-    $html_start = $_POST['trip-start']; // Format: YYYY-MM-DD
-    $html_end = $_POST['trip-end'];     // Format: YYYY-MM-DD
-
-    if (!empty($html_start) && !empty($html_end)) {
-        $is_set = 1;
-        // Save raw HTML date strings into the session for form retention
-        $_SESSION['start_date'] = $html_start;
-        $_SESSION['end_date'] = $html_end;
-
-        // FIXED CONVERSION: Convert YYYY-MM-DD to your exact DB integer format: DDMMYY
-        $start_search_int = (int) date('dmy', strtotime($html_start));
-        $end_search_int = (int) date('dmy', strtotime($html_end));
-    } else {
-        echo "<script>alert('Please select both start and end dates.');</script>";
-        unset($_SESSION['start_date']);
-        unset($_SESSION['end_date']);
-    }
-} elseif (isset($_SESSION['start_date']) && isset($_SESSION['end_date'])) {
+if ($search_type === 'single' && isset($_SESSION['single_date'])) {
+    $is_set = 1;
+    $single_search_int = (int) date('dmy', strtotime($_SESSION['single_date']));
+} elseif ($search_type === 'range' && isset($_SESSION['start_date']) && isset($_SESSION['end_date'])) {
     $is_set = 1;
     $start_search_int = (int) date('dmy', strtotime($_SESSION['start_date']));
     $end_search_int = (int) date('dmy', strtotime($_SESSION['end_date']));
@@ -57,22 +92,44 @@ $result = mysqli_query($conn, $query);
     <!-- Bootstrap CSS v5.3.8 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+    
+    <!-- FontAwesome for cleaner UI Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+
     <style>
         #mhu-text {
             color: #a2c250;
             text-shadow: 1px 2px 14px rgb(46 195 41);
         }
+        .filter-card-single {
+            background-color: #f0f4f8;
+            border-left: 4px solid #3b82f6;
+        }
+        .filter-card-range {
+            background-color: #f4fbf7;
+            border-left: 4px solid #10b981;
+        }
+        .divider-vertical {
+            width: 2px;
+            background-color: #e2e8f0;
+            align-self: stretch;
+        }
     </style>
 </head>
 
 <body>
+    <?php
+    // Handle error alerts securely after redirect
+    if (isset($_SESSION['flash_error'])) {
+        echo "<script>alert('" . addslashes($_SESSION['flash_error']) . "');</script>";
+        unset($_SESSION['flash_error']);
+    }
+    ?>
     <header>
         <nav class="navbar navbar-dark bg-dark shadow">
             <div class="container-fluid">
                 <span class="navbar-brand mb-0 h1 fs-3 fw-bold" id="mhu-text"> MHU-AMS
                     <sub>Subject-Attendance</sub></span>
-                <p></p>
-                <div class="right"><a href=""></a></div>
                 <span class="navbar-text text-white bg-secondary px-3 py-1 rounded-pill small">
                     <i class="fa-solid fa-user-tie me-1"></i> Welcome,
                     <?php echo isset($_SESSION['teacher_name']) ? htmlspecialchars($_SESSION['teacher_name']) : 'Teacher'; ?>
@@ -80,34 +137,66 @@ $result = mysqli_query($conn, $query);
                 <a href="../logout.php" class="btn btn-outline-light ms-3">Logout</a>
             </div>
         </nav>
-        <nav class="navbar navbar-dark bg-white shadow">
-            <div class="container-fluid d-flex align-items-center justify-content-between">
-                <div class="left"><a href=""></a></div>
+        
+        <!-- Optimized Toolbar Container -->
+        <nav class="navbar navbar-light bg-white shadow-sm py-3">
+            <div class="container-fluid justify-content-center">
+                <div class="d-flex flex-wrap align-items-center justify-content-center gap-4 w-100" style="max-width: 1100px;">
+                    
+                    <!-- Single Date Filter Box -->
+                    <div class="filter-card-single p-2 px-3 rounded shadow-sm d-flex align-items-center">
+                        <form class="d-flex align-items-center" method="POST" action="subject_attendence.php">
+                            <span class="text-primary me-2"><i class="fa-solid fa-calendar-day"></i></span>
+                            <label for="single-date" class="me-2 fw-semibold text-secondary small text-nowrap">Single Date:</label>
+                            <input type="date" id="single-date" name="single-date" class="form-control form-control-sm me-2 border-primary-subtle"
+                                value="<?php echo isset($_SESSION['single_date']) ? htmlspecialchars($_SESSION['single_date']) : ''; ?>">
+                            <button class="btn btn-sm btn-primary text-nowrap px-3 shadow-sm" type="submit" name="search_single_date">
+                                <i class="fa-solid fa-filter me-1"></i> View Day
+                            </button>
+                        </form>
+                    </div>
 
-                <div class="center d-flex align-items-center gap-3">
-                    <span class="small"></span>
-                    <form class="d-flex" method="POST" action="subject_attendence.php">
-                        <label for="start-date" class="m-2">Date From:</label>
-                        <input type="date" id="start-date" name="trip-start"
-                            value="<?php echo isset($_SESSION['start_date']) ? htmlspecialchars($_SESSION['start_date']) : ''; ?>">
-                        <label for="end-date" class="m-2"> To:</label>
-                        <input type="date" id="end-date" name="trip-end"
-                            value="<?php echo isset($_SESSION['end_date']) ? htmlspecialchars($_SESSION['end_date']) : ''; ?>">
-                        <button class="btn btn-outline-success mx-2" type="submit"
-                            name="search_in_dates">Search</button>
-                    </form>
+                    <!-- Visual Separator Line -->
+                    <div class="divider-vertical d-none d-md-block mx-2"></div>
+
+                    <!-- Date Range Filter Box -->
+                    <div class="filter-card-range p-2 px-3 rounded shadow-sm d-flex align-items-center">
+                        <form class="d-flex align-items-center" method="POST" action="subject_attendence.php">
+                            <span class="text-success me-2"><i class="fa-solid fa-calendar-days"></i></span>
+                            <label for="start-date" class="me-2 fw-semibold text-secondary small text-nowrap">From:</label>
+                            <input type="date" id="start-date" name="trip-start" class="form-control form-control-sm border-success-subtle"
+                                value="<?php echo isset($_SESSION['start_date']) ? htmlspecialchars($_SESSION['start_date']) : ''; ?>">
+                            
+                            <label for="end-date" class="mx-2 fw-semibold text-secondary small text-nowrap">To:</label>
+                            <input type="date" id="end-date" name="trip-end" class="form-control form-control-sm border-success-subtle"
+                                value="<?php echo isset($_SESSION['end_date']) ? htmlspecialchars($_SESSION['end_date']) : ''; ?>">
+                            
+                            <button class="btn btn-sm btn-success text-nowrap px-3 ms-2 shadow-sm" type="submit" name="search_in_dates">
+                                <i class="fa-solid fa-magnifying-glass me-1"></i> Search Range
+                            </button>
+                        </form>
+                    </div>
+
                 </div>
-
-                <div class="right"><a href=""></a></div>
             </div>
         </nav>
     </header>
 
     <main>
-        <div class="container w-50 border border-warning mt-4 "></div>
-        <!-- FIXED: Removed CSS display mixups. Table stays visible when filtering data -->
-        <table class="table table-striped table-hover d-table w-50 m-auto mt-4">
-            <thead>
+        <div class="container w-50 mt-4 text-center">
+            <?php if ($is_set && $search_type === 'single'): ?>
+                <div class="alert alert-primary py-2 d-inline-block shadow-sm">
+                    <i class="fa-solid fa-circle-info me-1"></i> Showing attendance report for date: <strong><?php echo date('d-m-Y', strtotime($_SESSION['single_date'])); ?></strong>
+                </div>
+            <?php elseif ($is_set && $search_type === 'range'): ?>
+                <div class="alert alert-success py-2 d-inline-block shadow-sm">
+                    <i class="fa-solid fa-circle-info me-1"></i> Showing range: <strong><?php echo date('d-m-Y', strtotime($_SESSION['start_date'])); ?></strong> to <strong><?php echo date('d-m-Y', strtotime($_SESSION['end_date'])); ?></strong>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <table class="table table-striped table-hover d-table w-50 m-auto mt-2 shadow-sm rounded border">
+            <thead class="table-dark">
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Subject Name</th>
@@ -118,70 +207,60 @@ $result = mysqli_query($conn, $query);
             </thead>
             <tbody>
             <?php
-$index = 1; // Start numbering table rows at 1
+            $index = 1; // Start numbering table rows at 1
 
-// Loop through each distinct subject
-while ($val = mysqli_fetch_assoc($result)) {
+            // Loop through each distinct subject
+            while ($val = mysqli_fetch_assoc($result)) {
 
-    $subject_escaped = mysqli_real_escape_string($conn, $val['subject_name']);
+                $subject_escaped = mysqli_real_escape_string($conn, $val['subject_name']);
+                $date_condition = "";
 
-    // Set conditions ONLY if date search filters are active
-    if ($is_set && $start_search_int !== null && $end_search_int !== null) {
-        $start_date = $start_search_int;
-        $end_date = $end_search_int;
+                // Apply conditions based on active search type
+                if ($is_set && $search_type === 'single' && $single_search_int !== null) {
+                    $single_str = str_pad($single_search_int, 6, "0", STR_PAD_LEFT);
+                    $date_condition = "AND STR_TO_DATE(LPAD(date_of_attendence, 6, '0'), '%d%m%y') = STR_TO_DATE('$single_str', '%d%m%y')";
+                } 
+                elseif ($is_set && $search_type === 'range' && $start_search_int !== null && $end_search_int !== null) {
+                    $start_str = str_pad($start_search_int, 6, "0", STR_PAD_LEFT);
+                    $end_str = str_pad($end_search_int, 6, "0", STR_PAD_LEFT);
+                    $date_condition = "AND STR_TO_DATE(LPAD(date_of_attendence, 6, '0'), '%d%m%y') BETWEEN STR_TO_DATE('$start_str', '%d%m%y') AND STR_TO_DATE('$end_str', '%d%m%y')";
+                }
 
-        $start_str = str_pad($start_date, 6, "0", STR_PAD_LEFT);
-        $end_str = str_pad($end_date, 6, "0", STR_PAD_LEFT);
+                // Query to fetch DISTINCT lecture dates to get accurate lecture count
+                $lecture_count_query = "SELECT COUNT(DISTINCT `date_of_attendence`) as total_lectures FROM `attendance` WHERE subject_name = '$subject_escaped' $date_condition";
+                $lecture_count_result = mysqli_query($conn, $lecture_count_query);
+                $lecture_count_row = mysqli_fetch_assoc($lecture_count_result);
+                $total_lectures = isset($lecture_count_row['total_lectures']) ? $lecture_count_row['total_lectures'] : 0;
 
-        // Secure dynamic date conditions
-        $date_condition = "AND STR_TO_DATE(LPAD(date_of_attendence, 6, '0'), '%d%m%y') BETWEEN STR_TO_DATE('$start_str', '%d%m%y') AND STR_TO_DATE('$end_str', '%d%m%y')";
+                // Query individual record markers strictly for overall raw metrics calculations
+                $status_query = "SELECT attendance_status FROM `attendance` WHERE subject_name = '$subject_escaped' $date_condition";
+                $status_result = mysqli_query($conn, $status_query);
 
-        // Format search labels properly (DD-MM-YYYY) for output beside subject name
-        $d_start = substr($start_str, 0, 2) . "-" . substr($start_str, 2, 2) . "-20" . substr($start_str, 4, 2);
-        $d_end = substr($end_str, 0, 2) . "-" . substr($end_str, 2, 2) . "-20" . substr($end_str, 4, 2);
-        
-        $date_display = " <small class='text-muted ms-2'>(" . $d_start . " to " . $d_end . ")</small>";
-    } else {
-        // Default Fallback state (No search submitted): Calculate metrics using all records in database
-        $date_condition = "";
-        $date_display = "";
-    }
+                $total_student_records = 0;
+                $present_count = 0;
 
-    // Query to fetch DISTINCT lecture dates to get accurate lecture count
-    $lecture_count_query = "SELECT COUNT(DISTINCT `date_of_attendence`) as total_lectures FROM `attendance` WHERE subject_name = '$subject_escaped' $date_condition";
-    $lecture_count_result = mysqli_query($conn, $lecture_count_query);
-    $lecture_count_row = mysqli_fetch_assoc($lecture_count_result);
-    $total_lectures = isset($lecture_count_row['total_lectures']) ? $lecture_count_row['total_lectures'] : 0;
+                while ($status_row = mysqli_fetch_assoc($status_result)) {
+                    $attendance_status = $status_row['attendance_status'];
+                    $total_student_records++;
+                    if (strtolower($attendance_status) === 'present' || $attendance_status == '1') {
+                        $present_count++;
+                    } 
+                }
 
-    // Query individual record markers strictly for overall raw metrics calculations
-    $status_query = "SELECT attendance_status FROM `attendance` WHERE subject_name = '$subject_escaped' $date_condition";
-    $status_result = mysqli_query($conn, $status_query);
+                // Calculate the aggregate metrics cleanly using the student count dataset
+                $percentage = ($total_student_records > 0) ? round(($present_count / $total_student_records) * 100, 2) : 0;
 
-    $total_student_records = 0;
-    $present_count = 0;
+                echo "<tr>";
+                echo "<td>" . $index . "</td>";
+                echo "<td>" . htmlspecialchars($val['subject_name'])  . "</td>";
+                echo "<td><span class='badge bg-secondary'>" . $total_lectures . "</span></td>";
+                echo "<td><span class='badge bg-success'>" . $present_count . "</span></td>"; 
+                echo "<td>" . $percentage . "%</td>";
+                echo "</tr>";
 
-    while ($status_row = mysqli_fetch_assoc($status_result)) {
-        $attendance_status = $status_row['attendance_status'];
-        $total_student_records++;
-        if (strtolower($attendance_status) === 'present' || $attendance_status == '1') {
-            $present_count++;
-        } 
-    }
-
-    // Calculate the aggregate metrics cleanly using the student count dataset
-    $percentage = ($total_student_records > 0) ? round(($present_count / $total_student_records) * 100, 2) : 0;
-
-    echo "<tr>";
-    echo "<td>" . $index . "</td>";
-    echo "<td>" . htmlspecialchars($val['subject_name'])  . "</td>";
-    echo "<td><span class='badge bg-secondary'>" . $total_lectures . "</span></td>";
-    echo "<td><span class='badge bg-success'>" . $present_count . "</span></td>"; // Displays total student check-ins marked "present"
-    echo "<td>" . $percentage . "%</td>";
-    echo "</tr>";
-
-    $index++;
-}
-?>
+                $index++;
+            }
+            ?>
             </tbody>
         </table>
     </main>
