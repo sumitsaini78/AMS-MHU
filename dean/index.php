@@ -233,7 +233,7 @@ if ($correction_count_result) {
     <footer class="text-center py-4 mt-5 text-muted small bg-white border-top">
         <p class="mb-0">&copy; 2026 Motherhood University Attendance Management System (AMS).</p>
     </footer>
-
+    
     <!-- JavaScript Injection Handler -->
     <script>
         function submitCourse(courseName) {
