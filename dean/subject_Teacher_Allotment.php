@@ -1,7 +1,12 @@
 <?php
 include "../db_connect.php";
 $message = "";
-
+if(!isset($_POST['course_submit'])){
+        header("Location: ./index.php");
+}
+else{
+    $course_name=$_POST['course_name'];
+}
 if (isset($_POST['Allocate_Subject'])) {
     // Getting Teacher data
     $selected_teacher = $_POST['selected_teacher'];

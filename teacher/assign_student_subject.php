@@ -7,6 +7,7 @@ if (!isset($_SESSION['teacher_id']) || !isset($_SESSION['teacher_name'])) {
     header("Location: ../index.php");
     exit;
 }
+// checking selected course
 
 $id = $_SESSION['teacher_id'];
 $teacher_name = $_SESSION['teacher_name'];
@@ -149,7 +150,6 @@ if (isset($_POST['bulk_assign_subject'])) {
 // Fetch general students and subjects for single assign dropdowns
 $query = "SELECT * FROM `students`";
 $result = mysqli_query($conn, $query);
-
 $subject_query = "SELECT DISTINCT subject_name FROM `subjected_teacher` WHERE teacher_id = '$id'";
 $subject_result = mysqli_query($conn, $subject_query);
 
@@ -162,7 +162,6 @@ if ($subject_result && mysqli_num_rows($subject_result) > 0) {
 ?>
 <!doctype html>
 <html lang="en" data-bs-theme="light">
-
 <head>
     <title>Assign Mapping | MHU-AMS</title>
     <meta charset="utf-8" />

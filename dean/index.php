@@ -12,12 +12,11 @@ if (!isset($_SESSION['dean_id'])) {
 $id = $_SESSION['dean_id'];
 $query = "SELECT * FROM deans WHERE id = '$id'";
 $result = mysqli_query($conn, $query);
-
 if ($result && mysqli_num_rows($result) == 1) {
     $dean = mysqli_fetch_assoc($result);
     $dean_name = $dean['Dean_name'];
-} else {
-    $dean_name = "Dean";
+    $faculty_name = $dean['faculty_name'];
+    $_SESSION['dean_name'] = $dean_name;
 }
 
 // 3. Live count for pending attendance correction requests
@@ -132,64 +131,91 @@ if ($correction_count_result) {
         </div>
 
         <!-- Section: Grid Action Control Items (Maintains 6 columns) -->
-<div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-6 mb-5">
-    
-    <!-- 1. Faculty -->
-    <div class="col">
-        <div class="action-card card h-100 shadow-sm text-center p-3">
-            <div class="fs-2 text-info mb-2"><i class="fa-solid fa-network-wired"></i></div>
-            <a href="add_Faculty.php" class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Add Faculty</a>
-        </div>
-    </div>
+        <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-6 mb-5">
 
-    <!-- 2. Add Students -->
-    <div class="col">
-        <div class="action-card card h-100 shadow-sm text-center p-3">
-            <div class="fs-2 text-info mb-2"><i class="fa-solid fa-user-graduate"></i></div>
-            <a href="add_Students.php" class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Add Students</a>
-        </div>
-    </div>
+            <!-- 1. Faculty -->
+            <div class="col">
+                <div class="action-card card h-100 shadow-sm text-center p-3">
+                    <div class="fs-2 text-info mb-2"><i class="fa-solid fa-network-wired"></i></div>
+                    <a href="add_Faculty.php" class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Add
+                        Faculty</a>
+                </div>
+            </div>
 
-    <!-- 3. VIEW STUDENTS (New Dedicated Column) -->
-    <div class="col">
-        <div class="action-card card h-100 shadow-sm text-center p-3">
-            <div class="fs-2 text-primary mb-2"><i class="fa-solid fa-users-viewfinder"></i></div>
-            <a href="view_students.php" class="btn btn-sm btn-outline-primary w-100 mt-auto fw-medium">View Students</a>
-        </div>
-    </div>
+            <!-- 2. Add Students -->
+            <div class="col">
+                <div class="action-card card h-100 shadow-sm text-center p-3">
+                    <div class="fs-2 text-info mb-2"><i class="fa-solid fa-user-graduate"></i></div>
+                    <a href="add_Students.php" class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Add
+                        Students</a>
+                </div>
+            </div>
 
-    <!-- 4. Subjects (Combined Add + Bulk) -->
-    <div class="col">
-        <div class="action-card card h-100 shadow-sm text-center p-3">
-            <div class="fs-2 text-info mb-2"><i class="fa-solid fa-book-bookmark"></i></div>
-            <div class="btn-group w-100 mt-auto">
-                <a href="add_bulk_subject.php" class="btn btn-sm btn-outline-info" title="Bulk">Add-Subjects</a>
+            <!-- 3. VIEW STUDENTS (New Dedicated Column) -->
+            <div class="col">
+                <div class="action-card card h-100 shadow-sm text-center p-3">
+                    <div class="fs-2 text-primary mb-2"><i class="fa-solid fa-users-viewfinder"></i></div>
+                    <a href="view_students.php" class="btn btn-sm btn-outline-primary w-100 mt-auto fw-medium">View
+                        Students</a>
+                </div>
+            </div>
+
+            <!-- 4. Subjects (Combined Add + Bulk) -->
+            <div class="col">
+                <div class="action-card card h-100 shadow-sm text-center p-3">
+                    <div class="fs-2 text-info mb-2"><i class="fa-solid fa-book-bookmark"></i></div>
+                    <div class="btn-group w-100 mt-auto">
+                        <a href="add_bulk_subject.php" class="btn btn-sm btn-outline-info" title="Bulk">Add-Subjects</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Teachers -->
+            <div class="col">
+                <div class="action-card card h-100 shadow-sm text-center p-3">
+                    <div class="fs-2 text-info mb-2"><i class="fa-solid fa-chalkboard-user"></i></div>
+                    <a href="add_Teacher.php" class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Add
+                        Teachers</a>
+                </div>
+            </div>
+
+            <!-- 6. Assign Subjects -->
+            <div class="col">
+                <div class="action-card card h-100 shadow-sm text-center p-3">
+                    <div class="fs-2 text-info mb-2"><i class="fa-solid fa-address-card"></i></div>
+                    <!-- <a href="subject_Teacher_Allotment.php"
+                        class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Assign Subject Teacher</a> -->
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            Subject-Teacher-Assign
+                        </button>
+                        <ul class="dropdown-menu">
+                            <?php
+                            $query = "select course_name from `courses_list` WHERE faculty_name='Faculty of Commerce & Business Studies' ";
+                            $result = mysqli_query($conn, $query);
+                            $row = mysqli_fetch_assoc($result);
+                            while ($val = mysqli_fetch_assoc($result)) {
+
+                                echo "<li><form action='subject_Teacher_Allotment.php' method='POST'>
+                            <input type='hidden' value='" . htmlspecialchars($val['course_name']) . "' name='course_name'>
+                            <input type='submit' name='course_submit' value='" . $val['course_name'] . "'>" . $val['course_name'] . "</form></li>";
+
+                            }
+                            ?>
+                        </ul>
+ 
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="action-card card h-100 shadow-sm text-center p-3">
+                    <div class="fs-2 text-info mb-2"><i class="fa-solid fa-address-card"></i></div>
+                    <a href="assign_student_subject.php"
+                        class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Assign Student Subject</a>
+                </div>
             </div>
         </div>
-    </div>
-
-    <!-- 5. Teachers -->
-    <div class="col">
-        <div class="action-card card h-100 shadow-sm text-center p-3">
-            <div class="fs-2 text-info mb-2"><i class="fa-solid fa-chalkboard-user"></i></div>
-            <a href="add_Teacher.php" class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Add Teachers</a>
-        </div>
-    </div>
-
-    <!-- 6. Assign Subjects -->
-    <div class="col">
-        <div class="action-card card h-100 shadow-sm text-center p-3">
-            <div class="fs-2 text-info mb-2"><i class="fa-solid fa-address-card"></i></div>
-            <a href="subject_Teacher_Allotment.php" class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Assign Subject Teacher</a>
-        </div>
-    </div>
-    <div class="col">
-        <div class="action-card card h-100 shadow-sm text-center p-3">
-            <div class="fs-2 text-info mb-2"><i class="fa-solid fa-address-card"></i></div>
-            <a href="assign_student_subject.php" class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Assign Student Subject</a>
-        </div>
-    </div>
-</div>
 
         <!-- Section: Analytics Stream Trackers Table -->
         <div class="row">

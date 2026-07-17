@@ -13,6 +13,7 @@ if (isset($_POST['dean-login'])) {
         // Successful login
         session_start(); 
         $_SESSION['dean_id'] = $dean_id;
+        $_SESSION['dean_name'] = $dean_name;
         header("Location: dean/index.php" );
         exit();
     } else {
