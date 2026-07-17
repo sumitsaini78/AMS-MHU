@@ -20,7 +20,7 @@ if (isset($_POST['insert_attendance'])) {
     $student_names    = $_POST['student_names'];
 
   $date_of_attendance =$_POST['date_of_attendance']; // Use the date passed from the form
-    $success = true;
+    $success = true; 
 
     // Loop through associative parameters
     foreach ($attendance_array as $roll_number => $status) {

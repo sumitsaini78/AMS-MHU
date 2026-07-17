@@ -16,7 +16,7 @@ $result_dean = mysqli_query($conn, $query_dean);
 $dean_name = ($result_dean && mysqli_num_rows($result_dean) == 1) ? mysqli_fetch_assoc($result_dean)['Dean_name'] : "Dean";
 
 // ==========================================
-// ACTION HANDLER: APPROVAL LOGIC
+// ACTION HANDLER: APPROVAL LOGIC (SINGLE)
 // ==========================================
 if (isset($_POST['action']) && $_POST['action'] == 'approve') { 
     $request_id = mysqli_real_escape_string($conn, $_POST['request_id']); 
@@ -39,7 +39,6 @@ if (isset($_POST['action']) && $_POST['action'] == 'approve') {
         $clean_status = ucfirst(strtolower(trim($requested_status))); 
         
         // Strict transactional relational sync using composite safety logic keys
-        // Taaki leading space handling aur calendar mismatch complete automatic theek ho sake.
         $update_attendance = "UPDATE `attendance` 
                               SET attendance_status = '$clean_status' 
                               WHERE id = '$attendance_id' 
@@ -73,7 +72,7 @@ if (isset($_POST['action']) && $_POST['action'] == 'approve') {
 }
 
 // ==========================================
-// ACTION HANDLER: REJECTION LOGIC
+// ACTION HANDLER: REJECTION LOGIC (SINGLE)
 // ==========================================
 if (isset($_POST['action']) && $_POST['action'] == 'reject') {
     $request_id = mysqli_real_escape_string($conn, $_POST['request_id']);
@@ -90,8 +89,88 @@ if (isset($_POST['action']) && $_POST['action'] == 'reject') {
     }
 }
 
+// ==========================================
+// ACTION HANDLER: APPROVE ALL LOGIC
+// ==========================================
+if (isset($_POST['action']) && $_POST['action'] == 'approve_all') {
+    $fetch_all = mysqli_query($conn, "SELECT * FROM `attendance_corrections` WHERE status = 'Pending'");
+    $success_count = 0;
+    $error_count = 0;
+
+    if ($fetch_all && mysqli_num_rows($fetch_all) > 0) {
+        while ($req_data = mysqli_fetch_assoc($fetch_all)) {
+            $request_id       = $req_data['id'];
+            $attendance_id    = $req_data['attendance_id'];
+            $requested_status = $req_data['requested_status'];
+            $student_name     = mysqli_real_escape_string($conn, $req_data['student_name']); 
+            $roll_number      = mysqli_real_escape_string($conn, $req_data['roll_number']); 
+            $subject_name     = mysqli_real_escape_string($conn, $req_data['subject_name']); 
+            $date_of_att      = $req_data['date_of_attendance'];
+
+            $clean_status = ucfirst(strtolower(trim($requested_status))); 
+
+            // Sync structural attendance records
+            $update_attendance = "UPDATE `attendance` 
+                                  SET attendance_status = '$clean_status' 
+                                  WHERE id = '$attendance_id' 
+                                     OR (roll_number = '$roll_number' 
+                                         AND date_of_attendence = '$date_of_att' 
+                                         AND TRIM(subject_name) = TRIM('$subject_name'))"; 
+
+            if (mysqli_query($conn, $update_attendance)) { 
+                mysqli_query($conn, "UPDATE `attendance_corrections` SET status = 'Approved' WHERE id = '$request_id'"); 
+                $success_count++;
+            } else {
+                $error_count++;
+            }
+        }
+
+        if ($error_count == 0) {
+            echo "<script>
+                    alert('✅ Success! All ($success_count) pending requests approved and student calendars synced.'); 
+                    window.location.href='manage_corrections.php';
+                  </script>";
+        } else {
+            echo "<script>
+                    alert('⚠️ Completed with warnings: $success_count succeeded, $error_count failed to sync.'); 
+                    window.location.href='manage_corrections.php';
+                  </script>";
+        }
+        exit;
+    } else {
+        echo "<script>
+                alert('❌ No pending requests found to approve.'); 
+                window.location.href='manage_corrections.php';
+              </script>";
+        exit;
+    }
+}
+
+// ==========================================
+// ACTION HANDLER: REJECT ALL LOGIC
+// ==========================================
+if (isset($_POST['action']) && $_POST['action'] == 'reject_all') {
+    $reject_all_query = "UPDATE `attendance_corrections` SET status = 'Rejected' WHERE status = 'Pending'";
+    
+    if (mysqli_query($conn, $reject_all_query)) {
+        $affected_rows = mysqli_affected_rows($conn);
+        echo "<script>
+                alert('🛑 Successfully rejected all ($affected_rows) pending correction requests.'); 
+                window.location.href='manage_corrections.php';
+              </script>";
+        exit;
+    } else {
+        echo "<script>
+                alert('❌ Error processing batch rejection: " . addslashes(mysqli_error($conn)) . "'); 
+                window.history.back();
+              </script>";
+        exit;
+    }
+}
+
 // Fetch all pending requests to list in UI
 $pending_requests = mysqli_query($conn, "SELECT * FROM `attendance_corrections` WHERE status = 'Pending' ORDER BY id DESC");
+$pending_count = ($pending_requests) ? mysqli_num_rows($pending_requests) : 0;
 ?>
 
 <!doctype html>
@@ -134,10 +213,31 @@ $pending_requests = mysqli_query($conn, "SELECT * FROM `attendance_corrections` 
     </header>
 
     <main class="container py-5">
-        <div class="row mb-4">
-            <div class="col-12 text-center text-md-start">
-                <h2 class="fw-bold text-dark"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>Attendance Correction Verification</h2>
-                <p class="text-muted small">Review anomalies filed by structural subject teachers and authorize student log updates directly to the dynamic performance indexes.</p>
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-6 text-center text-md-start">
+                <h2 class="fw-bold text-dark mb-1"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>Attendance Correction Verification</h2>
+                <p class="text-muted small mb-md-0">Review anomalies filed by structural subject teachers and authorize student log updates directly.</p>
+            </div>
+            
+            <!-- Dynamic Bulk Action Panel -->
+            <div class="col-md-6 d-flex justify-content-center justify-content-md-end gap-2 mt-3 mt-md-0">
+                <?php if ($pending_count > 0) { ?>
+                    <!-- Batch Approve Button Form -->
+                    <form method="POST" action="" onsubmit="return confirm('⚠️ Bulk Action: Are you sure you want to APPROVE and SYNC ALL (<?php echo $pending_count; ?>) pending requests? This cannot be undone.');">
+                        <input type="hidden" name="action" value="approve_all">
+                        <button type="submit" class="btn btn-success fw-bold shadow-sm d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-check-double"></i> Approve All
+                        </button>
+                    </form>
+
+                    <!-- Batch Reject Button Form -->
+                    <form method="POST" action="" onsubmit="return confirm('⚠️ Bulk Action: Are you sure you want to REJECT ALL (<?php echo $pending_count; ?>) pending correction requests?');">
+                        <input type="hidden" name="action" value="reject_all">
+                        <button type="submit" class="btn btn-danger fw-bold shadow-sm d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-ban"></i> Reject All
+                        </button>
+                    </form>
+                <?php } ?>
             </div>
         </div>
 
@@ -158,7 +258,7 @@ $pending_requests = mysqli_query($conn, "SELECT * FROM `attendance_corrections` 
                             </thead>
                             <tbody>
                                 <?php
-                                if ($pending_requests && mysqli_num_rows($pending_requests) > 0) {
+                                if ($pending_count > 0) {
                                     while ($row = mysqli_fetch_assoc($pending_requests)) {
                                         // Formulate nice raw custom date format output (e.g., 140726 -> 14-07-26)
                                         $raw_date = strval($row['date_of_attendance']);

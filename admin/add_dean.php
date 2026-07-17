@@ -46,10 +46,10 @@ if (isset($_POST['ins_dean'])) {
                     <select class="form-select" name="Dept_name" aria-label="Default select example">
                         <option selected disabled>Open this select menu</option>
                         <?php
-                        $query = "SELECT dep_name FROM `departments`";
+                        $query = "SELECT faculty_full_name FROM `faculty`";
                         $result = mysqli_query($conn, $query);
                         while ($row = mysqli_fetch_assoc($result)) {
-                            $val = $row['dep_name'];
+                            $val = $row['faculty_full_name'];
                             echo "<option value='" . htmlspecialchars($val) . "' name='Dept_name'>" . htmlspecialchars($val) . "</option>";
                         }
                         ?>

@@ -148,7 +148,7 @@ if (isset($_POST['import_csv'])) {
                                 <select class="form-select" name="course" required>
                                     <option selected disabled value="">Choose...</option>
                                     <?php 
-                                    $res = mysqli_query($conn, "SELECT course_name FROM courses");
+                                    $res = mysqli_query($conn, "SELECT course_name FROM subjects");
                                     while($r = mysqli_fetch_assoc($res)) echo "<option value='{$r['course_name']}'>{$r['course_name']}</option>";
                                     ?>
                                 </select>

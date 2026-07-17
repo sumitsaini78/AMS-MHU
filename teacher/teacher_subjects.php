@@ -12,7 +12,7 @@ $id = $_SESSION['teacher_id'];
 $teacher_name = $_SESSION['teacher_name'];
 
 // 2. Fetch all unique courses/subjects mapped to this authenticated teacher
-$query = "SELECT id, subject_name, subject_code FROM `subjected_teacher` WHERE teacher_id = '$id' ORDER BY subject_name ASC";
+$query = "SELECT id, subject_name,course_name, subject_code,year, semester FROM `subjected_teacher` WHERE teacher_id = '$id' ORDER BY subject_name ASC";
 $result = mysqli_query($conn, $query);
 ?>
 <!doctype html>
@@ -83,7 +83,48 @@ $result = mysqli_query($conn, $query);
             outline: inherit;
             text-align: left;
             width: 100%;
-        }
+        }.subject-card {
+    background: #ffffff;
+    border: none; /* Remove harsh border */
+    border-radius: 18px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+    border-left: 5px solid #0d6efd; /* Adds a clean color accent */
+}
+
+.subject-card:hover {
+    box-shadow: 0 20px 25px -5px rgba(13, 110, 253, 0.15);
+    transform: translateY(-5px);
+}
+
+.icon-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #eef2ff; /* Light indigo background */
+    color: #4f46e5; /* Deep indigo icon */
+    font-size: 1.4rem;
+}
+
+.subject-card:hover .icon-box {
+    background-color: #0d6efd;
+    color: #ffffff;
+}
+
+.small-xs {
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    color: #64748b !important;
+}
+
+.subject-code-text {
+    color: #6366f1;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
     </style>
 </head>
 
@@ -121,6 +162,9 @@ $result = mysqli_query($conn, $query);
                 while ($row = mysqli_fetch_assoc($result)) {
                     $subject = $row['subject_name'];
                     $subject_code = $row['subject_code'];
+                    $year = $row['year'];
+                    $semester = $row['semester'];
+                    $course = $row['course_name'];
                     ?>
                     <div class="col-12 col-md-6 col-lg-4">
                         <!-- Wraps the entire card interface element into a clean operational submission module form -->
@@ -129,30 +173,29 @@ $result = mysqli_query($conn, $query);
                                 value="<?php echo htmlspecialchars($subject, ENT_QUOTES, 'UTF-8'); ?>">
 
                             <button type="submit" class="card-submit-btn h-100">
-                                <div class="subject-card card p-4 shadow-sm h-100">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="icon-box me-3">
-                                            <i class="fa-solid fa-book-open-reader"></i>
-                                        </div>
-                                        <div class="overflow-hidden">
-                                            <span class="text-uppercase text-muted font-monospace small-xs tracking-wide">
-                                                <?php if ($subject_code) {
-                                                    echo htmlspecialchars($subject_code);
-                                                } 
-                                                else{
-                                                   echo "Code Not-Available"; }?>
-                                            </span>
-                                            <h5 class="fw-bold text-dark text-truncate mb-0">
-                                                <?php echo htmlspecialchars($subject); ?></h5>
-                                        </div>
-                                    </div>
+                               <div class="subject-card card p-4 shadow-sm h-100">
+    <div class="d-flex align-items-center mb-3">
+        <div class="icon-box me-3">
+            <i class="fa-solid fa-book-open-reader"></i>
+        </div>
+        <div class="overflow-hidden">
+            <span class="text-uppercase text-muted font-monospace small-xs tracking-wide">
+                <?php echo htmlspecialchars($course) . " • Year " . htmlspecialchars($year) . " • Sem " . htmlspecialchars($semester); ?>
+            </span>
+            <h5 class="fw-bold text-dark text-truncate mb-0">
+                <?php echo htmlspecialchars($subject); ?>
+            </h5>
+            <div class="subject-code-text">
+                <?php echo $subject_code ? htmlspecialchars($subject_code) : "No Code"; ?>
+            </div>
+        </div>
+    </div>
 
-                                    <div
-                                        class="border-top pt-3 mt-2 d-flex justify-content-between align-items-center text-primary fw-semibold small">
-                                        <span>Mark Attendence</span>
-                                        <i class="fa-solid fa-circle-arrow-right transition-transform"></i>
-                                    </div>
-                                </div>
+    <div class="border-top pt-3 mt-2 d-flex justify-content-between align-items-center text-primary fw-semibold small">
+        <span>Mark Attendance</span>
+        <i class="fa-solid fa-arrow-right"></i> <!-- Updated arrow icon -->
+    </div>
+</div>
                             </button>
                         </form>
                     </div>

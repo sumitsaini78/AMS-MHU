@@ -29,10 +29,10 @@ include "../db_connect.php";
         </nav>
     </header>
            <?php
-                        $query = "SELECT dep_name FROM `departments`";
+                        $query = "SELECT faculty_name FROM `faculty`";
                         $result = mysqli_query($conn, $query);
                         while ($row = mysqli_fetch_assoc($result)) {
-                            $val = $row['dep_name'];
+                            $val = $row['faculty_name'];
                             echo "<option value='" . htmlspecialchars($val) . "' name='Dept_name'>" . htmlspecialchars($val) . "</option>";
                         }
                         ?>

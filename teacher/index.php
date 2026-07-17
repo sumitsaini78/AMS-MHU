@@ -4,7 +4,7 @@ session_start();
 
 // 1. Secure the page: Check if the teacher is actually logged in
 if (!isset($_SESSION['teacher_id'])) {
-    header("Location: ./index.php");
+    header("Location: ../index.php");
     exit;
 }
 

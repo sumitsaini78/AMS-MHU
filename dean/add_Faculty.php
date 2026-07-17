@@ -24,12 +24,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['dept_name'])) {
     
     if (!empty($department_name) && !empty($department_full_name)) {
         // Checking duplicate entry barrier index mapping
-        $check_duplicate = mysqli_query($conn, "SELECT * FROM `departments` WHERE dep_name = '$department_name'");
+        $check_duplicate = mysqli_query($conn, "SELECT * FROM `faculty` WHERE dep_name = '$department_name'");
         
         if (mysqli_num_rows($check_duplicate) > 0) {
             $message = "danger|⚠️ Department short code already exists!";
         } else {
-            $query = "INSERT INTO `departments` (dep_name, full_name) VALUES ('$department_name', '$department_full_name')";
+            $query = "INSERT INTO `faculty` (dep_name, full_name) VALUES ('$department_name', '$department_full_name')";
             if (mysqli_query($conn, $query)) {
                 $message = "success|🎉 Department registered successfully into indices directory!";
             } else {

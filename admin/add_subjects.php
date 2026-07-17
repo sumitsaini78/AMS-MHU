@@ -8,7 +8,7 @@ if (isset($_POST['insert_subject'])) {
     $year = $_POST['year'];
 
 
-    $query = "insert into `courses` (course_name,subject_name,dept_name,semester,year) VALUES('$course_name','$subject_name','$dept_name','$semester','$year')";
+    $query = "insert into `subjects` (course_name,subject_name,dept_name,semester,year) VALUES('$course_name','$subject_name','$dept_name','$semester','$year')";
     if (mysqli_query($conn, $query)) {
         echo "<script>alert('" . addslashes($dept_name) . " : " . addslashes($course_name) . " : " . addslashes($subject_name) . " ,Added Successfully');</script>";
     }
@@ -50,10 +50,10 @@ if (isset($_POST['insert_subject'])) {
                     <select class="form-select" name="dept_name" id="Dept_name" required>
                         <option selected disabled value="">Open this select menu</option>
                         <?php
-                        $query = "SELECT dep_name FROM `departments`";
+                        $query = "SELECT faculty_name FROM `faculty`";
                         $result = mysqli_query($conn, $query);
                         while ($row = mysqli_fetch_assoc($result)) {
-                            $val = $row['dep_name'];
+                            $val = $row['faculty_name'];
                             echo "<option value='" . htmlspecialchars($val) . "'>" . htmlspecialchars($val) . "</option>";
                         }
                         ?>
@@ -75,7 +75,7 @@ if (isset($_POST['insert_subject'])) {
                                 $val = $row['course_name'];
                                 $faculty = $row['faculty_name'];
                                 echo $faculty;
-                                echo "<option value='" . htmlspecialchars($val) . "'>" . htmlspecialchars($faculty) . "-" . htmlspecialchars($val) . "</option>";
+                                echo "<option value='" . htmlspecialchars($val) . "'>" . htmlspecialchars($val) . "-" . htmlspecialchars($faculty) . "</option>";
                             }
                             ?>
                         </select>

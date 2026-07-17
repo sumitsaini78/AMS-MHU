@@ -170,10 +170,10 @@ if (isset($_POST['import_csv'])) {
                     <select class="form-select" name="faculty" id="faculty_name" required>
                         <option selected disabled value="">Open this select menu</option>
                         <?php
-                        $query = "SELECT dep_name FROM `departments`";
+                        $query = "SELECT faculty_name FROM `faculty`";
                         $result = mysqli_query($conn, $query);
                         while ($row = mysqli_fetch_assoc($result)) {
-                            $val = $row['dep_name'];
+                            $val = $row['faculty_name'];
                             echo "<option value='" . htmlspecialchars($val) . "'>" . htmlspecialchars($val) . "</option>";
                         }
                         ?>
@@ -186,7 +186,7 @@ if (isset($_POST['import_csv'])) {
                     <select class="form-select" name="course" id="course_name" required>
                         <option selected disabled value="">Open this select menu</option>
                         <?php
-                        $query = "SELECT course_name FROM `courses`";
+                        $query = "SELECT course_name FROM `courses_list`";
                         $result = mysqli_query($conn, $query);
                         while ($row = mysqli_fetch_assoc($result)) {
                             $val = $row['course_name'];

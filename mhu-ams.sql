@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 15, 2026 at 10:19 AM
+-- Generation Time: Jul 16, 2026 at 05:00 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -69,7 +69,7 @@ CREATE TABLE `attendance` (
 INSERT INTO `attendance` (`id`, `student_name`, `roll_number`, `subject_name`, `subject_code`, `course`, `year`, `semester`, `date_of_attendence`, `attendance_status`, `teacher_name`) VALUES
 (23, 'Aarav Sharma', '26CSE001', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
 (24, 'Ananya Iyer', '25ECE024', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
-(25, 'Rohan Verma', '24MECH015', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
+(25, 'Rohan Verma', '24MECH015', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 50726, 'Present', ''),
 (26, 'Diya Nair', '23CSE042', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
 (27, 'Ishaan Gupta', '26BBA009', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Present', ''),
 (28, 'Meera Joshi', '25MBA054', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 130726, 'Absent', ''),
@@ -226,7 +226,56 @@ INSERT INTO `attendance` (`id`, `student_name`, `roll_number`, `subject_name`, `
 (179, 'Aditya Rao', '26BCA012', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
 (180, 'Kavya Patel', '24MCA031', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
 (181, 'Vivaan Saxena', '25LAW004', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
-(182, 'Sanya Mirza', '23LAW048', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', '');
+(182, 'Sanya Mirza', '23LAW048', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
+(183, 'Aarav Sharma', '26CSE001', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
+(184, 'Ananya Iyer', '25ECE024', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
+(185, 'Rohan Verma', '24MECH015', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Present', ''),
+(186, 'Diya Nair', '23CSE042', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Present', ''),
+(187, 'Ishaan Gupta', '26BBA009', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
+(188, 'Meera Joshi', '25MBA054', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
+(189, 'Aditya Rao', '26BCA012', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Present', ''),
+(190, 'Kavya Patel', '24MCA031', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Present', ''),
+(191, 'Vivaan Saxena', '25LAW004', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Present', ''),
+(192, 'Sanya Mirza', '23LAW048', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Present', ''),
+(193, 'Aarav Sharma', '26CSE001', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Present', ''),
+(194, 'Ananya Iyer', '25ECE024', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
+(195, 'Rohan Verma', '24MECH015', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
+(196, 'Diya Nair', '23CSE042', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
+(197, 'Ishaan Gupta', '26BBA009', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
+(198, 'Meera Joshi', '25MBA054', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
+(199, 'Aditya Rao', '26BCA012', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
+(200, 'Kavya Patel', '24MCA031', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
+(201, 'Vivaan Saxena', '25LAW004', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
+(202, 'Sanya Mirza', '23LAW048', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 150726, 'Absent', ''),
+(203, 'Aarav Sharma', '26CSE001', ' Financial Accountin', 'mpmba33-601', 'BBA', 3, 7, 160726, 'Absent', ''),
+(204, 'Ananya Iyer', '25ECE024', ' Financial Accountin', 'mpmba33-601', 'BBA', 3, 7, 160726, 'Present', ''),
+(205, 'Rohan Verma', '24MECH015', ' Financial Accountin', 'mpmba33-601', 'BBA', 3, 7, 160726, 'Present', ''),
+(206, 'Diya Nair', '23CSE042', ' Financial Accountin', 'mpmba33-601', 'BBA', 3, 7, 160726, 'Absent', ''),
+(207, 'Ishaan Gupta', '26BBA009', ' Financial Accountin', 'mpmba33-601', 'BBA', 3, 7, 160726, 'Present', ''),
+(208, 'Meera Joshi', '25MBA054', ' Financial Accountin', 'mpmba33-601', 'BBA', 3, 7, 160726, 'Present', ''),
+(209, 'Aditya Rao', '26BCA012', ' Financial Accountin', 'mpmba33-601', 'BBA', 3, 7, 160726, 'Present', ''),
+(210, 'Kavya Patel', '24MCA031', ' Financial Accountin', 'mpmba33-601', 'BBA', 3, 7, 160726, 'Absent', ''),
+(211, 'Vivaan Saxena', '25LAW004', ' Financial Accountin', 'mpmba33-601', 'BBA', 3, 7, 160726, 'Absent', ''),
+(212, 'Sanya Mirza', '23LAW048', ' Financial Accountin', 'mpmba33-601', 'BBA', 3, 7, 160726, 'Absent', ''),
+(213, 'Aarav Sharma', '26CSE001', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 160726, 'Present', ''),
+(214, 'Ananya Iyer', '25ECE024', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 160726, 'Present', ''),
+(215, 'Rohan Verma', '24MECH015', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 160726, 'Absent', ''),
+(216, 'Diya Nair', '23CSE042', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 160726, 'Absent', ''),
+(217, 'Ishaan Gupta', '26BBA009', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 160726, 'Absent', ''),
+(218, 'Meera Joshi', '25MBA054', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 160726, 'Absent', ''),
+(219, 'Aditya Rao', '26BCA012', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 160726, 'Absent', ''),
+(220, 'Kavya Patel', '24MCA031', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 160726, 'Absent', ''),
+(221, 'Vivaan Saxena', '25LAW004', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 160726, 'Absent', ''),
+(222, 'Sanya Mirza', '23LAW048', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 60726, 'Present', ''),
+(223, 'Aditya Rao', '1', ' Financial Accountin', 'mpmba33-601', 'BBA', 3, 7, 160726, 'Absent', ''),
+(224, 'Sanya Mirza', '2', ' Financial Accountin', 'mpmba33-601', 'BBA', 3, 7, 160726, 'Present', ''),
+(225, 'Rohan Verma', '24MECH015', ' Principles and Practice of Management', 'kdskjdfs', 'BBA', 4, 4, 60726, 'Present', ''),
+(226, 'Aditya Rao', '1', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 160726, 'Present', ''),
+(227, 'Sanya Mirza', '2', ' Principles and Practice of Management', 'mpmba', '', 1, 8, 160726, 'Present', ''),
+(228, 'Aditya Rao', '26BCA012', ' Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 160726, 'Present', ''),
+(229, 'Aditya Rao', '26BCA012', ' Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 160726, 'Present', ''),
+(230, 'Aditya Rao', '26BCA012', ' Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 160726, 'Present', ''),
+(231, 'Sanya Mirza', '23LAW048', 'fa', 'N/A', 'MBA', 3, 6, 160726, 'Present', '');
 
 -- --------------------------------------------------------
 
@@ -255,38 +304,8 @@ CREATE TABLE `attendance_corrections` (
 
 INSERT INTO `attendance_corrections` (`id`, `attendance_id`, `teacher_id`, `student_name`, `roll_number`, `subject_name`, `date_of_attendance`, `current_status`, `requested_status`, `reason`, `status`, `created_at`) VALUES
 (1, 56, 3, 'Diya Nair', '23CSE042', ' Principles and Practice of Management', 140726, 'Present', 'Present', 'i did mistakenly', 'Approved', '2026-07-15 05:04:03'),
-(2, 56, 3, 'Diya Nair', '23CSE042', ' Principles and Practice of Management', 140726, 'Present', 'Present', 'asasas', 'Approved', '2026-07-15 05:14:46');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `courses`
---
-
-CREATE TABLE `courses` (
-  `course_id` int(11) NOT NULL,
-  `course_name` varchar(233) NOT NULL,
-  `Year` int(11) NOT NULL,
-  `semester` int(11) NOT NULL,
-  `subject_name` varchar(255) NOT NULL,
-  `dept_name` varchar(235) NOT NULL,
-  `subject_code` varchar(55) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `courses`
---
-
-INSERT INTO `courses` (`course_id`, `course_name`, `Year`, `semester`, `subject_name`, `dept_name`, `subject_code`) VALUES
-(38, 'BBA', 1, 1, ' Principles and Practice of Management', 'FOCBS', 'mubba22-504'),
-(39, 'BBA', 1, 1, ' Financial Accountin', 'FOCBS', 'mpmba33-601'),
-(40, 'bba', 1, 2, 'kaka', 'FOE', 'mpbba11-211'),
-(41, 'BBA', 1, 6, 'web technmoglies', 'FOPS', ''),
-(42, 'BBA', 1, 6, 'web technmoglies', 'FOPS', ''),
-(43, 'BBA', 1, 6, 'web technmoglies', 'FOPS', ''),
-(44, 'BBA', 1, 6, 'web technmoglies', 'FOPS', ''),
-(45, 'BBA', 2, 8, 'sub1', 'FOCBS', ''),
-(46, 'BBA', 2, 7, 'sub2', 'FOPS', '');
+(2, 56, 3, 'Diya Nair', '23CSE042', ' Principles and Practice of Management', 140726, 'Present', 'Present', 'asasas', 'Approved', '2026-07-15 05:14:46'),
+(3, 206, 3, 'Diya Nair', '23CSE042', ' Financial Accountin', 160726, 'Present', 'Absent', 'mistaklelnlynfgbjkbjh', 'Approved', '2026-07-16 06:24:36');
 
 -- --------------------------------------------------------
 
@@ -305,7 +324,55 @@ CREATE TABLE `courses_list` (
 --
 
 INSERT INTO `courses_list` (`id`, `course_name`, `faculty_name`) VALUES
-(0, 'BBA', 'FOCBS');
+(2, 'BCA', 'Faculty of Computer Science & Information Technology'),
+(3, 'MCA', 'Faculty of Computer Science & Information Technology'),
+(4, 'B.Sc. CS', 'Faculty of Computer Science & Information Technology'),
+(5, 'B.Sc. IT', 'Faculty of Computer Science & Information Technology'),
+(6, 'M.Sc. CS', 'Faculty of Computer Science & Information Technology'),
+(7, 'M.Sc. IT', 'Faculty of Computer Science & Information Technology'),
+(8, 'Ph.D. CS', 'Faculty of Computer Science & Information Technology'),
+(9, 'Ph.D. IT', 'Faculty of Computer Science & Information Technology'),
+(10, 'BBA', 'Faculty of Commerce & Business Studies'),
+(11, 'MBA', 'Faculty of Commerce & Business Studies'),
+(12, 'B.Com.', 'Faculty of Commerce & Business Studies'),
+(13, 'M.Com.', 'Faculty of Commerce & Business Studies'),
+(14, 'Ph.D. Management', 'Faculty of Commerce & Business Studies'),
+(15, 'Ph.D. Commerce', 'Faculty of Commerce & Business Studies'),
+(16, 'BA', 'Faculty of Arts, Humanities & Social Sciences'),
+(17, 'MA Economics', 'Faculty of Arts, Humanities & Social Sciences'),
+(18, 'MA English', 'Faculty of Arts, Humanities & Social Sciences'),
+(19, 'MA Political Science', 'Faculty of Arts, Humanities & Social Sciences'),
+(20, 'Ph.D. English', 'Faculty of Arts, Humanities & Social Sciences'),
+(21, 'Ph.D. Sociology', 'Faculty of Arts, Humanities & Social Sciences'),
+(22, 'Ph.D. Economics', 'Faculty of Arts, Humanities & Social Sciences'),
+(23, 'LLB', 'Faculty of Legal Studies'),
+(24, 'LLM', 'Faculty of Legal Studies'),
+(25, 'BA LLB Integrated', 'Faculty of Legal Studies'),
+(26, 'BBA LLB Integrated', 'Faculty of Legal Studies'),
+(27, 'B.Com. LLB Integrated', 'Faculty of Legal Studies'),
+(28, 'Diploma in Agriculture', 'Faculty of Agriculture'),
+(29, 'B.Sc. Ag. Hons.', 'Faculty of Agriculture'),
+(30, 'M.Sc. Ag. Agronomy', 'Faculty of Agriculture'),
+(31, 'D.Pharm.', 'Faculty of Pharmaceutical Sciences'),
+(32, 'B.Pharm.', 'Faculty of Pharmaceutical Sciences'),
+(33, 'B.Sc. Nursing', 'Faculty of Nursing'),
+(34, 'BPT', 'Faculty of Paramedical & Allied Health Sciences'),
+(35, 'BMLT', 'Faculty of Paramedical & Allied Health Sciences'),
+(36, 'BMRAIT', 'Faculty of Paramedical & Allied Health Sciences'),
+(37, 'M.Sc. MLT', 'Faculty of Paramedical & Allied Health Sciences'),
+(38, 'MPT', 'Faculty of Paramedical & Allied Health Sciences'),
+(39, 'B.Ed.', 'Faculty of Education'),
+(40, 'M.Ed.', 'Faculty of Education'),
+(41, 'Diploma in Mechanical Engineering', 'Faculty of Engineering & Technology'),
+(42, 'Diploma in Civil Engineering', 'Faculty of Engineering & Technology'),
+(43, 'Diploma in Electrical Engineering', 'Faculty of Engineering & Technology'),
+(44, 'Diploma in Computer Science Engineering', 'Faculty of Engineering & Technology'),
+(45, 'B.Sc. PCM', 'Faculty of Sciences'),
+(46, 'B.Sc. ZBC', 'Faculty of Sciences'),
+(47, 'M.Sc. Chemistry', 'Faculty of Sciences'),
+(48, 'M.Sc. Botany', 'Faculty of Sciences'),
+(49, 'M.Sc. Microbiology', 'Faculty of Sciences'),
+(50, 'M.Sc. Mathematics', 'Faculty of Sciences');
 
 -- --------------------------------------------------------
 
@@ -328,34 +395,40 @@ INSERT INTO `deans` (`id`, `Dean_name`, `Dept_name`, `number`) VALUES
 (2, 'Prof. P.K. Agarwal', 'focbs', 22),
 (18, 'Prof. P.K. Agarwal', 'focbs', 0),
 (19, 'dr. seema tomar', 'FOPS', 0),
-(20, 'test', 'FOE', 0);
+(20, 'test', 'FOE', 0),
+(21, 'testdean', 'Faculty of Commerce and Business Studies', 0);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `departments`
+-- Table structure for table `faculty`
 --
 
-CREATE TABLE `departments` (
+CREATE TABLE `faculty` (
   `id` int(11) NOT NULL,
-  `dep_name` varchar(255) NOT NULL,
-  `full_name` varchar(255) NOT NULL
+  `faculty_name` varchar(255) NOT NULL,
+  `faculty_full_name` varchar(255) NOT NULL,
+  `department` varchar(122) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `departments`
+-- Dumping data for table `faculty`
 --
 
-INSERT INTO `departments` (`id`, `dep_name`, `full_name`) VALUES
-(4, 'FOCBS', 'Faculty of Commerce and Business Studies'),
-(5, 'FOECS', 'Faculty of Engineering and Computing Sciences'),
-(6, 'FOPS', 'Faculty of Pharmaceutical Sciences'),
-(7, 'FOS', 'Faculty of Science'),
-(8, 'FOLS', 'Faculty of Legal Studies'),
-(9, 'FOE', 'Faculty of Education'),
-(10, 'FOAH', 'Faculty of Arts and Humanities'),
-(11, 'FOA', 'Faculty of Agriculture'),
-(12, 'FOPAHS', 'Faculty of Paramedical and Allied Health Sciences');
+INSERT INTO `faculty` (`id`, `faculty_name`, `faculty_full_name`, `department`) VALUES
+(4, 'FOCBS', 'Faculty of Commerce and Business Studies', ''),
+(5, 'FOECS', 'Faculty of Engineering and Computing Sciences', ''),
+(6, 'FOPS', 'Faculty of Pharmaceutical Sciences', ''),
+(7, 'FOS', 'Faculty of Science', ''),
+(8, 'FOLS', 'Faculty of Legal Studies', ''),
+(9, 'FOE', 'Faculty of Education', ''),
+(10, 'FOAH', 'Faculty of Arts and Humanities', ''),
+(11, 'FOA', 'Faculty of Agriculture', ''),
+(12, 'FOPAHS', 'Faculty of Paramedical and Allied Health Sciences', ''),
+(14, 'mca', 'bca', ''),
+(15, 'asas', 'asas', ''),
+(17, 'test faculty', 'asas', ''),
+(18, 'test faculty', 'asas', '');
 
 -- --------------------------------------------------------
 
@@ -390,7 +463,8 @@ INSERT INTO `students` (`id`, `name`, `enrollment_number`, `roll_number`, `facul
 (76, 'Aditya Rao', 0, '26BCA012', 'Faculty of Computer Apps', 'BCA', 1, 1, '', ''),
 (77, 'Kavya Patel', 0, '24MCA031', 'Faculty of Computer Apps', 'MCA', 3, 5, '', ''),
 (78, 'Vivaan Saxena', 0, '25LAW004', 'Faculty of Law', 'BA LLB', 2, 3, '', ''),
-(79, 'Sanya Mirza', 0, '23LAW048', 'Faculty of Law', 'BA LLB', 4, 7, '', '');
+(79, 'Sanya Mirza', 0, '23LAW048', 'Faculty of Law', 'BA LLB', 4, 7, '', ''),
+(80, 'as', 111, '11', 'test faculty', 'Ph.D. IT', 12, 1, '', '');
 
 -- --------------------------------------------------------
 
@@ -441,9 +515,45 @@ CREATE TABLE `subjected_teacher` (
 
 INSERT INTO `subjected_teacher` (`id`, `teacher_id`, `sub_id`, `teacher_name`, `subject_name`, `course_name`, `year`, `semester`, `subject_code`) VALUES
 (12, 3, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8, 'mpmba'),
-(13, 3, 38, 'dr. snehashish bhardwaj', ' Principles and Practice of Management', '', 1, 8, 'kdskjdfs'),
-(19, 3, 39, 'dr. snehashish bhardwaj', 'fa', '', 3, 6, ''),
-(20, 3, 45, 'dr. snehashish bhardwaj', 'sub1', '', 2, 7, '');
+(19, 3, 39, 'dr. snehashish bhardwaj', 'fa', 'MBA', 3, 6, ''),
+(20, 3, 45, 'dr. snehashish bhardwaj', 'sub1', 'MBA', 2, 7, ''),
+(21, 3, 39, 'dr. snehashish bhardwaj', ' Financial Accountin', 'BBA', 3, 7, 'mpmba33-601'),
+(22, 7, 39, 'DR.Chiku Saini', ' Financial Accountin', 'BBA', 2, 6, 'mpmba33-601'),
+(23, 5, 39, 'dr. brajkishore bharti', ' Financial Accountin', 'MBA', 2, 6, 'mpmba33-601');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `subjects`
+--
+
+CREATE TABLE `subjects` (
+  `course_id` int(11) NOT NULL,
+  `course_name` varchar(233) NOT NULL,
+  `Year` int(11) NOT NULL,
+  `semester` int(11) NOT NULL,
+  `subject_name` varchar(255) NOT NULL,
+  `dept_name` varchar(235) NOT NULL,
+  `subject_code` varchar(55) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `subjects`
+--
+
+INSERT INTO `subjects` (`course_id`, `course_name`, `Year`, `semester`, `subject_name`, `dept_name`, `subject_code`) VALUES
+(38, 'BBA', 1, 1, ' Principles and Practice of Management', 'FOCBS', 'mubba22-504'),
+(39, 'BBA', 1, 1, ' Financial Accountin', 'FOCBS', 'mpmba33-601'),
+(40, 'bba', 1, 2, 'kaka', 'FOE', 'mpbba11-211'),
+(41, 'BBA', 1, 6, 'web technmoglies', 'FOPS', ''),
+(42, 'BBA', 1, 6, 'web technmoglies', 'FOPS', ''),
+(43, 'BBA', 1, 6, 'web technmoglies', 'FOPS', ''),
+(44, 'BBA', 1, 6, 'web technmoglies', 'FOPS', ''),
+(45, 'BBA', 2, 8, 'sub1', 'FOCBS', ''),
+(46, 'BBA', 2, 7, 'sub2', 'FOPS', ''),
+(47, 'BBA', 2, 5, 'aasasas', 'FOECS', ''),
+(48, 'BBA', 2, 5, 'aasasas', 'FOECS', ''),
+(49, 'MBA', 1, 3, 'adddddd', 'FOCBS', '');
 
 -- --------------------------------------------------------
 
@@ -464,7 +574,16 @@ CREATE TABLE `teachers` (
 
 INSERT INTO `teachers` (`id`, `name`, `faculty`, `number`) VALUES
 (3, 'dr. snehashish bhardwaj', 'FOCBS', 333),
-(5, 'dr. brajkishore bharti', 'FOCBS', 555);
+(5, 'dr. brajkishore bharti', 'FOCBS', 555),
+(7, 'DR.Chiku Saini', 'FOCBS', 0),
+(8, 'asasas', '', 0),
+(9, 'asasa', '', 0),
+(10, 'asasas', '', 0),
+(11, 'wsedw', '', 0),
+(12, 'wsedw', '', 0),
+(13, 'wsedw', '', 0),
+(14, 'dstg', 'FOA', 0),
+(15, 'asasas', 'test faculty', 0);
 
 --
 -- Indexes for dumped tables
@@ -489,10 +608,10 @@ ALTER TABLE `attendance_corrections`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `courses`
+-- Indexes for table `courses_list`
 --
-ALTER TABLE `courses`
-  ADD PRIMARY KEY (`course_id`);
+ALTER TABLE `courses_list`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `deans`
@@ -501,9 +620,9 @@ ALTER TABLE `deans`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `departments`
+-- Indexes for table `faculty`
 --
-ALTER TABLE `departments`
+ALTER TABLE `faculty`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -525,6 +644,12 @@ ALTER TABLE `subjected_teacher`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `subjects`
+--
+ALTER TABLE `subjects`
+  ADD PRIMARY KEY (`course_id`);
+
+--
 -- Indexes for table `teachers`
 --
 ALTER TABLE `teachers`
@@ -538,37 +663,37 @@ ALTER TABLE `teachers`
 -- AUTO_INCREMENT for table `attendance`
 --
 ALTER TABLE `attendance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=183;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=232;
 
 --
 -- AUTO_INCREMENT for table `attendance_corrections`
 --
 ALTER TABLE `attendance_corrections`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `courses`
+-- AUTO_INCREMENT for table `courses_list`
 --
-ALTER TABLE `courses`
-  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
+ALTER TABLE `courses_list`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT for table `deans`
 --
 ALTER TABLE `deans`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
--- AUTO_INCREMENT for table `departments`
+-- AUTO_INCREMENT for table `faculty`
 --
-ALTER TABLE `departments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+ALTER TABLE `faculty`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=80;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
 
 --
 -- AUTO_INCREMENT for table `subjected_student`
@@ -580,13 +705,19 @@ ALTER TABLE `subjected_student`
 -- AUTO_INCREMENT for table `subjected_teacher`
 --
 ALTER TABLE `subjected_teacher`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+
+--
+-- AUTO_INCREMENT for table `subjects`
+--
+ALTER TABLE `subjects`
+  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT for table `teachers`
 --
 ALTER TABLE `teachers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

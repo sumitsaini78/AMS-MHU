@@ -13,11 +13,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['student_roll'] = $_POST['student_roll'];
         $_SESSION['student_name'] = $_POST['student_name'];
         unset($_SESSION['calendar_month']); // Reset month filter on new student select
+        unset($_SESSION['search_start']);
+        unset($_SESSION['search_end']);
     }
     
     // Handle month filter switching
     if (isset($_POST['filter_month'])) {
         $_SESSION['calendar_month'] = $_POST['selected_month'];
+        unset($_SESSION['search_start']); // Clear range if switching back to month view
+        unset($_SESSION['search_end']);
+    }
+    
+    // Handle date range filtering
+    if (isset($_POST['search_range'])) {
+        $_SESSION['search_start'] = $_POST['start_date'];
+        $_SESSION['search_end'] = $_POST['end_date'];
+        unset($_SESSION['calendar_month']);
     }
     
     header("Location: student_calendar.php");
@@ -33,6 +44,11 @@ if (!isset($_SESSION['student_roll']) || !isset($_SESSION['subject_name'])) {
 $student_roll = $_SESSION['student_roll'];
 $student_name = $_SESSION['student_name'];
 $subject_name = $_SESSION['subject_name'];
+
+// Define defaults for date inputs (Today's Date)
+$start_date_default = $_SESSION['search_start'] ?? date('Y-m-d');
+$end_date_default = $_SESSION['search_end'] ?? date('Y-m-d');
+$is_range_search = isset($_SESSION['search_start']) && isset($_SESSION['search_end']);
 
 // 3. Establish targeted calendar parameters (defaults to current month/year if unset)
 $target_month_str = $_SESSION['calendar_month'] ?? date('Y-m');
@@ -64,9 +80,25 @@ while ($row = mysqli_fetch_assoc($result)) {
     $m = substr($raw_date, 2, 2);
     $y = "20" . substr($raw_date, 4, 2); // Assuming 21st century format standard
     
-    // Check if record falls inside the currently viewed month window scope
-    if ((int)$m === $month && (int)$y === $year) {
-        $day_key = (int)$d;
+    $is_record_matched = false;
+    $day_key = null;
+
+    if ($is_range_search) {
+        // Date parsing verification for YYYY-MM-DD range system
+        $formatted_row_date = "$y-$m-$d";
+        if ($formatted_row_date >= $_SESSION['search_start'] && $formatted_row_date <= $_SESSION['search_end']) {
+            $is_record_matched = true;
+            $day_key = $formatted_row_date; 
+        }
+    } else {
+        // Check if record falls inside the currently viewed month window scope
+        if ((int)$m === $month && (int)$y === $year) {
+            $is_record_matched = true;
+            $day_key = (int)$d;
+        }
+    }
+
+    if ($is_record_matched && $day_key !== null) {
         $status = strtolower($row['attendance_status']);
         
         if ($status === 'present' || $status === '1') {
@@ -78,6 +110,11 @@ while ($row = mysqli_fetch_assoc($result)) {
         }
     }
 }
+// Sort by date key chronologically if rendering list views
+if ($is_range_search) {
+    ksort($attendance_data);
+}
+
 $total_lectures = $present_count + $absent_count;
 $attendance_rate = ($total_lectures > 0) ? round(($present_count / $total_lectures) * 100, 1) : 0;
 ?>
@@ -180,12 +217,16 @@ $attendance_rate = ($total_lectures > 0) ? round(($present_count / $total_lectur
                         </div>
                         <div class="col-md-5 ps-md-4 mt-3 mt-md-0">
                             <div class="d-flex align-items-center justify-content-between mb-2">
-                                <span class="text-secondary small">Month Attendance Metrics Rate:</span>
+                                <span class="text-secondary small"><?php echo $is_range_search ? 'Filtered' : 'Month'; ?> Attendance Metrics Rate:</span>
                                 <span class="fw-bold fs-5 <?php echo $attendance_rate >= 75 ? 'text-success' : ($attendance_rate >= 50 ? 'text-warning' : 'text-danger'); ?>">
                                     <?php echo $attendance_rate; ?>%
                                 </span>
                             </div>
                             <div class="d-flex gap-2">
+                                <div class="bg-success-subtle p-2 rounded text-center flex-fill border border-success-subtle">
+                                    <div class="text-success small fw-semibold">Total Lectures</div>
+                                    <div class="fs-5 fw-bold text-success"><?php echo $present_count+$absent_count; ?></div>
+                                </div>
                                 <div class="bg-success-subtle p-2 rounded text-center flex-fill border border-success-subtle">
                                     <div class="text-success small fw-semibold">Present</div>
                                     <div class="fs-5 fw-bold text-success"><?php echo $present_count; ?></div>
@@ -206,58 +247,112 @@ $attendance_rate = ($total_lectures > 0) ? round(($present_count / $total_lectur
             <div class="col-12 col-lg-10">
                 <div class="custom-card shadow-sm p-4 border">
                     
-                    <!-- Month Context Filtering Ribbon Controls Line -->
+                    <!-- Month Context & Date Range Filtering Ribbon Controls Line -->
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 border-bottom pb-3 mb-4">
                         <h4 class="fw-bold text-secondary mb-0">
-                            <i class="fa-regular fa-calendar-check text-primary me-2"></i><?php echo date('F Y', $first_day_timestamp); ?>
+                            <i class="fa-regular fa-calendar-check text-primary me-2"></i><?php echo $is_range_search ? "Range Search View" : date('F Y', $first_day_timestamp); ?>
                         </h4>
-                        <form method="POST" action="student_calendar.php" class="d-flex align-items-center gap-2">
-                            <label for="selected_month" class="small text-muted text-nowrap fw-medium">Switch Month View:</label>
-                            <input type="month" id="selected_month" name="selected_month" class="form-control form-control-sm border-secondary-subtle" 
-                                   value="<?php echo $target_month_str; ?>">
-                            <button type="submit" name="filter_month" class="btn btn-sm btn-primary px-3 shadow-sm">Load</button>
-                        </form>
+                        
+                        <div class="d-flex flex-wrap align-items-center gap-3 msg-filter-container">
+                            <!-- Existing Month Form View Filter -->
+                            <form method="POST" action="student_calendar.php" class="d-flex align-items-center gap-2">
+                                <label for="selected_month" class="small text-muted text-nowrap fw-medium">Month View:</label>
+                                <input type="month" id="selected_month" name="selected_month" class="form-control form-control-sm border-secondary-subtle" 
+                                       value="<?php echo $target_month_str; ?>">
+                                <button type="submit" name="filter_month" class="btn btn-sm btn-primary px-2 shadow-sm">Load</button>
+                            </form>
+
+                            <div class="vr d-none d-md-block text-secondary opacity-25"></div>
+
+                            <!-- Newly Added Date Range Form Filter (Defaults to Today's system dates) -->
+                            <form method="POST" action="student_calendar.php" class="d-flex align-items-center gap-2">
+                                <label class="small text-muted text-nowrap fw-medium">Search Range:</label>
+                                <input type="date" name="start_date" class="form-control form-control-sm border-secondary-subtle" value="<?php echo $start_date_default; ?>" required>
+                                <span class="small text-muted">to</span>
+                                <input type="date" name="end_date" class="form-control form-control-sm border-secondary-subtle" value="<?php echo $end_date_default; ?>" required>
+                                <button type="submit" name="search_range" class="btn btn-sm btn-success px-2 shadow-sm">Search</button>
+                                <?php if ($is_range_search): ?>
+                                    <a href="student_calendar.php" class="btn btn-sm btn-outline-secondary" title="Clear Filter"><i class="fa-solid fa-xmark"></i></a>
+                                <?php endif; ?>
+                            </form>
+                        </div>
                     </div>
 
-                    <!-- Interactive Calendar View Grid Module -->
-                    <div class="calendar-grid">
-                        <!-- Weekdays Header Rows Initialization -->
-                        <div class="calendar-weekday">Sun</div>
-                        <div class="calendar-weekday">Mon</div>
-                        <div class="calendar-weekday">Tue</div>
-                        <div class="calendar-weekday">Wed</div>
-                        <div class="calendar-weekday">Thu</div>
-                        <div class="calendar-weekday">Fri</div>
-                        <div class="calendar-weekday">Sat</div>
+                    <?php if (!$is_range_search): ?>
+                        <!-- Interactive Calendar View Grid Module -->
+                        <div class="calendar-grid">
+                            <!-- Weekdays Header Rows Initialization -->
+                            <div class="calendar-weekday">Sun</div>
+                            <div class="calendar-weekday">Mon</div>
+                            <div class="calendar-weekday">Tue</div>
+                            <div class="calendar-weekday">Wed</div>
+                            <div class="calendar-weekday">Thu</div>
+                            <div class="calendar-weekday">Fri</div>
+                            <div class="calendar-weekday">Sat</div>
 
-                        <?php
-                        // 1. Render empty offset tracking boxes for week launch alignment
-                        for ($i = 0; $i < $first_day_of_week; $i++) {
-                            echo "<div class='calendar-day empty'></div>";
-                        }
-
-                        // 2. Render actual month numeric operational calendar date blocks
-                        for ($day = 1; $day <= $days_in_month; $day++) {
-                            $status_class = '';
-                            $badge_markup = '';
-                            
-                            if (isset($attendance_data[$day])) {
-                                if ($attendance_data[$day] === 'present') {
-                                    $status_class = 'day-present';
-                                    $badge_markup = '<span class="badge bg-success small-xs d-none d-sm-inline-block shadow-sm">P</span>';
-                                } else {
-                                    $status_class = 'day-absent';
-                                    $badge_markup = '<span class="badge bg-danger small-xs d-none d-sm-inline-block shadow-sm">A</span>';
-                                }
+                            <?php
+                            // 1. Render empty offset tracking boxes for week launch alignment
+                            for ($i = 0; $i < $first_day_of_week; $i++) {
+                                echo "<div class='calendar-day empty'></div>";
                             }
 
-                            echo "<div class='calendar-day " . $status_class . "'>";
-                            echo "<span class='fw-bold fs-6'>" . $day . "</span>";
-                            echo "<div class='text-end'>" . $badge_markup . "</div>";
-                            echo "</div>";
-                        }
-                        ?>
-                    </div>
+                            // 2. Render actual month numeric operational calendar date blocks
+                            for ($day = 1; $day <= $days_in_month; $day++) {
+                                $status_class = '';
+                                $badge_markup = '';
+                                
+                                if (isset($attendance_data[$day])) {
+                                    if ($attendance_data[$day] === 'present') {
+                                        $status_class = 'day-present';
+                                        $badge_markup = '<span class="badge bg-success small-xs d-none d-sm-inline-block shadow-sm">P</span>';
+                                    } else {
+                                        $status_class = 'day-absent';
+                                        $badge_markup = '<span class="badge bg-danger small-xs d-none d-sm-inline-block shadow-sm">A</span>';
+                                    }
+                                }
+
+                                echo "<div class='calendar-day " . $status_class . "'>";
+                                echo "<span class='fw-bold fs-6'>" . $day . "</span>";
+                                echo "<div class='text-end'>" . $badge_markup . "</div>";
+                                echo "</div>";
+                            }
+                            ?>
+                        </div>
+                    <?php else: ?>
+                        <!-- Interactive Range Results Log List Module -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped align-middle bg-white rounded shadow-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Date Log</th>
+                                        <th class="text-center">Attendance Track Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($attendance_data)): ?>
+                                        <tr>
+                                            <td colspan="2" class="text-center text-muted py-3">No logged attendance sessions discovered across this target segment.</td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php foreach ($attendance_data as $date_key => $status_val): 
+                                            $display_date = date('d-M-Y', strtotime($date_key));
+                                            $is_present_check = ($status_val === 'present');
+                                        ?>
+                                            <tr>
+                                                <td class="fw-semibold text-dark"><?php echo $display_date; ?></td>
+                                                <td class="text-center">
+                                                    <span class="badge <?php echo $is_present_check ? 'bg-success text-white' : 'bg-danger text-white'; ?> px-3 py-2 shadow-sm">
+                                                        <i class="fa-solid <?php echo $is_present_check ? 'fa-circle-check' : 'fa-circle-xmark'; ?> me-1"></i>
+                                                        <?php echo ucfirst($status_val); ?>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
 
                     <!-- Operational Color Legends Explanations Strip Footer -->
                     <div class="d-flex justify-content-center gap-4 mt-4 pt-3 border-top small text-secondary fw-medium">

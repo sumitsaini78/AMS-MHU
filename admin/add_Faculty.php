@@ -3,7 +3,7 @@ include "../db_connect.php";
 if (isset($_POST['dept_name'])) {
     $department_name = $_POST['dept_name'];
     $department_full_name = $_POST['dept_full_name'];
-    $query = "insert into `departments`(dep_name,full_name)VALUES('$department_name','$department_full_name') ";
+    $query = "insert into `faculty`(faculty_name,faculty_full_name)VALUES('$department_name','$department_full_name') ";
     if (mysqli_query($conn, $query) == 1) {
         echo "inserted succefull";
     }
@@ -39,9 +39,9 @@ if (isset($_POST['dept_name'])) {
     <div class="container w-50 my-5 border p-3">
         <form method="post">
             <div class="mb-3">
-                <label for="dept_name" class="form-label">Department name</label>
+                <label for="dept_name" class="form-label">Faculty Short name</label>
                 <input type="text" class="form-control" name="dept_name" id="dept_name" aria-describedby="emailHelp">
-                <label for="dept_name" class="form-label">Department Full name</label>
+                <label for="dept_name" class="form-label">Faculty Full name</label>
                 <input type="text" class="form-control" name="dept_full_name" id="dept_full_name"
                     aria-describedby="emailHelp">
                 <input type="submit" class="btn btn-primary mt-3">
