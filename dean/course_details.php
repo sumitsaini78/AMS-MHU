@@ -36,7 +36,7 @@ if (!empty($_GET['date_from'])) {
 } else {
     $where_clauses[] = "date_of_attendence = $today_dmy";
 }
-
+ 
 $sql_where = "WHERE " . implode(" AND ", $where_clauses);
 
 // 4. Get Summary Stats

@@ -180,7 +180,13 @@ if ($correction_count_result) {
     <div class="col">
         <div class="action-card card h-100 shadow-sm text-center p-3">
             <div class="fs-2 text-info mb-2"><i class="fa-solid fa-address-card"></i></div>
-            <a href="subject_Teacher_Allotment.php" class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Assign Subject</a>
+            <a href="subject_Teacher_Allotment.php" class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Assign Subject Teacher</a>
+        </div>
+    </div>
+    <div class="col">
+        <div class="action-card card h-100 shadow-sm text-center p-3">
+            <div class="fs-2 text-info mb-2"><i class="fa-solid fa-address-card"></i></div>
+            <a href="assign_student_subject.php" class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Assign Student Subject</a>
         </div>
     </div>
 </div>
