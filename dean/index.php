@@ -4,7 +4,7 @@ session_start();
 
 // 1. Secure the page: Check if the Dean is actually logged in
 if (!isset($_SESSION['dean_id'])) {
-    header("Location: ./index.php");
+    header("Location: ../index.php");
     exit;
 }
 
@@ -199,12 +199,11 @@ if ($correction_count_result) {
 
                                 echo "<li><form action='subject_Teacher_Allotment.php' method='POST'>
                             <input type='hidden' value='" . htmlspecialchars($val['course_name']) . "' name='course_name'>
-                            <input type='submit' name='course_submit' value='" . $val['course_name'] . "'>" . $val['course_name'] . "</form></li>";
+                            <input type='submit' name='course_submit' value='" . $val['course_name'] . "'></form></li>";
 
                             }
                             ?>
                         </ul>
- 
                     </div>
                 </div>
             </div>
@@ -236,9 +235,10 @@ if ($correction_count_result) {
                             <thead class="table-dark">
                                 <tr>
                                     <th scope="col" style="width: 8%;">#</th>
-                                    <th scope="col" style="width: 37%;">Course Track</th>
-                                    <th scope="col" style="width: 15%;">Total Lectures</th>
-                                    <th scope="col" style="width: 15%;">Total Student Present </th>
+                                    <th scope="col" style="width: 37%;">Course Name</th>
+                                    <th scope="col" style="width: 15%;">Lecture Status</th>
+                                    <th scope="col" style="width: 15%;">Total Student </th>
+                                    <th scope="col" style="width: 15%;"> Student Present </th>
                                     <th scope="col" style="width: 25%;">Total Percentage</th>
                                 </tr>
                             </thead>
@@ -262,7 +262,7 @@ if ($correction_count_result) {
                                     while ($row = mysqli_fetch_assoc($result)) {
                                         $course_name = $row['course'];
                                         $total_lectures = $row['total_lectures'];
-                                        $total_records = $row['total_student_records'];
+                                        $total_records = $row['total_student_records']; 
                                         $present_count = $row['present_count'];
 
                                         $percentage = ($total_records > 0) ? round(($present_count / $total_records) * 100, 2) : 0;
