@@ -11,7 +11,7 @@ if (!isset($_SESSION['dean_id'])) {
 // 2. Safely assign the variable now that we know it exists
 $id = $_SESSION['dean_id'];
 $query = "SELECT * FROM deans WHERE id = '$id'";
-$result = mysqli_query($conn, $query);
+$result = mysqli_query($conn, $query); 
 if ($result && mysqli_num_rows($result) == 1) {
     $dean = mysqli_fetch_assoc($result);
     $dean_name = $dean['Dean_name'];
