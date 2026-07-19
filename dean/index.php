@@ -2,31 +2,31 @@
 include "../db_connect.php";
 session_start();
 
-// 1. Secure the page: Check if the Dean is actually logged in
+// 1. Secure the page
 if (!isset($_SESSION['dean_id'])) {
     header("Location: ../index.php");
     exit;
 }
 
-// 2. Safely assign the variable now that we know it exists
 $id = $_SESSION['dean_id'];
-$query = "SELECT * FROM deans WHERE id = '$id'";
-$result = mysqli_query($conn, $query); 
-if ($result && mysqli_num_rows($result) == 1) {
-    $dean = mysqli_fetch_assoc($result);
+
+// Fetch Dean Info
+$stmt = $conn->prepare("SELECT * FROM deans WHERE id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result && $result->num_rows === 1) {
+    $dean = $result->fetch_assoc();
     $dean_name = $dean['Dean_name'];
     $faculty_name = $dean['faculty_name'];
     $_SESSION['dean_name'] = $dean_name;
 }
 
-// 3. Live count for pending attendance correction requests
-$correction_count_query = "SELECT COUNT(*) as pending_total FROM `attendance_corrections` WHERE status = 'Pending'";
+// Pending Corrections Count
+$correction_count_query = "SELECT COUNT(*) as pending_total FROM attendance_corrections WHERE status = 'Pending'";
 $correction_count_result = mysqli_query($conn, $correction_count_query);
-$pending_count = 0;
-if ($correction_count_result) {
-    $count_row = mysqli_fetch_assoc($correction_count_result);
-    $pending_count = $count_row['pending_total'];
-}
+$pending_count = ($correction_count_result) ? mysqli_fetch_assoc($correction_count_result)['pending_total'] : 0;
 ?>
 
 <!doctype html>
@@ -34,299 +34,212 @@ if ($correction_count_result) {
 
 <head>
     <title>Dean Dashboard | MHU-AMS</title>
-    <!-- Required meta tags -->
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Bootstrap CSS v5.3.8 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
         body {
-            background-color: #f4f6f9;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-
-        .navbar-brand sub {
-            bottom: 0;
-            font-size: 0.65rem;
-            letter-spacing: 1px;
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', system-ui, sans-serif;
         }
 
         .action-card {
             border: none;
-            border-radius: 12px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border-radius: 15px;
+            transition: 0.3s;
             background: #ffffff;
         }
 
         .action-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08) !important;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
         }
 
-        .table-card {
-            border: none;
-            border-radius: 14px;
-            background: #ffffff;
+        .table-container {
+            border-radius: 15px;
             overflow: hidden;
         }
 
-        .table th {
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+        .progress {
+            height: 10px;
+            border-radius: 5px;
+        }
+
+        .navbar-brand sub {
+            font-size: 0.6rem;
+            letter-spacing: 2px;
         }
     </style>
 </head>
 
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-2">
-            <div class="container-fluid">
-                <a class="navbar-brand text-white fw-bold fs-4 d-flex align-items-center" href="index.php">
-                    <i class="fa-solid fa-graduation-cap text-warning me-2"></i>MHU-AMS <sub
-                        class="text-primary text-uppercase ms-1 fw-semibold">Dean</sub>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3">
+            <div class="container">
+                <a class="navbar-brand fw-bold fs-4 d-flex align-items-center" href="index.php">
+                    <i class="fa-solid fa-graduation-cap text-warning me-2"></i> MHU-AMS
+                    <sub class="text-primary ms-1">DEAN</sub>
                 </a>
-
-                <div class="d-flex align-items-center gap-2">
-                    <span
-                        class="navbar-text text-white bg-secondary bg-opacity-25 border border-secondary border-opacity-50 px-3 py-1.5 rounded-pill small">
-                        <i class="fa-solid fa-user-tie me-1 text-warning"></i> Welcome, <span
-                            class="fw-semibold"><?php echo htmlspecialchars($dean_name); ?></span>
-                    </span>
-
-                    <!-- NEW: Attendance Correction Action Link Component with Counter Badge -->
-                    <a href="manage_corrections.php"
-                        class="btn btn-sm role-button position-relative px-3 shadow-sm <?php echo ($pending_count > 0) ? 'btn-warning fw-bold text-dark' : 'btn-outline-warning text-white'; ?>">
-                        <i class="fa-solid fa-bell-conflict fa-triangle-exclamation me-1"></i> Corrections Request
-                        <?php if ($pending_count > 0) { ?>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-white small d-none d-md-block"><i
+                            class="fa-solid fa-user-tie me-2 text-warning"></i>Welcome,
+                        <strong><?= htmlspecialchars($dean_name ?? 'Dean') ?></strong></span>
+                    <a href="manage_corrections.php" class="btn btn-sm btn-outline-warning position-relative">
+                        <i class="fa-solid fa-bell"></i>
+                        <?php if ($pending_count > 0): ?>
                             <span
-                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger shadow border border-light animate__animated animate__pulse animate__infinite">
-                                <?php echo $pending_count; ?>
-                            </span>
-                        <?php } ?>
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"><?= $pending_count ?></span>
+                        <?php endif; ?>
                     </a>
-
-                    <a href="../logout.php" class="btn btn-sm btn-danger px-3 shadow-sm ms-2"><i
-                            class="fa-solid fa-power-off me-1"></i> Logout</a>
+                    <a href="../logout.php" class="btn btn-sm btn-danger px-3"><i class="fa-solid fa-power-off"></i></a>
                 </div>
             </div>
         </nav>
     </header>
 
-    <main class="container py-4">
-        <!-- Section: Overview Header -->
+    <main class="container py-5">
         <div class="row mb-4">
-            <div class="col-12 text-center text-md-start">
-                <h2 class="fw-bold text-dark">Operations</h2>
-                <p class="text-muted small">Manage faculty roster indices, course mapping metrics, and student profiles
-                    execution directories.</p>
+            <div class="col-12">
+                <h2 class="fw-bold text-dark">Dashboard Overview</h2>
+                <p class="text-muted">Manage your department operations and monitor daily attendance flow.</p>
             </div>
         </div>
 
-        <!-- Section: Grid Action Control Items (Maintains 6 columns) -->
-        <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-6 mb-5">
-
-            <!-- 1. Faculty -->
-            <div class="col">
-                <div class="action-card card h-100 shadow-sm text-center p-3">
-                    <div class="fs-2 text-info mb-2"><i class="fa-solid fa-network-wired"></i></div>
-                    <a href="add_Faculty.php" class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Add
-                        Faculty</a>
-                </div>
-            </div>
-
-            <!-- 2. Add Students -->
-            <div class="col">
-                <div class="action-card card h-100 shadow-sm text-center p-3">
-                    <div class="fs-2 text-info mb-2"><i class="fa-solid fa-user-graduate"></i></div>
-                    <a href="add_Students.php" class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Add
-                        Students</a>
-                </div>
-            </div>
-
-            <!-- 3. VIEW STUDENTS (New Dedicated Column) -->
-            <div class="col">
-                <div class="action-card card h-100 shadow-sm text-center p-3">
-                    <div class="fs-2 text-primary mb-2"><i class="fa-solid fa-users-viewfinder"></i></div>
-                    <a href="view_students.php" class="btn btn-sm btn-outline-primary w-100 mt-auto fw-medium">View
-                        Students</a>
-                </div>
-            </div>
-
-            <!-- 4. Subjects (Combined Add + Bulk) -->
-            <div class="col">
-                <div class="action-card card h-100 shadow-sm text-center p-3">
-                    <div class="fs-2 text-info mb-2"><i class="fa-solid fa-book-bookmark"></i></div>
-                    <div class="btn-group w-100 mt-auto">
-                        <a href="add_bulk_subject.php" class="btn btn-sm btn-outline-info" title="Bulk">Add-Subjects</a>
+        <!-- Action Cards -->
+        <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-6 mb-4">
+            <?php
+            $actions = [
+                ['Add Faculty', 'fa-network-wired', 'text-info', 'add_Faculty.php'],
+                ['Add Students', 'fa-user-graduate', 'text-info', 'add_Students.php'],
+                ['View Students', 'fa-users-viewfinder', 'text-primary', 'view_students.php'],
+                ['Add Subjects', 'fa-book-bookmark', 'text-info', 'add_bulk_subject.php'],
+                ['Add Teachers', 'fa-chalkboard-user', 'text-info', 'add_Teacher.php'],
+                ['Add Student<br> Subject', 'fa-address-card', 'text-warning', 'assign_student_subject.php']
+            ];
+            foreach ($actions as $act): ?>
+                <div class="col">
+                    <div class="action-card card h-100 shadow-sm p-3 text-center">
+                        <div class="fs-3 <?= $act[2] ?> mb-2"><i class="fa-solid <?= $act[1] ?>"></i></div>
+                        <a href="<?= $act[3] ?>"
+                            class="btn btn-sm btn-light w-100 text-muted fw-semibold border-0"><?= $act[0] ?></a>
                     </div>
                 </div>
-            </div>
+            <?php endforeach; ?>
+            <div class="col"><!-- Assign Subject Box (Adjusted Width) -->
+                <div class="col">
+                    <div class="action-card card h-100 shadow-sm p-3 text-center dropdown">
+                        <div class="fs-3 text-warning mb-2"><i class="fa-solid fa-address-card"></i></div>
 
-            <!-- 5. Teachers -->
-            <div class="col">
-                <div class="action-card card h-100 shadow-sm text-center p-3">
-                    <div class="fs-2 text-info mb-2"><i class="fa-solid fa-chalkboard-user"></i></div>
-                    <a href="add_Teacher.php" class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Add
-                        Teachers</a>
-                </div>
-            </div>
-
-            <!-- 6. Assign Subjects -->
-            <div class="col">
-                <div class="action-card card h-100 shadow-sm text-center p-3">
-                    <div class="fs-2 text-info mb-2"><i class="fa-solid fa-address-card"></i></div>
-                    <!-- <a href="subject_Teacher_Allotment.php"
-                        class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Assign Subject Teacher</a> -->
-                    <div class="dropdown">
-                        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            Subject-Teacher-Assign
+                        <!-- w-100 hataya gaya hai taaki ye normal size mein aaye -->
+                        <button class="btn btn-sm btn-light text-muted fw-semibold border-0 dropdown-toggle"
+                            type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Add Subject <br>Teacher
                         </button>
-                        <ul class="dropdown-menu">
-                            <?php
-                            $query = "select course_name from `courses_list` WHERE faculty_name='Faculty of Commerce & Business Studies' ";
-                            $result = mysqli_query($conn, $query);
-                            $row = mysqli_fetch_assoc($result);
-                            while ($val = mysqli_fetch_assoc($result)) {
 
-                                echo "<li><form action='subject_Teacher_Allotment.php' method='POST'>
-                            <input type='hidden' value='" . htmlspecialchars($val['course_name']) . "' name='course_name'>
-                            <input type='submit' name='course_submit' value='" . $val['course_name'] . "'></form></li>";
+                        <!-- Dropdown menu ko bhi thoda compact kiya hai -->
+                        <ul class="dropdown-menu shadow p-2"
+                            style="max-height: 300px; overflow-y: auto; min-width: 200px;">
+                            <li class="px-2 pb-2">
+                                <input type="text" class="form-control form-control-sm" id="courseSearch"
+                                    placeholder="Search course..." onkeyup="filterCourses()">
+                            </li>
+                            <div id="courseList">
+                                <?php
+                                $query = "SELECT course_name FROM courses_list WHERE faculty_name = ? ORDER BY course_name";
+                                $stmt = $conn->prepare($query);
+                                $stmt->bind_param("s", $faculty_name);
+                                $stmt->execute();
+                                $result = $stmt->get_result();
 
-                            }
-                            ?>
+                                if ($result && mysqli_num_rows($result) > 0):
+                                    while ($val = mysqli_fetch_assoc($result)): ?>
+                                        <li class="course-item">
+                                            <form action="subject_Teacher_Allotment.php" method="POST" class="px-2 py-1">
+                                                <input type="hidden" name="course_name"
+                                                    value="<?= htmlspecialchars($val['course_name']) ?>">
+                                                <button type="submit" name="course_submit"
+                                                    class="btn btn-link text-start w-100 text-decoration-none text-dark small">
+                                                    <?= htmlspecialchars($val['course_name']) ?>
+                                                </button>
+                                            </form>
+                                        </li>
+                                    <?php endwhile;
+                                else: ?>
+                                    <li class="text-muted text-center small p-2">No courses found</li>
+                                <?php endif; ?>
+                            </div>
                         </ul>
                     </div>
                 </div>
             </div>
-            <div class="col">
-                <div class="action-card card h-100 shadow-sm text-center p-3">
-                    <div class="fs-2 text-info mb-2"><i class="fa-solid fa-address-card"></i></div>
-                    <a href="assign_student_subject.php"
-                        class="btn btn-sm btn-outline-info w-100 mt-auto fw-medium">Assign Student Subject</a>
-                </div>
-            </div>
         </div>
 
-        <!-- Section: Analytics Stream Trackers Table -->
-        <div class="row">
-            <div class="col-12 col-xl-11 mx-auto">
-                <div class="table-card card shadow-sm p-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <span class="fs-4 text-secondary me-2"><i class="fa-solid fa-chart-bar text-warning"></i></span>
-                        <h4 class="fw-bold text-dark mb-0">Course Wise Attendence</h4>
-                    </div>
 
-                    <!-- Hidden Form that handles the actual submission redirect -->
-                    <form id="courseRedirectForm" method="POST" action="course_details.php">
-                        <input type="hidden" id="selectedCourseInput" name="course_name" value="">
-                    </form>
+        </div>
 
-                    <div class="table-responsive rounded border">
-                        <table class="table table-hover align-middle mb-0 table-striped">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th scope="col" style="width: 8%;">#</th>
-                                    <th scope="col" style="width: 37%;">Course Name</th>
-                                    <th scope="col" style="width: 15%;">Lecture Status</th>
-                                    <th scope="col" style="width: 15%;">Total Student </th>
-                                    <th scope="col" style="width: 15%;"> Student Present </th>
-                                    <th scope="col" style="width: 25%;">Total Percentage</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                // Filter query explicitly for BBA, BCom, MCom, and MBA
-                                $query = "SELECT 
-                                    course,
-                                    COUNT(DISTINCT date_of_attendence) as total_lectures,
-                                    COUNT(*) as total_student_records,
-                                    SUM(CASE WHEN LOWER(attendance_status) IN ('present', '1') THEN 1 ELSE 0 END) as present_count
-                                  FROM `attendance` 
-                                  WHERE course IN ('BBA', 'BCom', 'MCom', 'MBA')
-                                  GROUP BY course 
-                                  ORDER BY FIELD(course, 'BBA', 'BCom', 'MCom', 'MBA')";
+        <!-- Today's Report Table -->
+        <div class="card shadow-sm border-0 table-container">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                <h4 class="fw-bold text-dark"><i class="fa-solid fa-chart-line text-primary me-2"></i>Today's Attendance
+                    Report</h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Course</th>
+                                <th>Completion Status</th>
+                                <th class="text-end">Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $index = 1;
+                            $today_date = (int) date('dmy');
+                            $query = "SELECT c.course_name, COUNT(DISTINCT s.subject_name) AS total_subjects,
+                                      (SELECT COUNT(DISTINCT a.subject_name) FROM `attendance` a WHERE a.course = c.course_name AND a.date_of_attendence = '$today_date') AS marked_today
+                                      FROM `courses_list` c LEFT JOIN `subjects` s ON c.course_name = s.course_name 
+                                      WHERE c.faculty_name = '$faculty_name' GROUP BY c.course_name";
+                            $result = mysqli_query($conn, $query);
 
-                                $result = mysqli_query($conn, $query);
-                                $index = 1;
-
-                                if ($result && mysqli_num_rows($result) > 0) {
-                                    while ($row = mysqli_fetch_assoc($result)) {
-                                        $course_name = $row['course'];
-                                        $total_lectures = $row['total_lectures'];
-                                        $total_records = $row['total_student_records']; 
-                                        $present_count = $row['present_count'];
-
-                                        $percentage = ($total_records > 0) ? round(($present_count / $total_records) * 100, 2) : 0;
-
-                                        if ($percentage >= 75) {
-                                            $badge_class = "text-success fw-bold";
-                                            $progress_class = "bg-success";
-                                        } elseif ($percentage >= 50) {
-                                            $badge_class = "text-warning fw-bold";
-                                            $progress_class = "bg-warning";
-                                        } else {
-                                            $badge_class = "text-danger fw-bold";
-                                            $progress_class = "bg-danger";
-                                        }
-
-                                        $js_course = htmlspecialchars($course_name, ENT_QUOTES, 'UTF-8');
-
-                                        echo "<tr>";
-                                        echo "<th scope='row' class='fw-bold text-muted'>" . $index . "</th>";
-                                        echo "<td>
-                                            <button type='button' class='btn btn-link p-0 fw-bold text-decoration-none text-primary fs-6 text-start' onclick='submitCourse(\"{$js_course}\")'>
-                                                <i class='fa-solid fa-folder-open me-2 text-warning'></i>" . htmlspecialchars($course_name) . "
-                                            </button>
-                                          </td>";
-                                        echo "<td><span class='badge bg-secondary px-2.5 py-1.5'>" . $total_lectures . " Lectures</span></td>";
-                                        echo "<td><span class='badge bg-info text-dark px-2.5 py-1.5 fw-semibold'>" . $present_count . " Present</span></td>";
-                                        echo "<td>
-                                            <div class='d-flex align-items-center gap-2'>
-                                                <div class='progress flex-grow-1' style='height: 8px;'>
-                                                    <div class='progress-bar {$progress_class}' role='progressbar' style='width: {$percentage}%' aria-valuenow='{$percentage}' aria-valuemin='0' aria-valuemax='100'></div>
-                                                </div>
-                                                <span class='{$badge_class}' style='min-width: 55px; text-align: right;'>" . $percentage . "%</span>
+                            if ($result):
+                                while ($val = mysqli_fetch_assoc($result)):
+                                    $total = $val['total_subjects'] ?: 1;
+                                    $marked = $val['marked_today'] ?: 0;
+                                    $percent = ($marked / $total) * 100;
+                                    $color = ($percent >= 100) ? 'bg-success' : 'bg-primary';
+                                    ?>
+                                    <tr>
+                                        <td class="fw-bold text-muted"><?= $index++ ?></td>
+                                        <td><a href='view_subjects_attendance.php?course=<?= urlencode($val['course_name']) ?>'
+                                                class="text-decoration-none fw-semibold text-dark"><?= htmlspecialchars($val['course_name']) ?></a>
+                                        </td>
+                                        <td><small class="text-muted"><?= $marked ?> / <?= $total ?> subjects</small></td>
+                                        <td style="width: 250px;">
+                                            <div class="progress">
+                                                <div class="progress-bar <?= $color ?>" role="progressbar"
+                                                    style="width: <?= $percent ?>%"></div>
                                             </div>
-                                          </td>";
-                                        echo "</tr>";
-
-                                        $index++;
-                                    }
-                                } else {
-                                    echo "<tr><td colspan='5' class='text-center py-4 text-muted'><i class='fa-solid fa-triangle-exclamation me-2'></i> No attendance records found for BBA, BCom, MCom, or MBA.</td></tr>";
-                                }
-                                ?>
-                            </tbody>
-                        </table>
-                    </div>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </main>
 
-    <footer class="text-center py-4 mt-5 text-muted small bg-white border-top">
-        <p class="mb-0">&copy; 2026 Motherhood University Attendance Management System (AMS).</p>
+    <footer class="text-center py-4 text-muted border-top">
+        <small>&copy; 2026 Motherhood University Attendance Management System</small>
     </footer>
 
-    <!-- JavaScript Injection Handler -->
-    <script>
-        function submitCourse(courseName) {
-            document.getElementById('selectedCourseInput').value = courseName;
-            document.getElementById('courseRedirectForm').submit();
-        }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

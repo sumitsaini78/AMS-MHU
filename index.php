@@ -96,7 +96,7 @@ if (isset($_POST['teacher-login'])) {
             <button class="btn btn-primary px-4 py-2" onclick="showForm('adminForm')">Admin</button>
 
 
-            <button class="btn btn-success px-4 py-2" onclick="showForm('deanForm')">Dean</button>
+            <button class="btn btn-success px-4 py-2" id="dean" onclick="showForm('deanForm')">Dean</button>
 
 
             <button class="btn btn-warning px-4 py-2 text-dark" onclick="showForm('teacherForm')">Teachers</button>

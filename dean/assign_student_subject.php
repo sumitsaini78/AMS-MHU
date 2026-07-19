@@ -7,7 +7,6 @@ if (!isset($_SESSION['teacher_id']) || !isset($_SESSION['teacher_name'])) {
     header("Location: ../index.php");
     exit;
 }
-// checking selected course
 
 $id = $_SESSION['teacher_id'];
 $teacher_name = $_SESSION['teacher_name'];
@@ -40,12 +39,12 @@ if (isset($_POST['assign_subject'])) {
             $subject_code = mysqli_real_escape_string($conn, $code_data['subject_code']);
         }
 
-        // Step C: Check if this specific student name is already assigned to this subject name
-        $check_query = "SELECT * FROM `subjected_student` WHERE student_name = '$s_name' AND subject_name = '$subject_name'";
+        // Step C: Check if this specific student name is already assigned to this subject for this semester
+        $check_query = "SELECT id FROM `subjected_student` WHERE student_name = '$s_name' AND subject_name = '$subject_name' AND semester = '$s_sem'";
         $check_result = mysqli_query($conn, $check_query);
 
         if (mysqli_num_rows($check_result) > 0) {
-            echo "<script>alert('⚠️ This student is already assigned to this subject!'); window.location.href='assign_student_subject.php';</script>";
+            echo "<script>alert('⚠️ This student is already assigned to this subject for this semester!'); window.location.href='assign_student_subject.php';</script>";
             exit;
         } else {
             // Step D: Insert matching records into the true schema columns
@@ -78,16 +77,17 @@ if (isset($_POST['bulk_assign_subject'])) {
         $first_row = true; // Flag to skip header
 
         while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-            // Skip the header row
-            if ($first_row) {
+            // Skip the header row and any empty trailing rows
+            if ($first_row || empty(trim($data[0]))) {
                 $first_row = false;
                 continue;
             }
 
-            // Map data from CSV (Columns A, B, C)
-            // A (0): Roll Number, B (1): Name, C (2): Subject Name
-            $roll_number = mysqli_real_escape_string($conn, trim($data[0]));
-            $csv_subject = mysqli_real_escape_string($conn, trim($data[2]));
+            // Map data from CSV (Columns A, B, C, D, E)
+            $roll_number  = mysqli_real_escape_string($conn, trim($data[0]));
+            $csv_subject  = mysqli_real_escape_string($conn, trim($data[2]));
+            $csv_semester = isset($data[3]) ? (int)trim($data[3]) : 0;
+            $csv_year     = isset($data[4]) ? (int)trim($data[4]) : 0;
 
             // 1. Fetch Student Details from DB
             $student_query = "SELECT name, faculty, course, year, sem FROM `students` WHERE roll_number = '$roll_number'";
@@ -95,6 +95,11 @@ if (isset($_POST['bulk_assign_subject'])) {
 
             if ($student_result && mysqli_num_rows($student_result) > 0) {
                 $student = mysqli_fetch_assoc($student_result);
+                $student_name_safe = mysqli_real_escape_string($conn, $student['name']);
+                
+                // Prioritize CSV semester/year if provided, otherwise fallback to their DB default
+                $final_sem  = ($csv_semester > 0) ? $csv_semester : (int)$student['sem'];
+                $final_year = ($csv_year > 0) ? $csv_year : (int)$student['year'];
                 
                 // 2. Fetch Subject Code for this Teacher
                 $code_query = "SELECT subject_code FROM `subjected_teacher` 
@@ -104,24 +109,25 @@ if (isset($_POST['bulk_assign_subject'])) {
                 
                 if ($code_result && mysqli_num_rows($code_result) > 0) {
                     $code_data = mysqli_fetch_assoc($code_result);
-                    $subject_code = $code_data['subject_code'];
+                    $subject_code = mysqli_real_escape_string($conn, $code_data['subject_code']);
 
-                    // 3. Check for Duplicate
+                    // 3. Check for Duplicate (Added semester to prevent false flags on retakes)
                     $check_dup = "SELECT id FROM `subjected_student` 
-                                  WHERE student_name = '" . mysqli_real_escape_string($conn, $student['name']) . "' 
-                                  AND subject_name = '$csv_subject'";
+                                  WHERE student_name = '$student_name_safe' 
+                                  AND subject_name = '$csv_subject'
+                                  AND semester = '$final_sem'";
                     $dup_result = mysqli_query($conn, $check_dup);
 
                     if (mysqli_num_rows($dup_result) == 0) {
                         // 4. Insert Record
                         $insert = "INSERT INTO `subjected_student` (student_name, subject_name, subject_code, faculty, course, year, semester) 
-                                   VALUES ('" . mysqli_real_escape_string($conn, $student['name']) . "', 
+                                   VALUES ('$student_name_safe', 
                                            '$csv_subject', 
                                            '$subject_code', 
                                            '" . mysqli_real_escape_string($conn, $student['faculty']) . "', 
                                            '" . mysqli_real_escape_string($conn, $student['course']) . "', 
-                                           '" . (int)$student['year'] . "', 
-                                           '" . (int)$student['sem'] . "')";
+                                           '$final_year', 
+                                           '$final_sem')";
                         
                         if (mysqli_query($conn, $insert)) {
                             $success_count++;

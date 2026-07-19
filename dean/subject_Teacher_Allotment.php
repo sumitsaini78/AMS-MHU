@@ -7,12 +7,13 @@ if (!isset($_POST['course_submit'])) {
     $course_name = $_POST['course_name'];
 }
 if (isset($_POST['Allocate_Subject'])) {
+    echo "<script>alert('" . $_POST['course_name'] . "');</script>";
+
     // Getting Teacher data
     $selected_teacher = $_POST['selected_teacher'];
     $parts_t = explode('--', $selected_teacher, 2);
     $teacher_name = $parts_t[0];
     $teacher_id = $parts_t[1];
-
     // Getting Course and Subject data
     $selected_course_info = $_POST['selected_course'];
     $parts_c = explode('--', $selected_course_info, 3);
@@ -20,7 +21,7 @@ if (isset($_POST['Allocate_Subject'])) {
     $sub_id = $parts_c[1];
     $subject_code = $parts_c[2];
 
-    $course_name = $_POST['course_name']; // New: Getting selected course
+    $course_name = $_POST['course_name'];
     $year = $_POST['year'];
     $semester = $_POST['semester'];
 
@@ -105,36 +106,39 @@ if (isset($_POST['Allocate_Subject'])) {
                                     ?>
                                 </select>
                             </div>
-<div class="container bg-white p-4 rounded shadow-sm" style="max-width: 500px;">
-    <h4 class="mb-4 text-primary">Select Year & Semester</h4>
+                            <div class="container bg-white p-4 rounded shadow-sm" style="max-width: 500px;">
+                                <h4 class="mb-4 text-primary">Select Year & Semester</h4>
 
-    <!-- Added Bootstrap 'row' to align items horizontally -->
-    <div class="row">
-        
-        <!-- Year Dropdown (Takes up 50% of the row) -->
-        <div class="col-6 mb-3">
-            <label for="year" class="form-label fw-bold">Select Year:</label>
-            <select id="year" name="year" class="form-select">
-                <option value="">-- Choose Year --</option>
-                <option value="1">1st Year</option>
-                <option value="2">2nd Year</option>
-                <option value="3">3rd Year</option>
-                <option value="4">4th Year</option>
-            </select>
-        </div>
+                                <!-- Added Bootstrap 'row' to align items horizontally -->
+                                <div class="row">
 
-        <!-- Semester Dropdown (Takes up the other 50% of the row) -->
-        <div class="col-6 mb-3">
-            <label for="semester" class="form-label fw-bold">Select Semester:</label>
-            <!-- Default disable rakha hai jab tak year select na ho -->
-            <select id="semester" name="semester" class="form-select" disabled>
-                <option value="">-- Choose Semester --</option>
-            </select>
-        </div>
-        
-    </div>
-</div>
+                                    <!-- Year Dropdown (Takes up 50% of the row) -->
+                                    <div class="col-6 mb-3">
+                                        <label for="year" class="form-label fw-bold">Select Year:</label>
+                                        <select id="year" name="year" class="form-select">
+                                            <option value="">-- Choose Year --</option>
+                                            <option value="1">1st Year</option>
+                                            <option value="2">2nd Year</option>
+                                            <option value="3">3rd Year</option>
+                                            <option value="4">4th Year</option>
+                                        </select>
+                                    </div>
 
+                                    <!-- Semester Dropdown (Takes up the other 50% of the row) -->
+                                    <div class="col-6 mb-3">
+                                        <label for="semester" class="form-label fw-bold">Select Semester:</label>
+                                        <!-- Default disable rakha hai jab tak year select na ho -->
+                                        <select id="semester" name="semester" class="form-select" disabled>
+                                            <option value="">-- Choose Semester --</option>
+                                        </select>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div>
+                                <input type="hidden" name="course_name"
+                                    value="<?php echo htmlspecialchars($course_name); ?>">
+                            </div>
                             <button type="submit" class="btn btn-primary w-100" name="Allocate_Subject">Confirm
                                 Allocation</button>
                         </form>
