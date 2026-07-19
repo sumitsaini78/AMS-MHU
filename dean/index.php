@@ -20,6 +20,7 @@ if ($result && $result->num_rows === 1) {
     $dean = $result->fetch_assoc();
     $dean_name = $dean['Dean_name'];
     $faculty_name = $dean['faculty_name'];
+    $_SESSION['faculty_name']=$faculty_name;
     $_SESSION['dean_name'] = $dean_name;
 }
 
@@ -107,7 +108,6 @@ $pending_count = ($correction_count_result) ? mysqli_fetch_assoc($correction_cou
                 <p class="text-muted">Manage your department operations and monitor daily attendance flow.</p>
             </div>
         </div>
-
         <!-- Action Cards -->
         <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-6 mb-4">
             <?php
