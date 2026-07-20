@@ -262,7 +262,11 @@ $list_res = $stmt->get_result();
                                 ?>
                                 <tr>
                                     <td class="ps-4 text-muted fw-medium"><?= htmlspecialchars($row['date_of_attendence']) ?></td>
-                                    <td class="fw-medium"><?= htmlspecialchars($row['student_name']) ?></td>
+                                    <td class="fw-medium">
+                                    <input type="hidden" name="student_name" value="<?php $row['student_name']?>">
+                                    <?= htmlspecialchars($row['student_name']) ?>
+                                    </td>
+                                    
                                     <td><span class="badge bg-secondary text-white"><?= htmlspecialchars($row['roll_number']) ?></span></td>
                                     <td class="text-muted"><?= htmlspecialchars($row['subject_name'] ?? 'N/A') ?></td>
                                     <td>

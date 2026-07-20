@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 18, 2026 at 11:14 AM
+-- Generation Time: Jul 20, 2026 at 10:56 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -374,7 +374,16 @@ INSERT INTO `attendance` (`id`, `student_name`, `roll_number`, `subject_name`, `
 (327, ' ANANT JAIN ', '2506000005', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 180726, 'Present', ''),
 (328, 'Aarav Sharma', '26CSE001', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 180726, 'Absent', ''),
 (329, ' ANANT JAIN ', '2506000005', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 180726, 'Present', ''),
-(330, 'Aarav Sharma', '26CSE001', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 180726, 'Present', '');
+(330, 'Aarav Sharma', '26CSE001', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 180726, 'Present', ''),
+(331, ' ANANT JAIN ', '2506000005', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 180726, 'Present', ''),
+(332, 'Aarav Sharma', '26CSE001', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 180726, 'Absent', ''),
+(333, ' ANANT JAIN ', '2506000005', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 180726, 'Present', ''),
+(334, 'Aarav Sharma', '26CSE001', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 180726, 'Present', ''),
+(335, ' ANANT JAIN ', '2506000005', 'Principles and Practice of Management', 'mpmba', 'bba', 1, 8, 200726, 'Present', ''),
+(336, 'Aarav Sharma', '26CSE001', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 200726, 'Present', ''),
+(337, ' ANANT JAIN ', '2506000005', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 200726, 'Present', ''),
+(338, 'Aarav Sharma', '26CSE001', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 200726, 'Present', ''),
+(339, ' ARYAN SAINI ', '2506000010', 'sub1', 'N/A', 'N/A', 2, 7, 200726, 'Present', '');
 
 -- --------------------------------------------------------
 
@@ -522,8 +531,7 @@ CREATE TABLE `deans` (
 --
 
 INSERT INTO `deans` (`id`, `Dean_name`, `faculty_name`, `number`) VALUES
-(2, 'Prof. P.K. Agarwal', 'Faculty of Commerce and Business Studies', 22),
-(18, 'Prof. P.K. Agarwal', 'focbs', 0),
+(2, 'Prof. P.K. Agarwal', 'Faculty of Commerce & Business Studies', 22),
 (19, 'dr. seema tomar', 'FOPS', 0),
 (20, 'test', 'FOE', 0);
 
@@ -601,8 +609,6 @@ CREATE TABLE `students` (
   `course` varchar(111) NOT NULL,
   `year` int(11) NOT NULL,
   `sem` int(11) NOT NULL,
-  `subject_code` varchar(244) NOT NULL,
-  `subject_name` varchar(234) NOT NULL,
   `date_of_admission` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -610,79 +616,83 @@ CREATE TABLE `students` (
 -- Dumping data for table `students`
 --
 
-INSERT INTO `students` (`id`, `name`, `enrollment_number`, `roll_number`, `faculty`, `course`, `year`, `sem`, `subject_code`, `subject_name`, `date_of_admission`) VALUES
-(80, ' ABHIJEET PANWAR ', 2147483647, '2506000002', 'FOCBS', 'MBA', 1, 1, '', '', 0),
-(81, ' ABHINAV KUMAR ', 2147483647, '2506000059', 'FOCBS', 'MBA', 1, 2, '', '', 0),
-(82, ' ABHISHEK ', 2147483647, '2506000003', 'FOCBS', 'MBA', 1, 2, '', '', 0),
-(83, ' ADITI SHARMA ', 2147483647, '2506000004', 'FOCBS', 'MBA', 1, 2, '', '', 0),
-(84, ' ANANT JAIN ', 2147483647, '2506000005', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(85, ' ANCHAL ', 2147483647, '2506000046', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(86, ' ANJALI GUPTA ', 2147483647, '2506000007', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(87, ' ANJALI PAL ', 2147483647, '2506000008', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(88, ' ANSHIKA YADAV ', 2147483647, '2506000052', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(89, ' ANURAG CHOUDHARY ', 2147483647, '2506000061', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(90, ' ARNIKA KAMBOJ ', 2147483647, '2506000009', 'FOCBS', 'BBA', 0, 2, '', '', 0),
-(91, ' ARYAN SAINI ', 2147483647, '2506000010', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(92, ' ARYAV KUMAR ', 2147483647, '2506000058', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(93, ' ASIF ', 2147483647, '2506000011', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(94, ' BUNISH KUMAR SAINI ', 2147483647, '2506000012', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(95, ' DEEN DYAL ', 2147483647, '2506000013', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(96, ' DISHU ', 2147483647, '2506000014', 'FOCBS', 'BBA', 1, 0, '', '', 0),
-(97, ' HARSH GIRI ', 2147483647, '2506000015', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(98, ' HARSH NAMDEV ', 2147483647, '2506000056', 'FOCBS', 'BBA', 1, 1, '', '', 0),
-(99, ' HARSH SHARMA ', 2147483647, '2506000055', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(100, ' HARSH SHARMA ', 2147483647, '2506000047', 'FOCBS', 'BBA', 1, 1, '', '', 0),
-(101, ' HIMANI SHARMA ', 2147483647, '2506000016', 'FOCBS', 'BBA', 1, 1, '', '', 0),
-(102, ' HRITIK ', 2147483647, '2506000065', 'FOCBS', 'BBA', 1, 1, '', '', 0),
-(103, ' JAISHREE ', 2147483647, '2506000017', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(104, ' KANNU DEVI ', 2147483647, '2506000018', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(105, ' KAPIL SAINI ', 2147483647, '2506000019', 'FOCBS', 'BBA', 1, 1, '', '', 0),
-(106, ' KHUSHI KUMARI ', 2147483647, '2506000020', 'FOCBS', 'BBA', 1, 1, '', '', 0),
-(107, ' KM ANCHAL SAINI ', 2147483647, '2506000021', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(108, ' KM ANJALI ', 2147483647, '2506000006', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(109, ' KM PREETI ', 2147483647, '2506000022', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(110, ' MANSAVI ', 2147483647, '2506000023', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(111, ' NEERAJ KUMAR ', 2147483647, '2506000024', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(112, ' NEHA KASHYAP ', 2147483647, '2506000025', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(113, ' NIKHIL ', 2147483647, '2506000060', 'FOCBS', 'BBA', 1, 2, '', '', 0),
-(114, ' NISHANT ', 2147483647, '2506000026', 'FOCBS', 'BBA', 1, 1, '', '', 0),
-(115, ' NISHU SHARMA ', 2147483647, '2506000027', 'FOCBS', 'BBA', 1, 1, '', '', 0),
-(116, ' NITIN CHAUDHARY ', 2147483647, '2506000053', 'FOCBS', 'BBA', 1, 1, '', '', 0),
-(117, ' PRACHI ', 2147483647, '2506000028', 'FOCBS', 'BCOM', 1, 1, '', '', 0),
-(118, ' PRAJJWAL SHARMA ', 2147483647, '2506000048', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(119, ' PRAKHAR GOEL ', 2147483647, '2506000029', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(120, ' RADHIKA ', 2147483647, '2506000030', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(121, ' RISHABH BIJALWAN', 2147483647, '2506000062', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(122, ' RIYA TYAGI ', 2147483647, '2506000063', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(123, ' SACHIN KUMAR ', 2147483647, '2506000031', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(124, ' SAGAR GHOTNA ', 2147483647, '2506000032', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(125, ' SAKSHI ', 2147483647, '2506000033', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(126, ' SALONI ', 2147483647, '2506000034', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(127, ' SHIKHA ', 2147483647, '2506000035', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(128, ' SHIVAM ', 2147483647, '2506000036', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(129, ' SHIVANK TRIPATHI ', 2147483647, '2506000037', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(130, ' SUJAL KUMAR ', 2147483647, '2506000038', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(131, ' SUWECHA SINGH ', 2147483647, '2506000054', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(132, ' TANISHKA TYAGI ', 2147483647, '2506000039', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(133, ' TANU SAHRAWAT ', 2147483647, '2506000057', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(134, ' TARUN TOMAR ', 2147483647, '2506000040', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(135, ' UJJAWAL SHARMA ', 2147483647, '2506000041', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(136, ' VANSHIKA PAL ', 2147483647, '2506000042', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(137, ' VARTIKA CHOUDHARY ', 2147483647, '2506000043', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(138, ' VEDANSHI ', 2147483647, '2506000044', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(139, ' YASH TYAGI ', 2147483647, '2506000064', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(140, ' YATIN KUMAR ', 2147483647, '2506000045', 'FOCBS', 'BCOM', 1, 2, '', '', 0),
-(141, 'asaq', 231, '2123', 'FOA', 'BBA', 2, 2, '', '', 0),
-(142, 'Aarav Sharma', 0, '26CSE001', 'Faculty of Engineering', 'B.Tech CSE', 1, 1, '', '', 0),
-(143, 'Ananya Iyer', 0, '25ECE024', 'Faculty of Engineering', 'B.Tech ECE', 2, 3, '', '', 0),
-(144, 'Rohan Verma', 0, '24MECH015', 'Faculty of Engineering', 'B.Tech ME', 3, 5, '', '', 0),
-(145, 'Diya Nair', 0, '23CSE042', 'Faculty of Engineering', 'B.Tech CSE', 4, 7, '', '', 0),
-(146, 'Ishaan Gupta', 0, '26BBA009', 'Faculty of Management', 'BBA', 1, 1, '', '', 0),
-(147, 'Meera Joshi', 0, '25MBA054', 'Faculty of Management', 'MBA', 2, 3, '', '', 0),
-(148, 'Aditya Rao', 0, '26BCA012', 'Faculty of Computer Apps', 'BCA', 1, 1, '', '', 0),
-(149, 'Kavya Patel', 0, '24MCA031', 'Faculty of Computer Apps', 'MCA', 3, 5, '', '', 0),
-(150, 'Vivaan Saxena', 0, '25LAW004', 'Faculty of Law', 'BA LLB', 2, 3, '', '', 0),
-(151, 'Sanya Mirza', 0, '23LAW048', 'Faculty of Law', 'BA LLB', 4, 7, '', '', 0);
+INSERT INTO `students` (`id`, `name`, `enrollment_number`, `roll_number`, `faculty`, `course`, `year`, `sem`, `date_of_admission`) VALUES
+(80, ' ABHIJEET PANWAR ', 2147483647, '2506000002', 'FOCBS', 'MBA', 1, 1, 0),
+(81, ' ABHINAV KUMAR ', 2147483647, '2506000059', 'FOCBS', 'MBA', 1, 2, 0),
+(82, ' ABHISHEK ', 2147483647, '2506000003', 'FOCBS', 'MBA', 1, 2, 0),
+(83, ' ADITI SHARMA ', 2147483647, '2506000004', 'FOCBS', 'MBA', 1, 2, 0),
+(84, ' ANANT JAIN ', 2147483647, '2506000005', 'FOCBS', 'BBA', 1, 2, 0),
+(85, ' ANCHAL ', 2147483647, '2506000046', 'FOCBS', 'BBA', 1, 2, 0),
+(86, ' ANJALI GUPTA ', 2147483647, '2506000007', 'FOCBS', 'BBA', 1, 2, 0),
+(87, ' ANJALI PAL ', 2147483647, '2506000008', 'FOCBS', 'BBA', 1, 2, 0),
+(88, ' ANSHIKA YADAV ', 2147483647, '2506000052', 'FOCBS', 'BBA', 1, 2, 0),
+(89, ' ANURAG CHOUDHARY ', 2147483647, '2506000061', 'FOCBS', 'BBA', 1, 2, 0),
+(90, ' ARNIKA KAMBOJ ', 2147483647, '2506000009', 'FOCBS', 'BBA', 0, 2, 0),
+(91, ' ARYAN SAINI ', 2147483647, '2506000010', 'FOCBS', 'BBA', 1, 2, 0),
+(92, ' ARYAV KUMAR ', 2147483647, '2506000058', 'FOCBS', 'BBA', 1, 2, 0),
+(93, ' ASIF ', 2147483647, '2506000011', 'FOCBS', 'BBA', 1, 2, 0),
+(94, ' BUNISH KUMAR SAINI ', 2147483647, '2506000012', 'FOCBS', 'BBA', 1, 2, 0),
+(95, ' DEEN DYAL ', 2147483647, '2506000013', 'FOCBS', 'BBA', 1, 2, 0),
+(96, ' DISHU ', 2147483647, '2506000014', 'FOCBS', 'BBA', 1, 0, 0),
+(97, ' HARSH GIRI ', 2147483647, '2506000015', 'FOCBS', 'BBA', 1, 2, 0),
+(98, ' HARSH NAMDEV ', 2147483647, '2506000056', 'FOCBS', 'BBA', 1, 1, 0),
+(99, ' HARSH SHARMA ', 2147483647, '2506000055', 'FOCBS', 'BBA', 1, 2, 0),
+(100, ' HARSH SHARMA ', 2147483647, '2506000047', 'FOCBS', 'BBA', 1, 1, 0),
+(101, ' HIMANI SHARMA ', 2147483647, '2506000016', 'FOCBS', 'BBA', 1, 1, 0),
+(102, ' HRITIK ', 2147483647, '2506000065', 'FOCBS', 'BBA', 1, 1, 0),
+(103, ' JAISHREE ', 2147483647, '2506000017', 'FOCBS', 'BBA', 1, 2, 0),
+(104, ' KANNU DEVI ', 2147483647, '2506000018', 'FOCBS', 'BBA', 1, 2, 0),
+(105, ' KAPIL SAINI ', 2147483647, '2506000019', 'FOCBS', 'BBA', 1, 1, 0),
+(106, ' KHUSHI KUMARI ', 2147483647, '2506000020', 'FOCBS', 'BBA', 1, 1, 0),
+(107, ' KM ANCHAL SAINI ', 2147483647, '2506000021', 'FOCBS', 'BBA', 1, 2, 0),
+(108, ' KM ANJALI ', 2147483647, '2506000006', 'FOCBS', 'BBA', 1, 2, 0),
+(109, ' KM PREETI ', 2147483647, '2506000022', 'FOCBS', 'BBA', 1, 2, 0),
+(110, ' MANSAVI ', 2147483647, '2506000023', 'FOCBS', 'BBA', 1, 2, 0),
+(111, ' NEERAJ KUMAR ', 2147483647, '2506000024', 'FOCBS', 'BBA', 1, 2, 0),
+(112, ' NEHA KASHYAP ', 2147483647, '2506000025', 'FOCBS', 'BBA', 1, 2, 0),
+(113, ' NIKHIL ', 2147483647, '2506000060', 'FOCBS', 'BBA', 1, 2, 0),
+(114, ' NISHANT ', 2147483647, '2506000026', 'FOCBS', 'BBA', 1, 1, 0),
+(115, ' NISHU SHARMA ', 2147483647, '2506000027', 'FOCBS', 'BBA', 1, 1, 0),
+(116, ' NITIN CHAUDHARY ', 2147483647, '2506000053', 'FOCBS', 'BBA', 1, 1, 0),
+(117, ' PRACHI ', 2147483647, '2506000028', 'FOCBS', 'BCOM', 1, 1, 0),
+(118, ' PRAJJWAL SHARMA ', 2147483647, '2506000048', 'FOCBS', 'BCOM', 1, 2, 0),
+(119, ' PRAKHAR GOEL ', 2147483647, '2506000029', 'FOCBS', 'BCOM', 1, 2, 0),
+(120, ' RADHIKA ', 2147483647, '2506000030', 'FOCBS', 'BCOM', 1, 2, 0),
+(121, ' RISHABH BIJALWAN', 2147483647, '2506000062', 'FOCBS', 'BCOM', 1, 2, 0),
+(122, ' RIYA TYAGI ', 2147483647, '2506000063', 'FOCBS', 'BCOM', 1, 2, 0),
+(123, ' SACHIN KUMAR ', 2147483647, '2506000031', 'FOCBS', 'BCOM', 1, 2, 0),
+(124, ' SAGAR GHOTNA ', 2147483647, '2506000032', 'FOCBS', 'BCOM', 1, 2, 0),
+(125, ' SAKSHI ', 2147483647, '2506000033', 'FOCBS', 'BCOM', 1, 2, 0),
+(126, ' SALONI ', 2147483647, '2506000034', 'FOCBS', 'BCOM', 1, 2, 0),
+(127, ' SHIKHA ', 2147483647, '2506000035', 'FOCBS', 'BCOM', 1, 2, 0),
+(128, ' SHIVAM ', 2147483647, '2506000036', 'FOCBS', 'BCOM', 1, 2, 0),
+(129, ' SHIVANK TRIPATHI ', 2147483647, '2506000037', 'FOCBS', 'BCOM', 1, 2, 0),
+(130, ' SUJAL KUMAR ', 2147483647, '2506000038', 'FOCBS', 'BCOM', 1, 2, 0),
+(131, ' SUWECHA SINGH ', 2147483647, '2506000054', 'FOCBS', 'BCOM', 1, 2, 0),
+(132, ' TANISHKA TYAGI ', 2147483647, '2506000039', 'FOCBS', 'BCOM', 1, 2, 0),
+(133, ' TANU SAHRAWAT ', 2147483647, '2506000057', 'FOCBS', 'BCOM', 1, 2, 0),
+(134, ' TARUN TOMAR ', 2147483647, '2506000040', 'FOCBS', 'BCOM', 1, 2, 0),
+(135, ' UJJAWAL SHARMA ', 2147483647, '2506000041', 'FOCBS', 'BCOM', 1, 2, 0),
+(136, ' VANSHIKA PAL ', 2147483647, '2506000042', 'FOCBS', 'BCOM', 1, 2, 0),
+(137, ' VARTIKA CHOUDHARY ', 2147483647, '2506000043', 'FOCBS', 'BCOM', 1, 2, 0),
+(138, ' VEDANSHI ', 2147483647, '2506000044', 'FOCBS', 'BCOM', 1, 2, 0),
+(139, ' YASH TYAGI ', 2147483647, '2506000064', 'FOCBS', 'BCOM', 1, 2, 0),
+(140, ' YATIN KUMAR ', 2147483647, '2506000045', 'FOCBS', 'BCOM', 1, 2, 0),
+(141, 'asaq', 231, '2123', 'FOA', 'BBA', 2, 2, 0),
+(142, 'Aarav Sharma', 0, '26CSE001', 'Faculty of Engineering', 'B.Tech CSE', 1, 1, 0),
+(143, 'Ananya Iyer', 0, '25ECE024', 'Faculty of Engineering', 'B.Tech ECE', 2, 3, 0),
+(144, 'Rohan Verma', 0, '24MECH015', 'Faculty of Engineering', 'B.Tech ME', 3, 5, 0),
+(145, 'Diya Nair', 0, '23CSE042', 'Faculty of Engineering', 'B.Tech CSE', 4, 7, 0),
+(146, 'Ishaan Gupta', 0, '26BBA009', 'Faculty of Management', 'BBA', 1, 1, 0),
+(147, 'Meera Joshi', 0, '25MBA054', 'Faculty of Management', 'MBA', 2, 3, 0),
+(148, 'Aditya Rao', 0, '26BCA012', 'Faculty of Computer Apps', 'BCA', 1, 1, 0),
+(149, 'Kavya Patel', 0, '24MCA031', 'Faculty of Computer Apps', 'MCA', 3, 5, 0),
+(150, 'Vivaan Saxena', 0, '25LAW004', 'Faculty of Law', 'BA LLB', 2, 3, 0),
+(151, 'Sanya Mirza', 0, '23LAW048', 'Faculty of Law', 'BA LLB', 4, 7, 0),
+(152, 'a', 1, '1', 'FOCBS', 'MBA', 1, 2, 0),
+(153, 'a', 1, '1', 'FOCBS', 'MBA', 1, 2, 0),
+(154, 'John Doe', 12345678, 'A-101', 'Computer Science', 'B.Tech', 2026, 4, 0),
+(155, 'sumit ', 564564564, '5656456', 'klklk', 'bbb', 2222, 2, 0);
 
 -- --------------------------------------------------------
 
@@ -708,7 +718,9 @@ CREATE TABLE `subjected_student` (
 
 INSERT INTO `subjected_student` (`id`, `student_name`, `subject_name`, `subject_code`, `faculty`, `course`, `year`, `semester`, `roll_number`) VALUES
 (5, 'Aarav Sharma', 'Principles and Practice of Management', 'mpmba', 'Faculty of Engineering', 'B.Tech CSE', 1, 1, 0),
-(6, ' ANANT JAIN ', 'Principles and Practice of Management', 'mpmba', 'FOCBS', 'BBA', 1, 2, 0);
+(6, ' ANANT JAIN ', 'Principles and Practice of Management', 'mpmba', 'FOCBS', 'BBA', 1, 2, 0),
+(7, ' ARYAN SAINI ', 'sub1', '', 'FOCBS', 'BBA', 1, 2, 0),
+(8, ' BUNISH KUMAR SAINI ', 'sub1', '', 'FOCBS', 'BBA', 1, 2, 0);
 
 -- --------------------------------------------------------
 
@@ -736,7 +748,9 @@ INSERT INTO `subjected_teacher` (`id`, `teacher_id`, `sub_id`, `teacher_name`, `
 (12, 3, 38, 'dr. snehashish bhardwaj', 'Principles and Practice of Management', '', 1, 8, 'mpmba'),
 (13, 3, 38, 'dr. snehashish bhardwaj', 'Principles and Practice of Management', '', 1, 8, 'kdskjdfs'),
 (19, 3, 39, 'dr. snehashish bhardwaj', 'fa', '', 3, 6, ''),
-(20, 3, 45, 'dr. snehashish bhardwaj', 'sub1', '', 2, 7, '');
+(20, 3, 45, 'dr. snehashish bhardwaj', 'sub1', '', 2, 7, ''),
+(24, 3, 39, 'dr. snehashish bhardwaj', ' Financial Accountin', 'B.Com.', 3, 9, 'mpmba33-601'),
+(25, 5, 49, 'dr. brajkishore bharti', 'adddddd', '', 3, 5, '');
 
 -- --------------------------------------------------------
 
@@ -883,7 +897,7 @@ ALTER TABLE `teachers`
 -- AUTO_INCREMENT for table `attendance`
 --
 ALTER TABLE `attendance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=331;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=340;
 
 --
 -- AUTO_INCREMENT for table `attendance_corrections`
@@ -925,19 +939,19 @@ ALTER TABLE `faculty`
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=152;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=156;
 
 --
 -- AUTO_INCREMENT for table `subjected_student`
 --
 ALTER TABLE `subjected_student`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `subjected_teacher`
 --
 ALTER TABLE `subjected_teacher`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `subjects`

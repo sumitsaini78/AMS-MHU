@@ -21,7 +21,7 @@ $today_date = (int)date('dmy');
                 MAX(st.teacher_name) AS assigned_teacher,
                 (
                     SELECT COUNT(*)
-                    FROM `attendance` a 
+                    FROM `attendance` a     
                     WHERE TRIM(a.subject_name) = TRIM(s.subject_name) 
                     AND TRIM(a.course) = TRIM(c.course_name) 
                     AND a.date_of_attendence = '$today_date'
