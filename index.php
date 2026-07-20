@@ -19,7 +19,7 @@ if (isset($_POST['dean-login'])) {
     } else {
         // Invalid credentials
         echo "<script>alert('Invalid Dean ID or Password');</script>";
-    }
+    } 
 }
 // admin login
 if (isset($_POST['admin-login'])) {

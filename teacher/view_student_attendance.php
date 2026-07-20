@@ -1,5 +1,4 @@
-<?php
-include "../db_connect.php";
+<?php include "../db_connect.php" ;
 
 session_start();
 if ($_SESSION['teacher_name'] == null) {
@@ -7,14 +6,14 @@ if ($_SESSION['teacher_name'] == null) {
     exit();
 }
 
-// 1. Process Post & Redirect (PRG Pattern)
+// 1. Process Post & Redirect (PRG Pattern) to prevent Form Resubmission error on reload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['subject_name'])) {
     $_SESSION['subject_name'] = $_POST['subject_name'];
     header("Location: view_student_attendance.php");
     exit();
 }
 
-// 2. Enforce fallback routing states
+// 2. Enforce fallback routing states if subject parameters missing
 if (!isset($_SESSION['subject_name'])) {
     header("Location: student_attendence.php");
     exit();
@@ -22,11 +21,11 @@ if (!isset($_SESSION['subject_name'])) {
 
 $current_subject = $_SESSION['subject_name'];
 
-// 3. Capture Dates from GET for filtering
-$start_date = isset($_GET['start_date']) ? $_GET['start_date'] : '';
-$end_date = isset($_GET['end_date']) ? $_GET['end_date'] : '';
+// 3. Handle Date Filters from GET request
+$from_date = isset($_GET['from_date']) ? $_GET['from_date'] : '';
+$to_date = isset($_GET['to_date']) ? $_GET['to_date'] : '';
 
-// 4. Query logic with dynamic date filter
+// 4. Query to calculate total days and present days per student for the selected subject
 $query = "SELECT 
             s.name, 
             s.roll_number,
@@ -37,42 +36,119 @@ $query = "SELECT
             ON s.roll_number = a.roll_number 
             AND a.subject_name = ?";
 
-$params = [$current_subject];
-$types = "s";
-
-// Updated query to use the correct column name: date_of_attendence
-if (!empty($start_date) && !empty($end_date)) {
+if (!empty($from_date) && !empty($to_date)) {
     $query .= " AND a.date_of_attendence BETWEEN ? AND ?";
-    $params[] = $start_date;
-    $params[] = $end_date;
-    $types .= "ss";
 }
 
 $query .= " GROUP BY s.roll_number, s.name ORDER BY s.roll_number ASC";
 
 $stmt = mysqli_prepare($conn, $query);
-mysqli_stmt_bind_param($stmt, $types, ...$params);
+
+if (!empty($from_date) && !empty($to_date)) {
+    mysqli_stmt_bind_param($stmt, "sss", $current_subject, $from_date, $to_date);
+} else {
+    mysqli_stmt_bind_param($stmt, "s", $current_subject);
+}
+
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
+
+// =========================================================
+// 5. EXPORT TO EXCEL (CSV FORMAT) LOGIC
+// =========================================================
+if (isset($_GET['export']) && $_GET['export'] === 'excel') {
+    $filename = "Attendance_Report_" . date('Y-m-d') . ".csv";
+    
+    // Set headers for download
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    
+    // Create a file pointer connected to the output stream
+    $output = fopen('php://output', 'w');
+    
+    // Write UTF-8 BOM for Excel compatibility (ensures special characters render correctly)
+    fputs($output, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
+    
+    // Output the column headings
+    fputcsv($output, array('#', 'Student Name', 'Roll Number', 'Present Days', 'Total Days', 'Percentage (%)'));
+    
+    $index = 1;
+    // Loop over the rows, outputting them
+    while ($row = mysqli_fetch_assoc($result)) {
+        $total = (int)$row['total_days'];
+        $present = (int)$row['present_days'];
+        $raw_pct = ($total > 0) ? round(($present / $total) * 100, 2) : 0;
+        
+        fputcsv($output, array(
+            $index,
+            $row['name'],
+            $row['roll_number'],
+            $present,
+            $total,
+            $raw_pct
+        ));
+        $index++;
+    }
+    fclose($output);
+    exit(); // Exit here to ensure the HTML below isn't printed into the CSV
+}
 ?>
 <!doctype html>
 <html lang="en" data-bs-theme="light">
 
 <head>
     <title>View Student Attendance</title>
+    <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+
+    <!-- Bootstrap CSS v5.3.8 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+    
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+
     <style>
-        body { background-color: #f8f9fa; }
-        #mhu-text { color: #a2c250; text-shadow: 1px 2px 14px rgb(46 195 41); }
-        .custom-card { background: #ffffff; border: none; border-radius: 12px; }
-        .student-link-btn { background: none; border: none; color: #0d6efd; font-weight: 600; text-align: left; padding: 0; transition: color 0.15s ease-in-out; }
-        .student-link-btn:hover { color: #0a58ca; text-decoration: underline; cursor: pointer; }
-        .table th { font-weight: 600; text-transform: uppercase; font-size: 0.82rem; letter-spacing: 0.5px; }
-        .table td { vertical-align: middle; }
-        .progress { height: 8px; border-radius: 4px; }
+        body {
+            background-color: #f8f9fa;
+        }
+        #mhu-text {
+            color: #a2c250;
+            text-shadow: 1px 2px 14px rgb(46 195 41);
+        }
+        .custom-card {
+            background: #ffffff;
+            border: none;
+            border-radius: 12px;
+        }
+        .student-link-btn {
+            background: none;
+            border: none;
+            color: #0d6efd;
+            font-weight: 600;
+            text-align: left;
+            padding: 0;
+            transition: color 0.15s ease-in-out;
+        }
+        .student-link-btn:hover {
+            color: #0a58ca;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.82rem;
+            letter-spacing: 0.5px;
+        }
+        .table td {
+            vertical-align: middle;
+        }
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 
@@ -80,12 +156,16 @@ $result = mysqli_stmt_get_result($stmt);
     <header>
         <nav class="navbar navbar-dark bg-dark shadow-sm">
             <div class="container-fluid">
-                <span class="navbar-brand mb-0 h1 fs-3 fw-bold" id="mhu-text"> MHU-AMS <sub>Student-Records</sub></span>
+                <span class="navbar-brand mb-0 h1 fs-3 fw-bold" id="mhu-text"> MHU-AMS
+                    <sub>Student-Records</sub></span>
                 <div class="d-flex align-items-center">
                     <span class="navbar-text text-white bg-secondary px-3 py-1 rounded-pill small me-3">
-                        <i class="fa-solid fa-user-tie me-1"></i> Welcome, <?php echo htmlspecialchars($_SESSION['teacher_name']); ?>
+                        <i class="fa-solid fa-user-tie me-1"></i> Welcome,
+                        <?php echo isset($_SESSION['teacher_name']) ? htmlspecialchars($_SESSION['teacher_name']) : 'Teacher'; ?>
                     </span>
-                    <a href="student_attendence.php" class="btn btn-sm btn-outline-info me-2"><i class="fa-solid fa-arrow-left me-1"></i> Back</a>
+                    <a href="student_attendence.php" class="btn btn-sm btn-outline-info me-2">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Back
+                    </a>
                     <a href="../logout.php" class="btn btn-sm btn-outline-light">Logout</a>
                 </div>
             </div>
@@ -95,6 +175,7 @@ $result = mysqli_stmt_get_result($stmt);
     <main class="container py-5">
         <div class="row justify-content-center">
             <div class="col-12 col-xl-10">
+                
                 <div class="custom-card shadow-sm p-4 border border-light">
                     
                     <div class="d-flex align-items-center justify-content-between border-bottom pb-3 mb-4 flex-wrap gap-2">
@@ -104,26 +185,36 @@ $result = mysqli_stmt_get_result($stmt);
                                 <i class="fa-solid fa-book-bookmark text-muted me-2"></i><?php echo htmlspecialchars($current_subject); ?>
                             </h3>
                         </div>
-                        
-                        <!-- Date Filter Form -->
-                        <form method="GET" class="d-flex gap-2 align-items-end">
-                            <div class="form-group">
-                                <label class="small text-muted mb-1">From</label>
-                                <input type="date" name="start_date" class="form-control form-control-sm" value="<?php echo htmlspecialchars($start_date); ?>">
+                    </div>
+
+                    <!-- Date Range Filter & Export Form -->
+                    <div class="bg-light p-3 rounded mb-4 border border-light-subtle">
+                        <form method="GET" action="view_student_attendance.php" class="row g-3 align-items-end m-0">
+                            <div class="col-12 col-md-auto">
+                                <label for="from_date" class="form-label fw-bold text-secondary small mb-1"><i class="fa-regular fa-calendar me-1"></i> From Date:</label>
+                                <input type="date" id="from_date" name="from_date" class="form-control form-control-sm" value="<?php echo htmlspecialchars($from_date); ?>">
                             </div>
-                            <div class="form-group">
-                                <label class="small text-muted mb-1">To</label>
-                                <input type="date" name="end_date" class="form-control form-control-sm" value="<?php echo htmlspecialchars($end_date); ?>">
+                            <div class="col-12 col-md-auto">
+                                <label for="to_date" class="form-label fw-bold text-secondary small mb-1"><i class="fa-regular fa-calendar me-1"></i> To Date:</label>
+                                <input type="date" id="to_date" name="to_date" class="form-control form-control-sm" value="<?php echo htmlspecialchars($to_date); ?>">
                             </div>
-                            <div class="d-flex gap-1">
-                                <button type="submit" class="btn btn-sm btn-primary mt-4"><i class="fa-solid fa-filter"></i></button>
-                                <?php if (!empty($start_date)): ?>
-                                    <a href="view_student_attendance.php" class="btn btn-sm btn-outline-secondary mt-4"><i class="fa-solid fa-times"></i></a>
+                            <div class="col-12 col-md-auto">
+                                <button type="submit" class="btn btn-primary btn-sm px-3"><i class="fa-solid fa-filter me-1"></i> Filter</button>
+                                <?php if(!empty($from_date) && !empty($to_date)): ?>
+                                    <a href="view_student_attendance.php" class="btn btn-outline-secondary btn-sm px-3 ms-2">Clear</a>
                                 <?php endif; ?>
+                            </div>
+                            
+                            <!-- Export Button Added Here -->
+                            <div class="col-12 col-md-auto ms-auto">
+                                <button type="submit" name="export" value="excel" class="btn btn-success btn-sm px-3 shadow-sm">
+                                    <i class="fa-solid fa-file-excel me-1"></i> Export to Excel
+                                </button>
                             </div>
                         </form>
                     </div>
 
+                    <!-- Students Performance Grid -->
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light text-secondary">
@@ -137,10 +228,14 @@ $result = mysqli_stmt_get_result($stmt);
                             </thead>
                             <tbody>
                                 <?php
+                                // Reset the result pointer in case the data needs to be parsed again 
+                                mysqli_data_seek($result, 0);
+
                                 $index = 1;
                                 while ($row = mysqli_fetch_assoc($result)) {
                                     $total = (int)$row['total_days'];
                                     $present = (int)$row['present_days'];
+                                    
                                     $raw_pct = ($total > 0) ? round(($present / $total) * 100, 2) : 0;
                                     
                                     if ($raw_pct >= 75) {
@@ -156,46 +251,55 @@ $result = mysqli_stmt_get_result($stmt);
 
                                     echo "<tr>";
                                     echo "<td class='fw-semibold text-secondary ps-3'>" . $index . "</td>";
-                                    echo "<td>
-                                            <form method='POST' action='student_calendar.php' class='m-0'>
-                                                <input type='hidden' name='student_roll' value='" . htmlspecialchars($row['roll_number'], ENT_QUOTES, 'UTF-8') . "'>
-                                                <input type='hidden' name='student_name' value='" . htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8') . "'>
-                                                <button type='submit' class='student-link-btn'>
-                                                    <i class='fa-regular fa-user me-2 text-muted small'></i>" . htmlspecialchars($row['name']) . "
-                                                </button>
-                                            </form>
-                                          </td>";
+                                    
+                                    echo "<td>";
+                                    echo "<form method='POST' action='student_calendar.php' class='m-0'>";
+                                    echo "<input type='hidden' name='student_roll' value='" . htmlspecialchars($row['roll_number'], ENT_QUOTES, 'UTF-8') . "'>";
+                                    echo "<input type='hidden' name='student_name' value='" . htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8') . "'>";
+                                    echo "<button type='submit' class='student-link-btn'>";
+                                    echo "<i class='fa-regular fa-user me-2 text-muted small'></i>" . htmlspecialchars($row['name']) . "";
+                                    echo "</button>";
+                                    echo "</form>";
+                                    echo "</td>";
+                                    
                                     echo "<td class='text-secondary font-monospace'>" . htmlspecialchars($row['roll_number']) . "</td>";
+                                    
                                     echo "<td>";
                                     if ($total > 0) {
-                                        echo "<div class='d-flex align-items-center'>
-                                                <div class='progress flex-grow-1 bg-light me-2'>
-                                                    <div class='progress-bar $progress_color' role='progressbar' style='width: $raw_pct%' aria-valuenow='$raw_pct' aria-valuemin='0' aria-valuemax='100'></div>
-                                                </div>
-                                                <small class='text-muted text-nowrap'>$present/$total Days</small>
-                                              </div>";
+                                        echo "<div class='d-flex align-items-center'>";
+                                        echo "<div class='progress flex-grow-1 bg-light me-2'>";
+                                        echo "<div class='progress-bar " . $progress_color . "' role='progressbar' style='width: " . $raw_pct . "%' aria-valuenow='" . $raw_pct . "' aria-valuemin='0' aria-valuemax='100'></div>";
+                                        echo "</div>";
+                                        echo "<small class='text-muted text-nowrap'>" . $present . "/" . $total . " Days</small>";
+                                        echo "</div>";
                                     } else {
-                                        echo "<small class='text-muted italic'><i class='fa-solid fa-circle-minus me-1 text-black-50'></i>No lectures recorded</small>";
+                                        echo "<small class='text-muted italic'><i class='fa-solid fa-circle-minus me-1 text-black-50'></i>No records found</small>";
                                     }
                                     echo "</td>";
+                                    
                                     echo "<td class='text-end pe-3'>";
                                     if ($total > 0) {
-                                        echo "<span class='badge px-2.5 py-1.5 fw-bold $badge_color'>$raw_pct%</span>";
+                                        echo "<span class='badge px-2.5 py-1.5 fw-bold " . $badge_color . "'>" . $raw_pct . "%</span>";
                                     } else {
                                         echo "<span class='badge px-2.5 py-1.5 bg-light text-secondary border border-secondary-subtle'>N/A</span>";
                                     }
-                                    echo "</td></tr>";
+                                    echo "</td>";
+                                    
+                                    echo "</tr>";
                                     $index++;
                                 }
                                 ?>
                             </tbody>
                         </table>
                     </div>
+
                 </div>
+
             </div>
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 </body>
+
 </html>
