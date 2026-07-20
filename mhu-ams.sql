@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 20, 2026 at 10:56 AM
+-- Generation Time: Jul 20, 2026 at 01:18 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -380,10 +380,12 @@ INSERT INTO `attendance` (`id`, `student_name`, `roll_number`, `subject_name`, `
 (333, ' ANANT JAIN ', '2506000005', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 180726, 'Present', ''),
 (334, 'Aarav Sharma', '26CSE001', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 180726, 'Present', ''),
 (335, ' ANANT JAIN ', '2506000005', 'Principles and Practice of Management', 'mpmba', 'bba', 1, 8, 200726, 'Present', ''),
-(336, 'Aarav Sharma', '26CSE001', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 200726, 'Present', ''),
+(336, 'Aarav Sharma', '26CSE001', 'Principles and Practice of Management', 'mpmba', 'M.COM.', 1, 8, 200726, 'Present', ''),
 (337, ' ANANT JAIN ', '2506000005', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 200726, 'Present', ''),
 (338, 'Aarav Sharma', '26CSE001', 'Principles and Practice of Management', 'mpmba', 'N/A', 1, 8, 200726, 'Present', ''),
-(339, ' ARYAN SAINI ', '2506000010', 'sub1', 'N/A', 'N/A', 2, 7, 200726, 'Present', '');
+(339, ' ARYAN SAINI ', '2506000010', 'sub1', 'N/A', 'N/A', 2, 7, 200726, 'Present', ''),
+(340, ' ANANT JAIN ', '2506000005', 'Principles and Practice of Management', 'mpmba', 'M.COM.', 1, 8, 200726, 'Present', ''),
+(341, 'Aarav Sharma', '26CSE001', 'Principles and Practice of Management', 'mpmba', 'M.COM.', 1, 8, 200726, 'Present', '');
 
 -- --------------------------------------------------------
 
@@ -745,7 +747,7 @@ CREATE TABLE `subjected_teacher` (
 --
 
 INSERT INTO `subjected_teacher` (`id`, `teacher_id`, `sub_id`, `teacher_name`, `subject_name`, `course_name`, `year`, `semester`, `subject_code`) VALUES
-(12, 3, 38, 'dr. snehashish bhardwaj', 'Principles and Practice of Management', '', 1, 8, 'mpmba'),
+(12, 3, 38, 'dr. snehashish bhardwaj', 'Principles and Practice of Management', 'M.COM.', 1, 8, 'mpmba'),
 (13, 3, 38, 'dr. snehashish bhardwaj', 'Principles and Practice of Management', '', 1, 8, 'kdskjdfs'),
 (19, 3, 39, 'dr. snehashish bhardwaj', 'fa', '', 3, 6, ''),
 (20, 3, 45, 'dr. snehashish bhardwaj', 'sub1', '', 2, 7, ''),
@@ -773,7 +775,7 @@ CREATE TABLE `subjects` (
 --
 
 INSERT INTO `subjects` (`course_id`, `course_name`, `Year`, `semester`, `subject_name`, `dept_name`, `subject_code`) VALUES
-(38, 'BBA', 1, 1, ' Principles and Practice of Management', 'FOCBS', 'mubba22-504'),
+(38, 'M.Com.', 1, 1, ' Principles and Practice of Management', 'FOCBS', 'mubba22-504'),
 (39, 'BBA', 1, 1, ' Financial Accountin', 'FOCBS', 'mpmba33-601'),
 (40, 'bba', 1, 2, 'kaka', 'FOE', 'mpbba11-211'),
 (41, 'BBA', 1, 6, 'web technmoglies', 'FOPS', ''),
@@ -897,7 +899,7 @@ ALTER TABLE `teachers`
 -- AUTO_INCREMENT for table `attendance`
 --
 ALTER TABLE `attendance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=340;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=342;
 
 --
 -- AUTO_INCREMENT for table `attendance_corrections`
@@ -963,7 +965,7 @@ ALTER TABLE `subjects`
 -- AUTO_INCREMENT for table `teachers`
 --
 ALTER TABLE `teachers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
