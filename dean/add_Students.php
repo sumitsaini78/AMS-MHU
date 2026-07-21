@@ -17,8 +17,8 @@ if (isset($_GET['download_sample'])) {
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="sample_students.csv"');
     $output = fopen("php://output", "w");
-    fputcsv($output, ['Name', 'Enroll', 'Roll', 'Faculty', 'Course', 'Year', 'Sem']);
-    fputcsv($output, ['John Doe', '12345678', 'A-101', 'Computer Science', 'B.Tech', '2026', '4']);
+    fputcsv($output, ['Name', 'Enroll', 'Roll', 'Faculty', 'Course', 'Section', 'Year', 'Sem']);
+    fputcsv($output, ['John Doe', '12345678', 'A-101', 'Computer Science', 'B.Tech', 'A', '2026', '4']);
     fclose($output);
     exit;
 }
@@ -30,11 +30,12 @@ if (isset($_POST['insert_student'])) {
     $enroll = (int)$_POST['enroll_number'];
     $faculty = mysqli_real_escape_string($conn, $_POST['faculty']);
     $course = mysqli_real_escape_string($conn, $_POST['course']);
+    $section = mysqli_real_escape_string($conn, $_POST['section']);
     $year = (int)$_POST['year'];
     $sem = (int)$_POST['semester'];
 
-    $sql = "INSERT INTO students (name, enrollment_number, roll_number, faculty, course, year, sem) 
-            VALUES ('$name', $enroll, '$roll', '$faculty', '$course', $year, $sem)";
+    $sql = "INSERT INTO students (name, enrollment_number, roll_number, faculty, course, section, year, sem) 
+            VALUES ('$name', $enroll, '$roll', '$faculty', '$course', '$section', $year, $sem)";
 
     if (mysqli_query($conn, $sql)) {
         echo "<script>alert('Student added successfully!');</script>";
@@ -55,11 +56,12 @@ if (isset($_POST['import_csv'])) {
             $roll = mysqli_real_escape_string($conn, $row[2]);
             $faculty = mysqli_real_escape_string($conn, $row[3]);
             $course = mysqli_real_escape_string($conn, $row[4]);
-            $year = (int)$row[5];
-            $sem = (int)$row[6];
+            $section = mysqli_real_escape_string($conn, $row[5]);
+            $year = (int)$row[6];
+            $sem = (int)$row[7];
 
-            $sql = "INSERT INTO students (name, enrollment_number, roll_number, faculty, course, year, sem) 
-                    VALUES ('$name', '$enroll', '$roll', '$faculty', '$course', $year, $sem)";
+            $sql = "INSERT INTO students (name, enrollment_number, roll_number, faculty, course, section, year, sem) 
+                    VALUES ('$name', '$enroll', '$roll', '$faculty', '$course', '$section', $year, $sem)";
             mysqli_query($conn, $sql);
         }
         fclose($file);
@@ -123,13 +125,20 @@ if (isset($_POST['import_csv'])) {
                                     ?>
                                 </select>
                             </div>
-                            <div class="col-md-6"><label class="form-label">Course</label>
+                            <div class="col-md-3"><label class="form-label">Course</label>
                                 <select class="form-select" name="course" required>
                                     <option selected disabled value="">Choose...</option>
                                     <?php 
                                     $res = mysqli_query($conn, "SELECT course_name FROM subjects");
                                     while($r = mysqli_fetch_assoc($res)) echo "<option value='{$r['course_name']}'>{$r['course_name']}</option>";
                                     ?>
+                                </select>
+                            </div>
+                            <div class="col-md-3"><label class="form-label">Section</label>
+                                <select class="form-select" name="section" required>
+                                    <option selected disabled value="">Choose...</option>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
                                 </select>
                             </div>
                             <div class="col-md-3"><label class="form-label">Year</label><input type="number" class="form-control" name="year" required></div>
