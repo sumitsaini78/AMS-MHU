@@ -20,7 +20,7 @@ if ($result && $result->num_rows === 1) {
     $dean = $result->fetch_assoc();
     $dean_name = $dean['Dean_name'];
     $faculty_name = $dean['faculty_name'];
-    $_SESSION['faculty_name']=$faculty_name;
+    $_SESSION['faculty_name'] = $faculty_name;
     $_SESSION['dean_name'] = $dean_name;
 }
 
@@ -28,6 +28,19 @@ if ($result && $result->num_rows === 1) {
 $correction_count_query = "SELECT COUNT(*) as pending_total FROM attendance_corrections WHERE status = 'Pending'";
 $correction_count_result = mysqli_query($conn, $correction_count_query);
 $pending_count = ($correction_count_result) ? mysqli_fetch_assoc($correction_count_result)['pending_total'] : 0;
+
+// Fetch courses for dropdowns once to avoid multiple queries
+$courses_array = [];
+$query = "SELECT course_name FROM courses_list WHERE faculty_name = ? ORDER BY course_name";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("s", $faculty_name);
+$stmt->execute();
+$courses_result = $stmt->get_result();
+if ($courses_result) {
+    while ($row = mysqli_fetch_assoc($courses_result)) {
+        $courses_array[] = $row['course_name'];
+    }
+}
 ?>
 
 <!doctype html>
@@ -73,6 +86,11 @@ $pending_count = ($correction_count_result) ? mysqli_fetch_assoc($correction_cou
             font-size: 0.6rem;
             letter-spacing: 2px;
         }
+
+        /* Increased z-index for dropdown menus to prevent them from hiding behind cards/tables */
+        .dropdown-menu {
+            z-index: 9999 !important;
+        }
     </style>
 </head>
 
@@ -108,7 +126,8 @@ $pending_count = ($correction_count_result) ? mysqli_fetch_assoc($correction_cou
                 <p class="text-muted">Manage your department operations and monitor daily attendance flow.</p>
             </div>
         </div>
-        <!-- Action Cards -->
+
+        <!-- Action Cards Grid -->
         <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-6 mb-4">
             <?php
             $actions = [
@@ -116,10 +135,9 @@ $pending_count = ($correction_count_result) ? mysqli_fetch_assoc($correction_cou
                 ['Add Students', 'fa-user-graduate', 'text-info', 'add_Students.php'],
                 ['View Students', 'fa-users-viewfinder', 'text-primary', 'view_students.php'],
                 ['Add Subjects', 'fa-book-bookmark', 'text-info', 'add_bulk_subject.php'],
-                ['Add Teachers', 'fa-chalkboard-user', 'text-info', 'add_Teacher.php'],
-                ['Add Student<br> Subject', 'fa-address-card', 'text-warning', 'assign_student_subject.php']
+                ['Add Teachers', 'fa-chalkboard-user', 'text-info', 'add_Teacher.php']
             ];
-            foreach ($actions as $act): ?>
+            foreach ($actions as $act): ?>  
                 <div class="col">
                     <div class="action-card card h-100 shadow-sm p-3 text-center">
                         <div class="fs-3 <?= $act[2] ?> mb-2"><i class="fa-solid <?= $act[1] ?>"></i></div>
@@ -128,56 +146,74 @@ $pending_count = ($correction_count_result) ? mysqli_fetch_assoc($correction_cou
                     </div>
                 </div>
             <?php endforeach; ?>
-            <div class="col"><!-- Assign Subject Box (Adjusted Width) -->
-                <div class="col">
-                    <div class="action-card card h-100 shadow-sm p-3 text-center dropdown">
-                        <div class="fs-3 text-warning mb-2"><i class="fa-solid fa-address-card"></i></div>
 
-                        <!-- w-100 hataya gaya hai taaki ye normal size mein aaye -->
-                        <button class="btn btn-sm btn-light text-muted fw-semibold border-0 dropdown-toggle"
-                            type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Add Subject <br>Teacher
-                        </button>
-
-                        <!-- Dropdown menu ko bhi thoda compact kiya hai -->
-                        <ul class="dropdown-menu shadow p-2"
-                            style="max-height: 300px; overflow-y: auto; min-width: 200px;">
-                            <li class="px-2 pb-2">
-                                <input type="text" class="form-control form-control-sm" id="courseSearch"
-                                    placeholder="Search course..." onkeyup="filterCourses()">
-                            </li>
-                            <div id="courseList">
-                                <?php
-                                $query = "SELECT course_name FROM courses_list WHERE faculty_name = ? ORDER BY course_name";
-                                $stmt = $conn->prepare($query);
-                                $stmt->bind_param("s", $faculty_name);
-                                $stmt->execute();
-                                $result = $stmt->get_result();
-
-                                if ($result && mysqli_num_rows($result) > 0):
-                                    while ($val = mysqli_fetch_assoc($result)): ?>
-                                        <li class="course-item">
-                                            <form action="subject_Teacher_Allotment.php" method="POST" class="px-2 py-1">
-                                                <input type="hidden" name="course_name"
-                                                    value="<?= htmlspecialchars($val['course_name']) ?>">
-                                                <button type="submit" name="course_submit"
-                                                    class="btn btn-link text-start w-100 text-decoration-none text-dark small">
-                                                    <?= htmlspecialchars($val['course_name']) ?>
-                                                </button>
-                                            </form>
-                                        </li>
-                                    <?php endwhile;
-                                else: ?>
-                                    <li class="text-muted text-center small p-2">No courses found</li>
-                                <?php endif; ?>
-                            </div>
-                        </ul>
-                    </div>
+            <!-- Dropdown 1: Add Student Subject -->
+            <div class="col">
+                <div class="action-card card h-100 shadow-sm p-3 text-center dropdown">
+                    <div class="fs-3 text-warning mb-2"><i class="fa-solid fa-address-card"></i></div>
+                    <button class="btn btn-sm btn-light text-muted fw-semibold border-0 dropdown-toggle w-100"
+                        type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Add Student<br>Subject
+                    </button>
+                    <ul class="dropdown-menu shadow p-2" style="max-height: 300px; overflow-y: auto; min-width: 200px;">
+                        <li class="px-2 pb-2">
+                            <input type="text" class="form-control form-control-sm"
+                                placeholder="Search course..." onkeyup="filterCourseList(this)">
+                        </li>
+                        <div>
+                            <?php if (!empty($courses_array)): ?>
+                                <?php foreach ($courses_array as $course_name): ?>
+                                    <li class="course-item">
+                                        <form action="assign_student_subject.php" method="POST" class="px-2 py-1">
+                                            <input type="hidden" name="course_name" value="<?= htmlspecialchars($course_name) ?>">
+                                            <button type="submit" name="course_submit"
+                                                class="btn btn-link text-start w-100 text-decoration-none text-dark small">
+                                                <?= htmlspecialchars($course_name) ?>
+                                            </button>
+                                        </form>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li class="text-muted text-center small p-2">No courses found</li>
+                            <?php endif; ?>
+                        </div>
+                    </ul>
                 </div>
             </div>
-        </div>
 
-
+            <!-- Dropdown 2: Add Subject Teacher -->
+            <div class="col">
+                <div class="action-card card h-100 shadow-sm p-3 text-center dropdown">
+                    <div class="fs-3 text-warning mb-2"><i class="fa-solid fa-chalkboard-teacher"></i></div>
+                    <button class="btn btn-sm btn-light text-muted fw-semibold border-0 dropdown-toggle w-100"
+                        type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Add Subject<br>Teacher
+                    </button>
+                    <ul class="dropdown-menu shadow p-2" style="max-height: 300px; overflow-y: auto; min-width: 200px;">
+                        <li class="px-2 pb-2">
+                            <input type="text" class="form-control form-control-sm"
+                                placeholder="Search course..." onkeyup="filterCourseList(this)">
+                        </li>
+                        <div>
+                            <?php if (!empty($courses_array)): ?>
+                                <?php foreach ($courses_array as $course_name): ?>
+                                    <li class="course-item">
+                                        <form action="subject_Teacher_Allotment.php" method="POST" class="px-2 py-1">
+                                            <input type="hidden" name="course_name" value="<?= htmlspecialchars($course_name) ?>">
+                                            <button type="submit" name="course_submit"
+                                                class="btn btn-link text-start w-100 text-decoration-none text-dark small">
+                                                <?= htmlspecialchars($course_name) ?>
+                                            </button>
+                                        </form>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li class="text-muted text-center small p-2">No courses found</li>
+                            <?php endif; ?>
+                        </div>
+                    </ul>
+                </div>
+            </div>
         </div>
 
         <!-- Today's Report Table -->
@@ -202,9 +238,9 @@ $pending_count = ($correction_count_result) ? mysqli_fetch_assoc($correction_cou
                             $index = 1;
                             $today_date = (int) date('dmy');
                             $query = "SELECT c.course_name, COUNT(DISTINCT s.subject_name) AS total_subjects,
-                                      (SELECT COUNT(DISTINCT a.subject_name) FROM `attendance` a WHERE a.course = c.course_name AND a.date_of_attendence = '$today_date') AS marked_today
-                                      FROM `courses_list` c LEFT JOIN `subjects` s ON c.course_name = s.course_name 
-                                      WHERE c.faculty_name = '$faculty_name' GROUP BY c.course_name";
+                                     (SELECT COUNT(DISTINCT a.subject_name) FROM `attendance` a WHERE a.course = c.course_name AND a.date_of_attendence = '$today_date') AS marked_today
+                                     FROM `courses_list` c LEFT JOIN `subjects` s ON c.course_name = s.course_name 
+                                     WHERE c.faculty_name = '$faculty_name' GROUP BY c.course_name";
                             $result = mysqli_query($conn, $query);
 
                             if ($result):
@@ -238,6 +274,23 @@ $pending_count = ($correction_count_result) ? mysqli_fetch_assoc($correction_cou
     <footer class="text-center py-4 text-muted border-top">
         <small>&copy; 2026 Motherhood University Attendance Management System</small>
     </footer>
+
+    <!-- Script for Live Course Search inside Dropdowns -->
+    <script>
+        function filterCourseList(input) {
+            let filter = input.value.toLowerCase();
+            let dropdownMenu = input.closest('.dropdown-menu');
+            let items = dropdownMenu.getElementsByClassName('course-item');
+            for (let i = 0; i < items.length; i++) {
+                let text = items[i].textContent || items[i].innerText;
+                if (text.toLowerCase().indexOf(filter) > -1) {
+                    items[i].style.display = "";
+                } else {
+                    items[i].style.display = "none";
+                }
+            }
+        }
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>

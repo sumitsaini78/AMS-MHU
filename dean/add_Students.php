@@ -121,10 +121,10 @@ if (isset($_POST['import_csv'])) {
                             <div class="col-md-6"><label class="form-label">Faculty</label>
                                 <select class="form-select" name="faculty" required>
                                     <option selected disabled value="">Choose...</option>
-                                    <?php 
-                                    $res = mysqli_query($conn, "SELECT faculty_name FROM faculty");
-                                    while($r = mysqli_fetch_assoc($res)) echo "<option value='{$r['faculty_name']}'>{$r['faculty_name']}</option>";
-                                    ?>
+                                   <?php 
+    $res = mysqli_query($conn, "SELECT DISTINCT faculty_name FROM faculty");
+    while($r = mysqli_fetch_assoc($res)) echo "<option value='{$r['faculty_name']}'>{$r['faculty_name']}</option>";
+?>
                                 </select>
                             </div>
                             <div class="col-md-3"><label class="form-label">Course</label>

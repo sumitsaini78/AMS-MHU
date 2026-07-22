@@ -153,8 +153,9 @@ $date_of_attendance = date('dmy');
                                     <th style="width: 25%;">Roll Number</th>
                                     <th class="text-start ps-4">Student Name</th>
                                     <th style="width: 35%;">
-                                        Attendance Status 
-                                        <button type="button" class="btn btn-sm btn-outline-light ms-2" onclick="checkAll()">Check All</button>
+                                        Attendance Status
+                                        <button type="button" class="btn btn-sm btn-outline-light ms-2"
+                                            onclick="checkAll()">Check All</button>
                                     </th>
                                 </tr>
                             </thead>
@@ -165,7 +166,7 @@ $date_of_attendance = date('dmy');
                                                    FROM subjected_student ss 
                                                    INNER JOIN students s ON ss.student_name = s.name 
                                                    WHERE ss.subject_name = ?";
-                                
+
                                 $students_stmt = mysqli_prepare($conn, $students_query);
                                 mysqli_stmt_bind_param($students_stmt, "s", $subject_name);
                                 mysqli_stmt_execute($students_stmt);
@@ -202,7 +203,7 @@ $date_of_attendance = date('dmy');
                             class="btn btn-success btn-lg px-5 shadow fw-bold"><i
                                 class="fa-solid fa-floppy-disk me-2"></i>Save Attendance</button>
                     </div>
-                </form>  
+                </form>
 
             </div>
         </div>

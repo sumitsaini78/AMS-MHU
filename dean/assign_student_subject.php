@@ -1,8 +1,8 @@
 <?php
 include "../db_connect.php";
 session_start();
-$faculty_name=$_SESSION['faculty_name'];
-// 1. Secure the page: Check if the teacher is actually logged in
+
+// 1. Secure the page: Check if the dean is actually logged in
 if (!isset($_SESSION['dean_id']) || !isset($_SESSION['dean_name'])) {
     header("Location: ../index.php");
     exit;
@@ -10,6 +10,27 @@ if (!isset($_SESSION['dean_id']) || !isset($_SESSION['dean_name'])) {
 
 $id = $_SESSION['dean_id'];
 $teacher_name = $_SESSION['dean_name'];
+
+// Fetch faculty_name safely from the deans table if not already in session
+$dean_query = "SELECT faculty_name FROM `deans` WHERE id = '$id' LIMIT 1";
+$dean_result = mysqli_query($conn, $dean_query);
+if ($dean_result && mysqli_num_rows($dean_result) > 0) {
+    $dean_data = mysqli_fetch_assoc($dean_result);
+    $faculty_name = $dean_data['faculty_name'];
+    $_SESSION['faculty_name'] = $faculty_name;
+} else {
+    $faculty_name = $_SESSION['faculty_name'] ?? '';
+}
+
+// Getting selected course to insert or retaining it from session
+if (isset($_POST['course_submit']) && !empty($_POST['course_name'])) {
+    $course_name = $_POST['course_name'];
+    $_SESSION['course_name'] = $course_name;
+} elseif (isset($_SESSION['course_name'])) {
+    $course_name = $_SESSION['course_name'];
+} else {
+    $course_name = "";
+}
 
 // ==========================================
 // 2A. SINGLE ASSIGNMENT PROCESSOR
@@ -19,37 +40,47 @@ if (isset($_POST['assign_subject'])) {
     $subject_name = mysqli_real_escape_string($conn, $_POST['subject_name']);
 
     // Step A: Fetch student complete details using the submitted ID
-    $student_info_query = "SELECT name, faculty, course, year, sem FROM `students` WHERE id = '$student_id'";
+    $student_info_query = "SELECT name, roll_number, faculty, course, year, sem FROM `students` WHERE id = '$student_id' AND course= '$course_name'";
     $student_info_result = mysqli_query($conn, $student_info_query);
 
     if ($student_info_result && mysqli_num_rows($student_info_result) > 0) {
         $student_data = mysqli_fetch_assoc($student_info_result);
         $s_name = mysqli_real_escape_string($conn, $student_data['name']);
+        $s_roll = (int) $student_data['roll_number'];
         $s_faculty = mysqli_real_escape_string($conn, $student_data['faculty']);
         $s_course = mysqli_real_escape_string($conn, $student_data['course']);
         $s_year = (int) $student_data['year'];
         $s_sem = (int) $student_data['sem'];
 
-        // Step B: Fetch subject_code from subjected_teacher table to keep schema aligned
+        // Step B: Fetch subject_code from subjected_teacher, fallback to subjects table if empty
         $code_query = "SELECT subject_code FROM `subjected_teacher` WHERE subject_name = '$subject_name' AND teacher_id = '$id' LIMIT 1";
         $code_result = mysqli_query($conn, $code_query);
         $subject_code = "";
+        
         if ($code_result && mysqli_num_rows($code_result) > 0) {
             $code_data = mysqli_fetch_assoc($code_result);
             $subject_code = mysqli_real_escape_string($conn, $code_data['subject_code']);
+        } else {
+            // Fallback lookup from subjects table
+            $sub_fallback = "SELECT subject_code FROM `subjects` WHERE subject_name = '$subject_name' AND course_name = '$course_name' LIMIT 1";
+            $sub_res = mysqli_query($conn, $sub_fallback);
+            if ($sub_res && mysqli_num_rows($sub_res) > 0) {
+                $sub_data = mysqli_fetch_assoc($sub_res);
+                $subject_code = mysqli_real_escape_string($conn, $sub_data['subject_code']);
+            }
         }
 
-        // Step C: Check if this specific student name is already assigned to this subject for this semester
-        $check_query = "SELECT id FROM `subjected_student` WHERE student_name = '$s_name' AND subject_name = '$subject_name' AND semester = '$s_sem'";
+        // Step C: Check if this specific student roll number is already assigned to this subject for this semester
+        $check_query = "SELECT id FROM `subjected_student` WHERE roll_number = '$s_roll' AND subject_name = '$subject_name' AND semester = '$s_sem'";
         $check_result = mysqli_query($conn, $check_query);
 
         if (mysqli_num_rows($check_result) > 0) {
             echo "<script>alert('⚠️ This student is already assigned to this subject for this semester!'); window.location.href='assign_student_subject.php';</script>";
             exit;
         } else {
-            // Step D: Insert matching records into the true schema columns
-            $insert_query = "INSERT INTO `subjected_student` (student_name, subject_name, subject_code, faculty, course, year, semester) 
-                             VALUES ('$s_name', '$subject_name', '$subject_code', '$s_faculty', '$s_course', '$s_year', '$s_sem')";
+            // Step D: Insert matching records including roll_number
+            $insert_query = "INSERT INTO `subjected_student` (student_name, subject_name, subject_code, faculty, course, year, semester, roll_number) 
+                             VALUES ('$s_name', '$subject_name', '$subject_code', '$s_faculty', '$s_course', '$s_year', '$s_sem', '$s_roll')";
 
             if (mysqli_query($conn, $insert_query)) {
                 echo "<script>alert('✅ Subject mapping successfully assigned!'); window.location.href='assign_student_subject.php';</script>";
@@ -71,74 +102,80 @@ if (isset($_POST['assign_subject'])) {
 if (isset($_POST['bulk_assign_subject'])) {
     if (isset($_FILES['excel_file']['tmp_name']) && $_FILES['excel_file']['tmp_name'] != "") {
         $handle = fopen($_FILES['excel_file']['tmp_name'], "r");
-        
+
         $success_count = 0;
         $error_count = 0;
         $first_row = true; // Flag to skip header
 
         while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-            // Skip the header row and any empty trailing rows
             if ($first_row || empty(trim($data[0]))) {
                 $first_row = false;
                 continue;
             }
 
             // Map data from CSV (Columns A, B, C, D, E)
-            $roll_number  = mysqli_real_escape_string($conn, trim($data[0]));
-            $csv_subject  = mysqli_real_escape_string($conn, trim($data[2]));
-            $csv_semester = isset($data[3]) ? (int)trim($data[3]) : 0;
-            $csv_year     = isset($data[4]) ? (int)trim($data[4]) : 0;
+            $roll_number = mysqli_real_escape_string($conn, trim($data[0]));
+            $csv_subject = mysqli_real_escape_string($conn, trim($data[2]));
+            $csv_semester = isset($data[3]) ? (int) trim($data[3]) : 0;
+            $csv_year = isset($data[4]) ? (int) trim($data[4]) : 0;
 
             // 1. Fetch Student Details from DB
-            $student_query = "SELECT name, faculty, course, year, sem FROM `students` WHERE roll_number = '$roll_number'";
+            $student_query = "SELECT name, roll_number, faculty, course, year, sem FROM `students` WHERE roll_number = '$roll_number'";
             $student_result = mysqli_query($conn, $student_query);
 
             if ($student_result && mysqli_num_rows($student_result) > 0) {
                 $student = mysqli_fetch_assoc($student_result);
                 $student_name_safe = mysqli_real_escape_string($conn, $student['name']);
-                
-                // Prioritize CSV semester/year if provided, otherwise fallback to their DB default
-                $final_sem  = ($csv_semester > 0) ? $csv_semester : (int)$student['sem'];
-                $final_year = ($csv_year > 0) ? $csv_year : (int)$student['year'];
-                
-                // 2. Fetch Subject Code for this Teacher
+                $student_roll = (int) $student['roll_number'];
+
+                $final_sem = ($csv_semester > 0) ? $csv_semester : (int) $student['sem'];
+                $final_year = ($csv_year > 0) ? $csv_year : (int) $student['year'];
+
+                // 2. Fetch Subject Code for this Teacher or fallback to subjects table
                 $code_query = "SELECT subject_code FROM `subjected_teacher` 
                                WHERE TRIM(subject_name) = '$csv_subject' 
                                AND teacher_id = '$id' LIMIT 1";
                 $code_result = mysqli_query($conn, $code_query);
-                
+                $subject_code = "";
+
                 if ($code_result && mysqli_num_rows($code_result) > 0) {
                     $code_data = mysqli_fetch_assoc($code_result);
                     $subject_code = mysqli_real_escape_string($conn, $code_data['subject_code']);
+                } else {
+                    $sub_fallback = "SELECT subject_code FROM `subjects` WHERE TRIM(subject_name) = '$csv_subject' AND course_name = '$course_name' LIMIT 1";
+                    $sub_res = mysqli_query($conn, $sub_fallback);
+                    if ($sub_res && mysqli_num_rows($sub_res) > 0) {
+                        $sub_data = mysqli_fetch_assoc($sub_res);
+                        $subject_code = mysqli_real_escape_string($conn, $sub_data['subject_code']);
+                    }
+                }
 
-                    // 3. Check for Duplicate (Added semester to prevent false flags on retakes)
-                    $check_dup = "SELECT id FROM `subjected_student` 
-                                  WHERE student_name = '$student_name_safe' 
-                                  AND subject_name = '$csv_subject'
-                                  AND semester = '$final_sem'";
-                    $dup_result = mysqli_query($conn, $check_dup);
+                // 3. Check for Duplicate
+                $check_dup = "SELECT id FROM `subjected_student` 
+                              WHERE roll_number = '$student_roll' 
+                              AND subject_name = '$csv_subject'
+                              AND semester = '$final_sem'";
+                $dup_result = mysqli_query($conn, $check_dup);
 
-                    if (mysqli_num_rows($dup_result) == 0) {
-                        // 4. Insert Record
-                        $insert = "INSERT INTO `subjected_student` (student_name, subject_name, subject_code, faculty, course, year, semester) 
-                                   VALUES ('$student_name_safe', 
-                                           '$csv_subject', 
-                                           '$subject_code', 
-                                           '" . mysqli_real_escape_string($conn, $student['faculty']) . "', 
-                                           '" . mysqli_real_escape_string($conn, $student['course']) . "', 
-                                           '$final_year', 
-                                           '$final_sem')";
-                        
-                        if (mysqli_query($conn, $insert)) {
-                            $success_count++;
-                        } else {
-                            $error_count++;
-                        }
+                if (mysqli_num_rows($dup_result) == 0) {
+                    // 4. Insert Record including roll_number
+                    $insert = "INSERT INTO `subjected_student` (student_name, subject_name, subject_code, faculty, course, year, semester, roll_number) 
+                               VALUES ('$student_name_safe', 
+                                       '$csv_subject', 
+                                       '$subject_code', 
+                                       '" . mysqli_real_escape_string($conn, $student['faculty']) . "', 
+                                       '" . mysqli_real_escape_string($conn, $student['course']) . "', 
+                                       '$final_year', 
+                                       '$final_sem',
+                                       '$student_roll')";
+
+                    if (mysqli_query($conn, $insert)) {
+                        $success_count++;
                     } else {
-                        $error_count++; // Duplicate found
+                        $error_count++;
                     }
                 } else {
-                    $error_count++; // Subject not found for this teacher
+                    $error_count++; // Duplicate found
                 }
             } else {
                 $error_count++; // Student not found
@@ -154,9 +191,9 @@ if (isset($_POST['bulk_assign_subject'])) {
 }
 
 // Fetch general students and subjects for single assign dropdowns
-$query = "SELECT * FROM `students`";
+$query = "SELECT * FROM `students` WHERE course='$course_name'";
 $result = mysqli_query($conn, $query);
-$subject_query = "SELECT DISTINCT subject_name FROM `subjects` WHERE faculty_name = '$faculty_name'";
+$subject_query = "SELECT DISTINCT subject_name FROM `subjects` WHERE faculty_name = '$faculty_name' AND course_name='$course_name'";
 $subject_result = mysqli_query($conn, $subject_query);
 
 $subjects_list = [];
@@ -168,6 +205,7 @@ if ($subject_result && mysqli_num_rows($subject_result) > 0) {
 ?>
 <!doctype html>
 <html lang="en" data-bs-theme="light">
+
 <head>
     <title>Assign Mapping | MHU-AMS</title>
     <meta charset="utf-8" />
@@ -251,8 +289,7 @@ if ($subject_result && mysqli_num_rows($subject_result) > 0) {
 
                     <div class="text-center mb-4">
                         <span
-                            class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1.5 rounded-pill uppercase fw-bold tracking-wider mb-2">Roster
-                            Mapping</span>
+                            class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1.5 rounded-pill uppercase fw-bold tracking-wider mb-2"><?php echo htmlspecialchars($course_name); ?></span>
                         <h2 class="fw-bold text-dark">Assign Subjects to Students</h2>
                         <p class="text-muted small">Link specific database profiles to your assigned university courses
                             manually or via bulk upload.</p>
@@ -383,7 +420,8 @@ if ($subject_result && mysqli_num_rows($subject_result) > 0) {
                                     </div>
                                     <p class="mb-0 text-muted"><i class="fa-solid fa-lightbulb text-warning me-1"></i>
                                         <em>Note: "Faculty" and "Course" constraints are dynamically pulled from the
-                                            database using the provided Roll Number.</em></p>
+                                            database using the provided Roll Number.</em>
+                                    </p>
                                 </div>
 
                                 <form method="POST" action="assign_student_subject.php" enctype="multipart/form-data">

@@ -158,10 +158,7 @@ if ($result && mysqli_num_rows($result) == 1) {
                             <a href="request_correction.php" class="btn btn-sm btn-outline-light w-100"><i
                                     class="fa-solid fa-triangle-exclamation me-1"></i> Correction</a>
                         </li>
-                        <li class="nav-item mx-1 my-1 my-lg-0">
-                            <a href="assign_student_subject.php" class="btn btn-sm btn-outline-light w-100"><i class="fa-solid fa-book-medical"></i> Student Subjects</a>
-                        </li>
-                      
+
                     </ul>
 
                     <div

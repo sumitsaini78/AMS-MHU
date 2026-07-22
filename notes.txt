@@ -1,12 +1,15 @@
-*checking all Teachers *
-1. assign_student_subject.php
-2. full_subject_attendance
-3. index.php
-4. insert_attendance.php
-5. request_correction.php
-6. save_insert_attendance.php
-7. student_attendance.php
-8. student_calendar.php
-9. subject_attendence .php
-10. teacher_subjects.php
-11. view_student_attendance.php
+*Testing and Debugging*
+*Dean*
+1. add faculty and department is mapped and working
+2. add stusdents working
+3. view students working
+4. add subjects working 
+ view subjects add karna hai
+ view Allocated_subjects add karna hai
+ view students_subject dikhana h
+5. add teachers working (added by excel import)
+6. add subject teacher 
+*Teacher*
+1. marking attendance working
+2. view attendnace wroking 
+3. correction working 

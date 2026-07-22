@@ -1,5 +1,7 @@
 <?php
 include "../db_connect.php";
+session_start();
+$faculty_name=$_SESSION['faculty_name'];    
 $message = "";
 if (!isset($_POST['course_submit'])) {
     header("Location: ./index.php");
@@ -71,7 +73,7 @@ if (isset($_POST['Allocate_Subject'])) {
                                 <select class="form-select" name="selected_teacher" required>
                                     <option value="" selected disabled>Select Teacher</option>
                                     <?php
-                                    $q = mysqli_query($conn, "SELECT id, name FROM `teachers` WHERE faculty = 'FOCBS'");
+                                    $q = mysqli_query($conn, "SELECT id, name FROM `teachers` WHERE faculty = '$faculty_name'");
                                     while ($row = mysqli_fetch_assoc($q)) {
                                         echo "<option value='{$row['name']}--{$row['id']}'>{$row['name']}</option>";
                                     }
@@ -99,7 +101,7 @@ if (isset($_POST['Allocate_Subject'])) {
                                 <select class="form-select" name="selected_course" required>
                                     <option value="" selected disabled>Select Subject</option>
                                     <?php
-                                    $q = mysqli_query($conn, "SELECT course_id, subject_name, subject_code FROM `subjects` WHERE dept_name = 'FOCBS'");
+                                    $q = mysqli_query($conn, "SELECT course_id, subject_name, subject_code FROM `subjects` WHERE faculty_name = '$faculty_name'");  
                                     while ($row = mysqli_fetch_assoc($q)) {
                                         echo "<option value='{$row['subject_name']}--{$row['course_id']}--{$row['subject_code']}'>{$row['subject_name']}</option>";
                                     }

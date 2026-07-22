@@ -12,6 +12,7 @@ if (!isset($_SESSION['dean_id'])) {
 $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
 $filter_course = isset($_GET['course']) ? mysqli_real_escape_string($conn, $_GET['course']) : '';
 $filter_year = isset($_GET['year']) ? mysqli_real_escape_string($conn, $_GET['year']) : '';
+$filter_sem = isset($_GET['sem']) ? mysqli_real_escape_string($conn, $_GET['sem']) : '';
 
 // Base Query restricted to FOCBS
 $sql = "SELECT * FROM students WHERE faculty = 'FOCBS'";
@@ -31,6 +32,11 @@ if ($filter_year != '') {
     $sql .= " AND year = '$filter_year'";
 }
 
+// Apply semester filter
+if ($filter_sem != '') {
+    $sql .= " AND sem = '$filter_sem'";
+}
+
 $sql .= " ORDER BY name ASC";
 $result = mysqli_query($conn, $sql);
 
@@ -39,6 +45,9 @@ $courses_result = mysqli_query($conn, "SELECT DISTINCT course_name FROM courses_
 
 // Fetch available years for the dropdown filter options
 $years_result = mysqli_query($conn, "SELECT DISTINCT year FROM students WHERE faculty = 'FOCBS' ORDER BY year DESC");
+
+// Fetch available semesters for the dropdown filter options
+$sems_result = mysqli_query($conn, "SELECT DISTINCT sem FROM students WHERE faculty = 'FOCBS' ORDER BY sem ASC");
 ?>
 
 <!doctype html>
@@ -63,11 +72,14 @@ $years_result = mysqli_query($conn, "SELECT DISTINCT year FROM students WHERE fa
         <!-- Search and Filter Bar -->
         <div class="card border-0 shadow-sm p-3 mb-4 rounded-3">
             <form method="GET" class="row g-3">
-                <div class="col-md-5">
+                
+                <!-- Search -->
+                <div class="col-md-3">
                     <label class="form-label small text-muted fw-bold">Search Keywords</label>
-                    <input type="text" name="search" class="form-control" placeholder="Name, enrollment, or roll number..." value="<?php echo htmlspecialchars($search); ?>">
+                    <input type="text" name="search" class="form-control" placeholder="Name, enrollment..." value="<?php echo htmlspecialchars($search); ?>">
                 </div>
                 
+                <!-- Course -->
                 <div class="col-md-3">
                     <label class="form-label small text-muted fw-bold">Filter by Course</label>
                     <select name="course" class="form-select">
@@ -81,6 +93,7 @@ $years_result = mysqli_query($conn, "SELECT DISTINCT year FROM students WHERE fa
                     </select>
                 </div>
 
+                <!-- Year -->
                 <div class="col-md-2">
                     <label class="form-label small text-muted fw-bold">Filter by Year</label>
                     <select name="year" class="form-select">
@@ -88,12 +101,27 @@ $years_result = mysqli_query($conn, "SELECT DISTINCT year FROM students WHERE fa
                         <?php 
                         while($y = mysqli_fetch_assoc($years_result)) {
                             $selected = ($filter_year == $y['year']) ? 'selected' : '';
-                            echo "<option value='{$y['year']}' $selected>{$y['year']}</option>";
+                            echo "<option value='{$y['year']}' $selected>Year {$y['year']}</option>";
                         }
                         ?>
                     </select>
                 </div>
 
+                <!-- Semester -->
+                <div class="col-md-2">
+                    <label class="form-label small text-muted fw-bold">Filter by Sem</label>
+                    <select name="sem" class="form-select">
+                        <option value="">All Sems</option>
+                        <?php 
+                        while($s = mysqli_fetch_assoc($sems_result)) {
+                            $selected = ($filter_sem == $s['sem']) ? 'selected' : '';
+                            echo "<option value='{$s['sem']}' $selected>Semester {$s['sem']}</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <!-- Filter Button -->
                 <div class="col-md-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-filter me-1"></i> Filter</button>
                 </div>

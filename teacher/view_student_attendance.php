@@ -1,7 +1,8 @@
-<?php include "../db_connect.php" ;
+<?php
+include "../db_connect.php";
 
 session_start();
-if ($_SESSION['teacher_name'] == null) {
+if (!isset($_SESSION['teacher_name']) || empty($_SESSION['teacher_name'])) {
     header("Location: ../index.php");
     exit();
 }
@@ -25,27 +26,29 @@ $current_subject = $_SESSION['subject_name'];
 $from_date = isset($_GET['from_date']) ? $_GET['from_date'] : '';
 $to_date = isset($_GET['to_date']) ? $_GET['to_date'] : '';
 
-// 4. Query to calculate total days and present days per student for the selected subject
+// 4. Query to calculate attendance ONLY for students assigned to this subject
 $query = "SELECT 
-            s.name, 
-            s.roll_number,
+            ss.student_name AS name, 
+            ss.roll_number,
             COUNT(a.attendance_status) AS total_days,
             SUM(CASE WHEN LOWER(a.attendance_status) = 'present' OR a.attendance_status = '1' THEN 1 ELSE 0 END) AS present_days
-          FROM `students` s
+          FROM `subjected_student` ss
           LEFT JOIN `attendance` a 
-            ON s.roll_number = a.roll_number 
-            AND a.subject_name = ?";
+            ON ss.roll_number = a.roll_number 
+            AND a.subject_name = ss.subject_name";
 
 if (!empty($from_date) && !empty($to_date)) {
     $query .= " AND a.date_of_attendence BETWEEN ? AND ?";
 }
 
-$query .= " GROUP BY s.roll_number, s.name ORDER BY s.roll_number ASC";
+$query .= " WHERE ss.subject_name = ?
+            GROUP BY ss.roll_number, ss.student_name 
+            ORDER BY ss.roll_number ASC";
 
 $stmt = mysqli_prepare($conn, $query);
 
 if (!empty($from_date) && !empty($to_date)) {
-    mysqli_stmt_bind_param($stmt, "sss", $current_subject, $from_date, $to_date);
+    mysqli_stmt_bind_param($stmt, "sss", $from_date, $to_date, $current_subject);
 } else {
     mysqli_stmt_bind_param($stmt, "s", $current_subject);
 }
@@ -67,7 +70,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     $output = fopen('php://output', 'w');
     
     // Write UTF-8 BOM for Excel compatibility (ensures special characters render correctly)
-    fputs($output, $bom =( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
+    fputs($output, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF)));
     
     // Output the column headings
     fputcsv($output, array('#', 'Student Name', 'Roll Number', 'Present Days', 'Total Days', 'Percentage (%)'));
@@ -161,7 +164,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
                 <div class="d-flex align-items-center">
                     <span class="navbar-text text-white bg-secondary px-3 py-1 rounded-pill small me-3">
                         <i class="fa-solid fa-user-tie me-1"></i> Welcome,
-                        <?php echo isset($_SESSION['teacher_name']) ? htmlspecialchars($_SESSION['teacher_name']) : 'Teacher'; ?>
+                        <?php echo htmlspecialchars($_SESSION['teacher_name']); ?>
                     </span>
                     <a href="student_attendence.php" class="btn btn-sm btn-outline-info me-2">
                         <i class="fa-solid fa-arrow-left me-1"></i> Back
@@ -205,7 +208,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
                                 <?php endif; ?>
                             </div>
                             
-                            <!-- Export Button Added Here -->
+                            <!-- Export Button -->
                             <div class="col-12 col-md-auto ms-auto">
                                 <button type="submit" name="export" value="excel" class="btn btn-success btn-sm px-3 shadow-sm">
                                     <i class="fa-solid fa-file-excel me-1"></i> Export to Excel
@@ -228,7 +231,6 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
                             </thead>
                             <tbody>
                                 <?php
-                                // Reset the result pointer in case the data needs to be parsed again 
                                 mysqli_data_seek($result, 0);
 
                                 $index = 1;
@@ -287,7 +289,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
                                     
                                     echo "</tr>";
                                     $index++;
-                                }
+                                }   
                                 ?>
                             </tbody>
                         </table>
