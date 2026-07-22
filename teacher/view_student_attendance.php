@@ -22,9 +22,18 @@ if (!isset($_SESSION['subject_name'])) {
 
 $current_subject = $_SESSION['subject_name'];
 
-// 3. Handle Date Filters from GET request
+// 3. Handle Date Filters from GET request and convert to DDMMYY integer format
 $from_date = isset($_GET['from_date']) ? $_GET['from_date'] : '';
 $to_date = isset($_GET['to_date']) ? $_GET['to_date'] : '';
+
+$from_date_int = '';
+$to_date_int = '';
+
+if (!empty($from_date) && !empty($to_date)) {
+    // Convert YYYY-MM-DD to DDMMYY integer (e.g., 2026-07-22 -> 220726)
+    $from_date_int = (int)date('dmy', strtotime($from_date));
+    $to_date_int = (int)date('dmy', strtotime($to_date));
+}
 
 // 4. Query to calculate attendance ONLY for students assigned to this subject
 $query = "SELECT 
@@ -37,7 +46,7 @@ $query = "SELECT
             ON ss.roll_number = a.roll_number 
             AND a.subject_name = ss.subject_name";
 
-if (!empty($from_date) && !empty($to_date)) {
+if (!empty($from_date_int) && !empty($to_date_int)) {
     $query .= " AND a.date_of_attendence BETWEEN ? AND ?";
 }
 
@@ -47,12 +56,12 @@ $query .= " WHERE ss.subject_name = ?
 
 $stmt = mysqli_prepare($conn, $query);
 
-if (!empty($from_date) && !empty($to_date)) {
-    mysqli_stmt_bind_param($stmt, "sss", $from_date, $to_date, $current_subject);
+if (!empty($from_date_int) && !empty($to_date_int)) {
+    // Bind as integers ("iii" or "iis" depending on current_subject type, here current_subject is string)
+    mysqli_stmt_bind_param($stmt, "iis", $from_date_int, $to_date_int, $current_subject);
 } else {
     mysqli_stmt_bind_param($stmt, "s", $current_subject);
 }
-
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 
@@ -172,7 +181,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
                     <a href="../logout.php" class="btn btn-sm btn-outline-light">Logout</a>
                 </div>
             </div>
-        </nav>
+        </nav>    
     </header>
 
     <main class="container py-5">

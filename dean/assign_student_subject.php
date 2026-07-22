@@ -40,7 +40,7 @@ if (isset($_POST['assign_subject'])) {
     $subject_name = mysqli_real_escape_string($conn, $_POST['subject_name']);
 
     // Step A: Fetch student complete details using the submitted ID
-    $student_info_query = "SELECT name, roll_number, faculty, course, year, sem FROM `students` WHERE id = '$student_id' AND course= '$course_name'";
+    $student_info_query = "SELECT name, roll_number, faculty, course, year, sem ,session FROM `students` WHERE id = '$student_id' AND course= '$course_name'";
     $student_info_result = mysqli_query($conn, $student_info_query);
 
     if ($student_info_result && mysqli_num_rows($student_info_result) > 0) {
@@ -51,7 +51,7 @@ if (isset($_POST['assign_subject'])) {
         $s_course = mysqli_real_escape_string($conn, $student_data['course']);
         $s_year = (int) $student_data['year'];
         $s_sem = (int) $student_data['sem'];
-
+        $s_session=mysqli_real_escape_string($conn,$student_data['session']);
         // Step B: Fetch subject_code from subjected_teacher, fallback to subjects table if empty
         $code_query = "SELECT subject_code FROM `subjected_teacher` WHERE subject_name = '$subject_name' AND teacher_id = '$id' LIMIT 1";
         $code_result = mysqli_query($conn, $code_query);
@@ -79,8 +79,8 @@ if (isset($_POST['assign_subject'])) {
             exit;
         } else {
             // Step D: Insert matching records including roll_number
-            $insert_query = "INSERT INTO `subjected_student` (student_name, subject_name, subject_code, faculty, course, year, semester, roll_number) 
-                             VALUES ('$s_name', '$subject_name', '$subject_code', '$s_faculty', '$s_course', '$s_year', '$s_sem', '$s_roll')";
+            $insert_query = "INSERT INTO `subjected_student` (student_name, subject_name, subject_code, faculty, course, year, semester, roll_number,session) 
+                             VALUES ('$s_name', '$subject_name', '$subject_code', '$s_faculty', '$s_course', '$s_year', '$s_sem', '$s_roll','$s_session')";
 
             if (mysqli_query($conn, $insert_query)) {
                 echo "<script>alert('✅ Subject mapping successfully assigned!'); window.location.href='assign_student_subject.php';</script>";

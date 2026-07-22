@@ -111,7 +111,7 @@ $date_of_attendance = date('dmy');
 
     <main class="container my-5">
         <div class="row justify-content-center">
-            <div class="col-md-11 col-lg-9">
+            <div class="col-md-11 col-lg-10">
 
                 <!-- Session metadata details layout banner -->
                 <div class="session-banner card shadow-sm p-4 mb-4">
@@ -150,8 +150,9 @@ $date_of_attendance = date('dmy');
                         <table class='table table-striped table-hover table-bordered text-center align-middle mb-0'>
                             <thead class='table-dark'>
                                 <tr>
-                                    <th style="width: 25%;">Roll Number</th>
-                                    <th class="text-start ps-4">Student Name</th>
+                                    <th style="width: 20%;">Roll Number</th>
+                                    <th class="text-start ps-3">Student Name</th>
+                                    <th style="width: 20%;">Session</th>
                                     <th style="width: 35%;">
                                         Attendance Status
                                         <button type="button" class="btn btn-sm btn-outline-light ms-2"
@@ -161,8 +162,8 @@ $date_of_attendance = date('dmy');
                             </thead>
                             <tbody>
                                 <?php
-                                // JOIN query pulling the missing roll_number while safely filtering for the active class session context
-                                $students_query = "SELECT ss.student_name, s.roll_number 
+                                // JOIN query fetching session and roll number from the students table[cite: 2]
+                                $students_query = "SELECT ss.student_name, s.roll_number, s.session 
                                                    FROM subjected_student ss 
                                                    INNER JOIN students s ON ss.student_name = s.name 
                                                    WHERE ss.subject_name = ?";
@@ -176,13 +177,16 @@ $date_of_attendance = date('dmy');
                                     while ($row = mysqli_fetch_assoc($students_result)) {
                                         $roll_number = $row['roll_number'];
                                         $student_name = $row['student_name'];
+                                        $student_session = !empty($row['session']) ? $row['session'] : 'N/A';
 
                                         echo "
                                         <tr>
                                             <td class='font-monospace fw-bold'>" . htmlspecialchars($roll_number) . "</td>
-                                            <td class='text-start ps-4 fw-medium text-secondary'>" . htmlspecialchars($student_name) . "</td>
+                                            <td class='text-start ps-3 fw-medium text-secondary'>" . htmlspecialchars($student_name) . "</td>
+                                            <td class='font-monospace text-muted'>" . htmlspecialchars($student_session) . "</td>
                                             <td>
                                                 <input type='hidden' name='student_names[" . htmlspecialchars($roll_number) . "]' value='" . htmlspecialchars($student_name) . "'>
+                                                <input type='hidden' name='student_session[" . htmlspecialchars($roll_number) . "]' value='" . htmlspecialchars($student_session) . "'>
                                                 <input type='hidden' name='attendance[" . htmlspecialchars($roll_number) . "]' value='Absent'>
                                                 <div class='form-check d-flex justify-content-center m-0'>
                                                     <input class='form-check-input p-2 border border-secondary cursor-pointer' type='checkbox' style='transform: scale(1.3);' name='attendance[" . htmlspecialchars($roll_number) . "]' value='Present'>
@@ -191,7 +195,7 @@ $date_of_attendance = date('dmy');
                                         </tr>";
                                     }
                                 } else {
-                                    echo "<tr><td colspan='3' class='text-muted py-4'><i class='fa-solid fa-folder-open me-2'></i>No mapped student records found for this subject.</td></tr>";
+                                    echo "<tr><td colspan='4' class='text-muted py-4'><i class='fa-solid fa-folder-open me-2'></i>No mapped student records found for this subject.</td></tr>";
                                 }
                                 ?>
                             </tbody>

@@ -1,18 +1,3 @@
-*Testing and Debugging*
-*Dean*
-1. add faculty and department is mapped and working
-2. add stusdents working
-3. view students working
-4. add subjects working 
- view subjects add karna hai
- view Allocated_subjects add karna hai
- view students_subject dikhana h
-5. add teachers working (added by excel import)
-6. add subject teacher 
-*Teacher*
-1. marking attendance working
-2. view attendnace wroking 
-3. correction working 
-*admin*
--All Operation + Additional-
-1. add dean,student,teacher,subjects,subject_allocation,
+working on
+session 
+with student + attendance

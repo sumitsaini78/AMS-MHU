@@ -7,64 +7,57 @@ if (!isset($_SESSION['dean_id'])) {
     exit;
 }
 
-$id = $_SESSION['dean_id'];
-$query = "SELECT * FROM deans WHERE id = '$id'";
-$result = mysqli_query($conn, $query);
+$id = $_SESSION['dean_id'];$query = "SELECT * FROM deans WHERE id = '$id'";
+$result = mysqli_query($conn,$query);
 $dean_name = ($result && mysqli_num_rows($result) == 1) ? mysqli_fetch_assoc($result)['Dean_name'] : 'Admin';
 
-// 1. Handle Sample CSV Download (Added 'Admission Date')
+// 1. Handle Sample CSV Download (Added 'Session')
 if (isset($_GET['download_sample'])) {
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="sample_students.csv"');
     $output = fopen("php://output", "w");
-    fputcsv($output, ['Name', 'Enroll', 'Roll', 'Faculty', 'Course', 'Section', 'Year', 'Sem', 'Admission Date']);
-    fputcsv($output, ['John Doe', '12345678', 'A-101', 'Computer Science', 'B.Tech', 'A', '2026', '4', '2026-07-01']);
+    fputcsv($output, ['Name', 'Enroll', 'Roll', 'Faculty', 'Course', 'Section', 'Year', 'Sem', 'Admission Date', 'Session']);
+    fputcsv($output, ['John Doe', '12345678', 'A-101', 'Computer Science', 'B.Tech', 'A', '2026', '4', '2026-07-01', '2026-2027']);
     fclose($output);
     exit;
 }
 
-// 2. Handle Manual Insert (Added date_of_admission)
+// 2. Handle Manual Insert (Added session)
 if (isset($_POST['insert_student'])) {
-    $name = mysqli_real_escape_string($conn, $_POST['student_name']);
-    $roll = mysqli_real_escape_string($conn, $_POST['roll_number']);
-    $enroll = mysqli_real_escape_string($conn, $_POST['enroll_number']);
-    $faculty = mysqli_real_escape_string($conn, $_POST['faculty']);
-    $course = mysqli_real_escape_string($conn, $_POST['course']);
-    $section = mysqli_real_escape_string($conn, $_POST['section']);
+    $name = mysqli_real_escape_string($conn, $_POST['student_name']);$roll = mysqli_real_escape_string($conn,$_POST['roll_number']);
+    $enroll = mysqli_real_escape_string($conn, $_POST['enroll_number']);$faculty = mysqli_real_escape_string($conn,$_POST['faculty']);
+    $course = mysqli_real_escape_string($conn, $_POST['course']);$section = mysqli_real_escape_string($conn,$_POST['section']);
     $year = (int)$_POST['year'];
     $sem = (int)$_POST['semester'];
-    $admission_date = mysqli_real_escape_string($conn, $_POST['admission_date']);
+    $admission_date = mysqli_real_escape_string($conn, $_POST['admission_date']);$session = mysqli_real_escape_string($conn,$_POST['session']);
 
-    $sql = "INSERT INTO students (name, enrollment_number, roll_number, faculty, course, section, year, sem, date_of_admission) 
-            VALUES ('$name', '$enroll', '$roll', '$faculty', '$course', '$section', $year, $sem, '$admission_date')";
+    $sql = "INSERT INTO students (name, enrollment_number, roll_number, faculty, course, section, year, sem, date_of_admission, session) 
+            VALUES ('$name', '$enroll', '$roll', '$faculty', '$course', '$section', $year,$sem, '$admission_date', '$session')";
 
-    if (mysqli_query($conn, $sql)) {
+    if (mysqli_query($conn,$sql)) {
         echo "<script>alert('Student added successfully!');</script>";
     } else {
         echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
     }
 }
 
-// 3. Handle CSV Import (Added mapping for $row[8])
+// 3. Handle CSV Import (Added mapping for $row[9] - Session)
 if (isset($_POST['import_csv'])) {
-    $filename = $_FILES["csv_file"]["tmp_name"];
+    $filename =$_FILES["csv_file"]["tmp_name"];
     if ($_FILES["csv_file"]["size"] > 0) {
         $file = fopen($filename, "r");
         fgetcsv($file); // Skip header
         while (($row = fgetcsv($file, 10000, ",")) !== FALSE) {
-            $name = mysqli_real_escape_string($conn, $row[0]);
-            $enroll = mysqli_real_escape_string($conn, $row[1]);
-            $roll = mysqli_real_escape_string($conn, $row[2]);
-            $faculty = mysqli_real_escape_string($conn, $row[3]);
-            $course = mysqli_real_escape_string($conn, $row[4]);
-            $section = mysqli_real_escape_string($conn, $row[5]);
+            $name = mysqli_real_escape_string($conn, $row[0]);$enroll = mysqli_real_escape_string($conn,$row[1]);
+            $roll = mysqli_real_escape_string($conn, $row[2]);$faculty = mysqli_real_escape_string($conn,$row[3]);
+            $course = mysqli_real_escape_string($conn, $row[4]);$section = mysqli_real_escape_string($conn,$row[5]);
             $year = (int)$row[6];
             $sem = (int)$row[7];
-            $admission_date = mysqli_real_escape_string($conn, $row[8]); // 9th column (index 8)
+            $admission_date = mysqli_real_escape_string($conn, $row[8]);$session = mysqli_real_escape_string($conn,$row[9]); // 10th column (index 9)
 
-            $sql = "INSERT INTO students (name, enrollment_number, roll_number, faculty, course, section, year, sem, date_of_admission) 
-                    VALUES ('$name', '$enroll', '$roll', '$faculty', '$course', '$section', $year, $sem, '$admission_date')";
-            mysqli_query($conn, $sql);
+            $sql = "INSERT INTO students (name, enrollment_number, roll_number, faculty, course, section, year, sem, date_of_admission, session) 
+                    VALUES ('$name', '$enroll', '$roll', '$faculty', '$course', '$section', $year,$sem, '$admission_date', '$session')";
+            mysqli_query($conn,$sql);
         }
         fclose($file);
         echo "<script>alert('CSV Imported Successfully!'); window.location.href='add_students.php';</script>";
@@ -121,10 +114,10 @@ if (isset($_POST['import_csv'])) {
                             <div class="col-md-6"><label class="form-label">Faculty</label>
                                 <select class="form-select" name="faculty" required>
                                     <option selected disabled value="">Choose...</option>
-                                   <?php 
-    $res = mysqli_query($conn, "SELECT DISTINCT faculty_name FROM faculty");
-    while($r = mysqli_fetch_assoc($res)) echo "<option value='{$r['faculty_name']}'>{$r['faculty_name']}</option>";
-?>
+                                    <?php 
+                                    $res = mysqli_query($conn, "SELECT DISTINCT faculty_name FROM faculty");
+                                    while($r = mysqli_fetch_assoc($res)) echo "<option value='{$r['faculty_name']}'>{$r['faculty_name']}</option>";
+                                    ?>
                                 </select>
                             </div>
                             <div class="col-md-3"><label class="form-label">Course</label>
@@ -145,8 +138,10 @@ if (isset($_POST['import_csv'])) {
                             </div>
                             <div class="col-md-3"><label class="form-label">Year</label><input type="number" class="form-control" name="year" required></div>
                             <div class="col-md-3"><label class="form-label">Semester</label><input type="number" class="form-control" name="semester" required></div>
-                            <!-- Added Admission Date Input Field -->
                             <div class="col-md-6"><label class="form-label">Date of Admission</label><input type="date" class="form-control" name="admission_date" required></div>
+                            <!-- Added Session Input Field -->
+                            <div class="col-md-6"><label class="form-label">Session</label><input type="text" class="form-control" name="session" placeholder="e.g., 2026-2027" required></div>
+                            
                             <div class="col-12 mt-4"><button type="submit" name="insert_student" class="btn btn-primary px-5 fw-bold">Save Student</button></div>
                         </form>
                     </div>
@@ -155,4 +150,4 @@ if (isset($_POST['import_csv'])) {
         </div>
     </main>
 </body>
-</html> 
+</html>
