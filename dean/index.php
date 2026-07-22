@@ -233,7 +233,7 @@ if ($courses_result) {
                                 <th class="text-end">Progress</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody> 
                             <?php
                             $index = 1;
                             $today_date = (int) date('dmy');

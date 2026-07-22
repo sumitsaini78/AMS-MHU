@@ -8,7 +8,7 @@ if (!isset($_SESSION['dean_id'])) {
     exit;
 }
 
-// 1. Get and sanitize BOTH course and subject names passed via URL GET parameters
+// 1. Get and sanitize parameters
 $course = trim($_GET['course'] ?? $_POST['course'] ?? '');
 $subject = trim($_GET['subject'] ?? $_POST['subject'] ?? '');
 
@@ -25,7 +25,7 @@ $filter_text = "Showing records for: Today (" . date('d/m/Y') . ")";
 $date_from = $_GET['date_from'] ?? '';
 $date_to = $_GET['date_to'] ?? '';
 
-// 2. Initialize WHERE clauses to filter by BOTH course and subject
+// 2. Initialize WHERE clauses
 $where_clauses = ["course = ?", "subject_name = ?"];
 $params = [$course, $subject];
 $types = "ss";
@@ -53,7 +53,7 @@ if (!empty($date_from)) {
 
 $sql_where = "WHERE " . implode(" AND ", $where_clauses);
 
-// 3. Summary Stats (Filtered by course, subject, and date)
+// 3. Summary Stats
 $stats_query = "SELECT 
                     COUNT(DISTINCT date_of_attendence) as total_lectures,
                     COUNT(*) as total_entries,
@@ -69,7 +69,7 @@ $percentage = ($stats['total_entries'] > 0)
     ? round(($stats['present_count'] / $stats['total_entries']) * 100, 2)
     : 0;
 
-// 4. Detailed Records (Filtered by course, subject, and date)
+// 4. Detailed Records
 $list_query = "SELECT * FROM attendance $sql_where ORDER BY date_of_attendence DESC, student_name ASC";
 $stmt = $conn->prepare($list_query);
 $stmt->bind_param($types, ...$params);
@@ -107,15 +107,11 @@ $list_res = $stmt->get_result();
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08) !important;
         }
 
-        .table-card {
-            border: none;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
+        .table-card,
         .filter-card {
             border: none;
             border-radius: 10px;
+            overflow: hidden;
         }
 
         .table thead th {
@@ -137,13 +133,12 @@ $list_res = $stmt->get_result();
                 class="btn btn-sm btn-outline-secondary mb-3 shadow-sm rounded-pill px-3">
                 <i class="fa-solid fa-arrow-left me-1"></i> Back to Subjects
             </a>
-            
+
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <div>
-                    <h2 class="fw-bold text-dark mb-0">
-                        <?= htmlspecialchars($subject) ?> 
-                    </h2>
-                    <span class="text-muted fs-5 fw-medium"><i class="fa-solid fa-graduation-cap me-1"></i> <?= htmlspecialchars($course) ?></span>
+                    <h2 class="fw-bold text-dark mb-0"><?= htmlspecialchars($subject) ?></h2>
+                    <span class="text-muted fs-5 fw-medium"><i class="fa-solid fa-graduation-cap me-1"></i>
+                        <?= htmlspecialchars($course) ?></span>
                 </div>
                 <span class="badge bg-primary fs-6 px-4 py-2 rounded-pill shadow-sm">
                     <i class="fa-regular fa-calendar me-1"></i> <?= $filter_text ?>
@@ -160,9 +155,7 @@ $list_res = $stmt->get_result();
                             <small class="text-muted fw-bold text-uppercase">Total Lectures</small>
                             <h2 class="fw-bold mt-1 text-dark mb-0"><?= $stats['total_lectures'] ?? 0 ?></h2>
                         </div>
-                        <div class="text-primary opacity-50">
-                            <i class="fa-solid fa-person-chalkboard fa-2x"></i>
-                        </div>
+                        <div class="text-primary opacity-50"><i class="fa-solid fa-person-chalkboard fa-2x"></i></div>
                     </div>
                 </div>
             </div>
@@ -173,9 +166,7 @@ $list_res = $stmt->get_result();
                             <small class="text-muted fw-bold text-uppercase">Overall Attendance</small>
                             <h2 class="fw-bold mt-1 text-success mb-0"><?= $percentage ?>%</h2>
                         </div>
-                        <div class="text-success opacity-50">
-                            <i class="fa-solid fa-chart-pie fa-2x"></i>
-                        </div>
+                        <div class="text-success opacity-50"><i class="fa-solid fa-chart-pie fa-2x"></i></div>
                     </div>
                 </div>
             </div>
@@ -186,9 +177,7 @@ $list_res = $stmt->get_result();
                             <small class="text-muted fw-bold text-uppercase">Total Records</small>
                             <h2 class="fw-bold mt-1 text-dark mb-0"><?= $stats['total_entries'] ?? 0 ?></h2>
                         </div>
-                        <div class="text-info opacity-50">
-                            <i class="fa-solid fa-users fa-2x"></i>
-                        </div>
+                        <div class="text-info opacity-50"><i class="fa-solid fa-users fa-2x"></i></div>
                     </div>
                 </div>
             </div>
@@ -197,9 +186,9 @@ $list_res = $stmt->get_result();
         <!-- Filter Form -->
         <div class="card filter-card mb-4 shadow-sm">
             <div class="card-body p-4">
-                <h6 class="card-title fw-bold text-muted mb-3"><i class="fa-solid fa-filter me-1"></i> Filter Attendance Data</h6>
+                <h6 class="card-title fw-bold text-muted mb-3"><i class="fa-solid fa-filter me-1"></i> Filter Attendance
+                    Data</h6>
                 <form method="GET" class="row g-3 align-items-end">
-                    <!-- Ensure both course and subject parameters persist when form is submitted -->
                     <input type="hidden" name="course" value="<?= htmlspecialchars($course) ?>">
                     <input type="hidden" name="subject" value="<?= htmlspecialchars($subject) ?>">
 
@@ -218,9 +207,7 @@ $list_res = $stmt->get_result();
                         <button type="submit" class="btn btn-primary flex-grow-1 shadow-sm">
                             <i class="fa-solid fa-magnifying-glass me-1"></i> Search
                         </button>
-                        <a href="course_details.php?course=<?= urlencode($course) ?>&subject=<?= urlencode($subject) ?>"
-                            class="btn btn-outline-success shadow-sm px-4">Today</a>
-                        <a href="course_details.php?course=<?= urlencode($course) ?>&subject=<?= urlencode($subject) ?>"
+                        <a href="?course=<?= urlencode($course) ?>&subject=<?= urlencode($subject) ?>"
                             class="btn btn-outline-secondary shadow-sm px-4">Reset</a>
                     </div>
                 </form>
@@ -229,20 +216,18 @@ $list_res = $stmt->get_result();
 
         <!-- Attendance Records -->
         <div class="card table-card shadow-sm">
-            <div class="card-header bg-white py-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                <strong class="fs-5 text-dark"><i class="fa-solid fa-list-check text-primary me-2"></i>Detailed Attendance Logs</strong>
-                
-                <!-- Action Buttons integrated beautifully into the card header -->
+            <div
+                class="card-header bg-white py-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <strong class="fs-5 text-dark"><i class="fa-solid fa-list-check text-primary me-2"></i>Detailed
+                    Attendance Logs</strong>
                 <div class="d-flex gap-2 flex-wrap">
-                    <button onclick="exportTableToExcel('attendanceTable', 'Today_Attendance')" class="btn btn-sm btn-success shadow-sm">
-                        <i class="fa-regular fa-file-excel me-1"></i> Export Today
-                    </button>
-                    <button onclick="exportTableToExcel('attendanceTable', 'DateToDate_Attendance')" class="btn btn-sm btn-outline-success shadow-sm">
-                        <i class="fa-solid fa-file-export me-1"></i> Export Filtered
+                    <button onclick="exportTableToExcel('attendanceTable', 'Attendance_Report')"
+                        class="btn btn-sm btn-success shadow-sm">
+                        <i class="fa-regular fa-file-excel me-1"></i> Export to Excel
                     </button>
                 </div>
             </div>
-            
+
             <div class="table-responsive">
                 <table class="table table-hover table-striped mb-0 align-middle" id="attendanceTable">
                     <thead class="table-light">
@@ -261,12 +246,26 @@ $list_res = $stmt->get_result();
                                     ? 'text-success bg-success-subtle' : 'text-danger bg-danger-subtle';
                                 ?>
                                 <tr>
-                                    <td class="ps-4 text-muted fw-medium"><?= htmlspecialchars($row['date_of_attendence']) ?></td>
-                                    <td class="fw-medium">
-                                    <input type="hidden" name="student_name" value="<?php $row['student_name']?>">
-                                    <?= htmlspecialchars($row['student_name']) ?>
+                                    <td class="ps-4 text-muted fw-medium"><?= htmlspecialchars($row['date_of_attendence']) ?>
                                     </td>
-                                    <td><span class="badge bg-secondary text-white"><?= htmlspecialchars($row['roll_number']) ?></span></td>
+                                    
+                                    <!-- Student Name as Clickable Form Submission Link to student_calendar.php -->
+                                    <td class="fw-medium">
+                                        <form action="student_calendar.php" method="POST" class="d-inline">
+                                            <input type="hidden" name="student_roll" value="<?= htmlspecialchars($row['roll_number']) ?>">
+                                            <input type="hidden" name="student_name" value="<?= htmlspecialchars($row['student_name']) ?>">
+                                            <input type="hidden" name="subject_name" value="<?= htmlspecialchars($subject) ?>">
+                                            
+                                            <button type="submit" class="btn btn-link text-primary text-decoration-none p-0 fw-medium d-inline-flex align-items-center">
+                                                <?= htmlspecialchars($row['student_name']) ?>
+                                                <i class="fa-solid fa-circle-info ms-1 small opacity-75"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+
+                                    <td><span
+                                            class="badge bg-secondary text-white"><?= htmlspecialchars($row['roll_number']) ?></span>
+                                    </td>
                                     <td class="text-muted"><?= htmlspecialchars($row['subject_name'] ?? 'N/A') ?></td>
                                     <td>
                                         <span class="badge <?= $status_class ?> px-3 py-2 rounded-pill">
@@ -291,31 +290,22 @@ $list_res = $stmt->get_result();
         </div>
     </div>
 
-    <!-- SheetJS MUST be loaded before your custom function calls it -->
+    <!-- SheetJS & Bootstrap JS -->
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         function exportTableToExcel(tableID, baseFilename) {
-            // Table element ko get karein
             var table = document.getElementById(tableID);
-
-            // Agar table empty hai ya nahi mili, toh error rokne ke liye check karein
             if (!table) {
-                alert("Pehle data load karein!");
+                alert("Table nahi mili!");
                 return;
             }
-
-            // Aaj ki date format karke filename mein append karein (e.g. Today_Attendance_19-07-2026.xlsx)
             var d = new Date();
             var dateString = d.getDate() + "-" + (d.getMonth() + 1) + "-" + d.getFullYear();
             var finalFilename = baseFilename + "_" + dateString + ".xlsx";
 
-            // Table ko workbook mein convert karein
             var wb = XLSX.utils.table_to_book(table, { sheet: "Attendance Record" });
-
-            // Excel file generate aur download karein
             XLSX.writeFile(wb, finalFilename);
         }
     </script>

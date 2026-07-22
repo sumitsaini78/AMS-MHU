@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 22, 2026 at 06:26 AM
+-- Generation Time: Jul 22, 2026 at 01:48 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -61,6 +61,15 @@ CREATE TABLE `attendance` (
   `teacher_name` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `attendance`
+--
+
+INSERT INTO `attendance` (`id`, `student_name`, `roll_number`, `subject_name`, `subject_code`, `course`, `year`, `semester`, `date_of_attendence`, `attendance_status`, `teacher_name`) VALUES
+(1, 'radha', '2', 'Business Management ', 'bms1', 'BBA', 1, 1, 220726, 'Present', ''),
+(2, 'radha', '2', 'Business Management ', 'bms1', 'BBA', 1, 1, 220726, 'Present', ''),
+(3, 'madhav', '3', 'Business Management ', 'bms1', 'BBA', 1, 1, 220726, 'Present', '');
+
 -- --------------------------------------------------------
 
 --
@@ -81,6 +90,13 @@ CREATE TABLE `attendance_corrections` (
   `status` enum('Pending','Approved','Rejected') DEFAULT 'Pending',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `attendance_corrections`
+--
+
+INSERT INTO `attendance_corrections` (`id`, `attendance_id`, `teacher_id`, `student_name`, `roll_number`, `subject_name`, `date_of_attendance`, `current_status`, `requested_status`, `reason`, `status`, `created_at`) VALUES
+(1, 1, 3, 'radha', '2', 'Business Management ', 220726, 'Present', 'Present', 'a', 'Approved', '2026-07-22 09:06:47');
 
 -- --------------------------------------------------------
 
@@ -143,7 +159,7 @@ CREATE TABLE `faculty` (
 
 INSERT INTO `faculty` (`id`, `faculty_name`, `faculty_full_name`, `department`) VALUES
 (1, 'FOCBS', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', ''),
-(7, 'a', 'a', '');
+(8, 'FOCBS', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 'asa');
 
 -- --------------------------------------------------------
 
@@ -171,7 +187,10 @@ CREATE TABLE `students` (
 INSERT INTO `students` (`id`, `name`, `enrollment_number`, `roll_number`, `faculty`, `course`, `section`, `year`, `sem`, `date_of_admission`) VALUES
 (1, 'a', 1, '1', 'FOCBS', 'MBA', 'A', 1, 1, 0),
 (2, 'radha', 1, '2', 'FOCBS', 'BBA', 'A', 1, 1, 0),
-(3, 'madhav', 2, '3', 'FOCBS', 'BBA', 'A', 1, 1, 0);
+(3, 'madhav', 2, '3', 'FOCBS', 'BBA', 'A', 2, 1, 0),
+(4, 'a', 2, '1', 'FOCBS', 'BBA', 'A', 1, 1, 2026),
+(5, 'stu1', 1, '1', 'FOCBS', 'BBA', 'A', 1, 1, 26),
+(6, 'stu2', 2, '2', 'FOCBS', 'MBA', 'A', 1, 1, 26);
 
 -- --------------------------------------------------------
 
@@ -191,6 +210,14 @@ CREATE TABLE `subjected_student` (
   `roll_number` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `subjected_student`
+--
+
+INSERT INTO `subjected_student` (`id`, `student_name`, `subject_name`, `subject_code`, `faculty`, `course`, `year`, `semester`, `roll_number`) VALUES
+(14, 'madhav', 'Business Management ', '', 'FOCBS', 'BBA', 1, 1, 3),
+(15, 'radha', 'Business Management ', '', 'FOCBS', 'BBA', 1, 1, 2);
+
 -- --------------------------------------------------------
 
 --
@@ -208,6 +235,13 @@ CREATE TABLE `subjected_teacher` (
   `semester` int(11) NOT NULL,
   `subject_code` varchar(66) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `subjected_teacher`
+--
+
+INSERT INTO `subjected_teacher` (`id`, `teacher_id`, `sub_id`, `teacher_name`, `subject_name`, `course_name`, `year`, `semester`, `subject_code`) VALUES
+(1, 3, 2, 'DR. SNEHASHISH BHARDWAJ', 'Business Management ', 'BBA', 1, 1, 'bms1');
 
 -- --------------------------------------------------------
 
@@ -234,7 +268,9 @@ INSERT INTO `subjects` (`course_id`, `course_name`, `Year`, `semester`, `subject
 (1, 'BBA', 1, 1, 'Business Management ', '', 'bms1', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
 (2, 'BBA', 1, 1, 'Business Management ', '', 'bms1', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
 (3, 'B.Sc CS', 2026, 1, 'Introduction to Programming', '', 'CS-101', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
-(4, 'B.Sc CS', 2026, 1, 'Mathematics-I', '', 'MAT-101', 'FACULTY OF COMMERCE AND BUSINESS STUDIES');
+(4, 'B.Sc CS', 2026, 1, 'Mathematics-I', '', 'MAT-101', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
+(5, 'MBA', 1, 2, 'mba sum ', '', 'mbacd', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
+(6, 'BBA', 1, 2, 'bba 12', '', '', 'FACULTY OF COMMERCE AND BUSINESS STUDIES');
 
 -- --------------------------------------------------------
 
@@ -254,7 +290,10 @@ CREATE TABLE `teachers` (
 --
 
 INSERT INTO `teachers` (`id`, `name`, `faculty`, `number`) VALUES
-(3, 'DR. SNEHASHISH BHARDWAJ', '', 333);
+(3, 'DR. SNEHASHISH BHARDWAJ', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 333),
+(4, 'mr sumit saini', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 4),
+(5, 'te1', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 4),
+(6, 't2', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 5);
 
 --
 -- Indexes for dumped tables
@@ -334,13 +373,13 @@ ALTER TABLE `teachers`
 -- AUTO_INCREMENT for table `attendance`
 --
 ALTER TABLE `attendance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `attendance_corrections`
 --
 ALTER TABLE `attendance_corrections`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `courses_list`
@@ -358,37 +397,37 @@ ALTER TABLE `deans`
 -- AUTO_INCREMENT for table `faculty`
 --
 ALTER TABLE `faculty`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `subjected_student`
 --
 ALTER TABLE `subjected_student`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `subjected_teacher`
 --
 ALTER TABLE `subjected_teacher`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `subjects`
 --
 ALTER TABLE `subjects`
-  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `teachers`
 --
 ALTER TABLE `teachers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

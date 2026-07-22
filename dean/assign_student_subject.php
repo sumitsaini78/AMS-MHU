@@ -6,7 +6,7 @@ session_start();
 if (!isset($_SESSION['dean_id']) || !isset($_SESSION['dean_name'])) {
     header("Location: ../index.php");
     exit;
-}
+} 
 
 $id = $_SESSION['dean_id'];
 $teacher_name = $_SESSION['dean_name'];

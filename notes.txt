@@ -13,3 +13,6 @@
 1. marking attendance working
 2. view attendnace wroking 
 3. correction working 
+*admin*
+-All Operation + Additional-
+1. add dean,student,teacher,subjects,subject_allocation,

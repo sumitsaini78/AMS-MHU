@@ -2,7 +2,7 @@
 include "../db_connect.php";
 
 session_start();
-if ($_SESSION['teacher_name'] == null) {
+if (!isset($_SESSION['dean_name']) || $_SESSION['dean_name'] == null) {
     header("Location: ../index.php");
     exit();
 }
@@ -12,6 +12,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['student_roll'])) {
         $_SESSION['student_roll'] = $_POST['student_roll'];
         $_SESSION['student_name'] = $_POST['student_name'];
+        
+        if (isset($_POST['subject_name'])) {
+            $_SESSION['subject_name'] = $_POST['subject_name'];
+        }
+        if (isset($_POST['course'])) {
+            $_SESSION['course'] = $_POST['course'];
+        }
+        if (isset($_POST['semester'])) {
+            $_SESSION['semester'] = $_POST['semester'];
+        }
+        if (isset($_POST['session'])) {
+            $_SESSION['session'] = $_POST['session'];
+        }
+        if (isset($_POST['academic_year'])) {
+            $_SESSION['academic_year'] = $_POST['academic_year'];
+        }
+
         unset($_SESSION['calendar_month']); // Reset month filter on new student select
         unset($_SESSION['search_start']);
         unset($_SESSION['search_end']);
@@ -30,6 +47,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['search_end'] = $_POST['end_date'];
         unset($_SESSION['calendar_month']);
     }
+
+    // NEW: Handle Session, Year, and Semester Search/Update
+    if (isset($_POST['filter_session_sem'])) {
+        if (!empty($_POST['session_val'])) {
+            $_SESSION['session'] = $_POST['session_val'];
+        }
+        if (!empty($_POST['academic_year_val'])) {
+            $_SESSION['academic_year'] = $_POST['academic_year_val'];
+        }
+        if (!empty($_POST['semester_val'])) {
+            $_SESSION['semester'] = $_POST['semester_val'];
+        }
+    }
     
     // NEW: If the user clicked "Export to Excel", DO NOT redirect. 
     // Let the code fall through to generate the file.
@@ -45,9 +75,13 @@ if (!isset($_SESSION['student_roll']) || !isset($_SESSION['subject_name'])) {
     exit();
 }
 
-$student_roll = $_SESSION['student_roll'];
-$student_name = $_SESSION['student_name'];
-$subject_name = $_SESSION['subject_name'];
+$student_roll   = $_SESSION['student_roll'];
+$student_name   = $_SESSION['student_name'];
+$subject_name   = $_SESSION['subject_name'];
+$course_val     = $_SESSION['course'] ?? 'N/A';
+$semester_val   = $_SESSION['semester'] ?? 'N/A';
+$session_val    = $_SESSION['session'] ?? '2025-2026';
+$academic_year  = $_SESSION['academic_year'] ?? '1st Year';
 
 // Define defaults for date inputs (Today's Date)
 $start_date_default = $_SESSION['search_start'] ?? date('Y-m-d');
@@ -123,41 +157,36 @@ $total_lectures = $present_count + $absent_count;
 $attendance_rate = ($total_lectures > 0) ? round(($present_count / $total_lectures) * 100, 1) : 0;
 
 // =========================================================================
-// NEW: EXPORT TO EXCEL LOGIC (Downloads a CSV Native to Excel)
+// EXPORT TO EXCEL LOGIC (Downloads a CSV Native to Excel)
 // =========================================================================
 if (isset($_POST['export_excel']) && $is_range_search) {
-    // Clear any accidental whitespace or HTML before this point
     if (ob_get_length()) ob_clean();
     
     $filename = "Attendance_Report_" . $student_roll . "_" . date('Ymd') . ".csv";
     
-    // Set headers to force download
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
     
     $output = fopen('php://output', 'w');
     
-    // 1. Add Summary / Header Rows to the Excel file
     fputcsv($output, ['MHU-AMS Date Range Attendance Report']);
     fputcsv($output, ['Student Name:', $student_name, 'Roll Number:', $student_roll]);
+    fputcsv($output, ['Course:', $course_val, 'Academic Year:', $academic_year, 'Semester:', $semester_val, 'Session:', $session_val]);
     fputcsv($output, ['Subject:', $subject_name, 'Range:', $_SESSION['search_start'] . ' to ' . $_SESSION['search_end']]);
     fputcsv($output, ['Total Lectures:', $total_lectures, 'Present:', $present_count, 'Absent:', $absent_count, 'Attendance %:', $attendance_rate . '%']);
-    fputcsv($output, []); // Empty row for spacing
+    fputcsv($output, []); 
     
-    // 2. Add Table Column Headers
     fputcsv($output, ['Date', 'Day', 'Attendance Status']);
     
-    // 3. Add Data Rows
     foreach ($attendance_data as $date_key => $status_val) {
         $display_date = date('d-M-Y', strtotime($date_key));
-        $day_name = date('l', strtotime($date_key)); // e.g. Monday, Tuesday
+        $day_name = date('l', strtotime($date_key)); 
         fputcsv($output, [$display_date, $day_name, ucfirst($status_val)]);
     }
     
     fclose($output);
-    exit(); // Terminate script so the HTML below is not appended to the file
+    exit(); 
 }
-// =========================================================================
 ?>
 <!doctype html>
 <html lang="en" data-bs-theme="light">
@@ -177,10 +206,8 @@ if (isset($_POST['export_excel']) && $is_range_search) {
     <style>
         body { background-color: #f8f9fa; }
         #mhu-text { color: #a2c250; text-shadow: 1px 2px 14px rgb(46 195 41); }
-        
         .custom-card { background: #ffffff; border: none; border-radius: 14px; }
         
-        /* Modern CSS Grid Calendar Structural View */
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -211,7 +238,6 @@ if (isset($_POST['export_excel']) && $is_range_search) {
         .calendar-day:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
         .calendar-day.empty { background-color: #f1f3f5; border: none; cursor: default; pointer-events: none; }
         
-        /* Attendance Dynamic Colors Indicators */
         .day-present { background-color: #d1e7dd !important; border-color: #a3cfbb !important; color: #0f5132 !important; }
         .day-absent { background-color: #f8d7da !important; border-color: #f5c2c7 !important; color: #842029 !important; }
         
@@ -231,10 +257,10 @@ if (isset($_POST['export_excel']) && $is_range_search) {
             <div class="container-fluid">
                 <span class="navbar-brand mb-0 h1 fs-3 fw-bold" id="mhu-text"> MHU-AMS <sub>Calendar-View</sub></span>
                 <div class="d-flex align-items-center">
-                    <span class="navbar-text text-white bg-secondary px-3 py-1 rounded-pill small me-3">
-                        <i class="fa-solid fa-user-tie me-1"></i> Welcome, <?php echo htmlspecialchars($_SESSION['teacher_name']); ?>
+                    <span class="navbar-text text-light small me-3">
+                        <i class="fa-solid fa-user-tie me-1 text-muted"></i> Welcome, <?php echo htmlspecialchars($_SESSION['dean_name'] ?? 'Dean'); ?>
                     </span>
-                    <a href="view_student_attendance.php" class="btn btn-sm btn-outline-info me-2">
+                    <a href="student_attendence.php" class="btn btn-sm btn-outline-info me-2">
                         <i class="fa-solid fa-arrow-left me-1"></i> Back to List
                     </a>
                 </div>
@@ -249,11 +275,15 @@ if (isset($_POST['export_excel']) && $is_range_search) {
                 <div class="custom-card shadow-sm p-4 border">
                     <div class="row align-items-center">
                         <div class="col-md-7 border-end border-light">
-                            <span class="badge bg-secondary-subtle text-secondary mb-1">Student Focus Profile</span>
-                            <h2 class="fw-bold text-dark mb-1"><i class="fa-solid fa-circle-user text-muted me-2"></i><?php echo htmlspecialchars($student_name); ?></h2>
-                            <p class="text-muted mb-0 font-monospace small">Roll Number: <?php echo htmlspecialchars($student_roll); ?></p>
-                            <div class="mt-2 text-primary fw-medium small">
-                                <i class="fa-solid fa-book-open me-1"></i> Subject Track Target: <strong class="text-dark"><?php echo htmlspecialchars($subject_name); ?></strong>
+                            <span class="text-uppercase text-muted fw-bold mb-1 d-block" style="font-size: 0.75rem;">Student Focus Profile</span>
+                            <h3 class="fw-bold text-dark mb-1">
+                                <i class="fa-solid fa-circle-user text-primary me-2"></i><?php echo htmlspecialchars($student_name); ?>
+                            </h3>
+                            <p class="text-muted mb-1 font-monospace small">Roll Number: <span class="text-dark fw-semibold"><?php echo htmlspecialchars($student_roll); ?></span></p>
+                            <p class="text-muted mb-1 small">Course/Yr/Sem: <span class="text-dark fw-semibold"><?php echo htmlspecialchars($course_val); ?> | <?php echo htmlspecialchars($academic_year); ?> (Sem: <?php echo htmlspecialchars($semester_val); ?>)</span></p>
+                            <p class="text-muted mb-1 small">Session: <span class="text-dark fw-semibold"><?php echo htmlspecialchars($session_val); ?></span></p>
+                            <div class="text-secondary small">
+                                <i class="fa-solid fa-book-open me-1 text-muted"></i> Subject Track Target: <span class="text-dark fw-semibold"><?php echo htmlspecialchars($subject_name); ?></span>
                             </div>
                         </div>
                         <div class="col-md-5 ps-md-4 mt-3 mt-md-0">
@@ -264,17 +294,17 @@ if (isset($_POST['export_excel']) && $is_range_search) {
                                 </span>
                             </div>
                             <div class="d-flex gap-2">
-                                <div class="bg-success-subtle p-2 rounded text-center flex-fill border border-success-subtle">
-                                    <div class="text-success small fw-semibold">Total Lectures</div>
-                                    <div class="fs-5 fw-bold text-success"><?php echo $present_count+$absent_count; ?></div>
+                                <div class="bg-light p-2 rounded text-center flex-fill border">
+                                    <div class="text-muted small">Total</div>
+                                    <div class="fs-6 fw-bold text-dark"><?php echo $present_count+$absent_count; ?></div>
                                 </div>
-                                <div class="bg-success-subtle p-2 rounded text-center flex-fill border border-success-subtle">
-                                    <div class="text-success small fw-semibold">Present</div>
-                                    <div class="fs-5 fw-bold text-success"><?php echo $present_count; ?></div>
+                                <div class="bg-light p-2 rounded text-center flex-fill border">
+                                    <div class="text-success small">Present</div>
+                                    <div class="fs-6 fw-bold text-success"><?php echo $present_count; ?></div>
                                 </div>
-                                <div class="bg-danger-subtle p-2 rounded text-center flex-fill border border-danger-subtle">
-                                    <div class="text-danger small fw-semibold">Absent</div>
-                                    <div class="fs-5 fw-bold text-danger"><?php echo $absent_count; ?></div>
+                                <div class="bg-light p-2 rounded text-center flex-fill border">
+                                    <div class="text-danger small">Absent</div>
+                                    <div class="fs-6 fw-bold text-danger"><?php echo $absent_count; ?></div>
                                 </div>
                             </div>
                         </div>
@@ -288,16 +318,27 @@ if (isset($_POST['export_excel']) && $is_range_search) {
             <div class="col-12 col-lg-10">
                 <div class="custom-card shadow-sm p-4 border">
                     
-                    <!-- Month Context & Date Range Filtering Ribbon Controls Line -->
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 border-bottom pb-3 mb-4">
                         <h4 class="fw-bold text-secondary mb-0">
                             <i class="fa-regular fa-calendar-check text-primary me-2"></i><?php echo $is_range_search ? "Range Search View" : date('F Y', $first_day_timestamp); ?>
                         </h4>
                         
                         <div class="d-flex flex-wrap align-items-center gap-3 msg-filter-container">
-                            <!-- Existing Month Form View Filter -->
+                            
+                            <!-- NEW: Session, Academic Year & Semester Search Form -->
                             <form method="POST" action="student_calendar.php" class="d-flex align-items-center gap-2">
-                                <label for="selected_month" class="small text-muted text-nowrap fw-medium">Month View:</label>
+                                <label class="small text-muted text-nowrap fw-medium">Session/Sem:</label>
+                                <input type="text" name="session_val" class="form-control form-control-sm border-secondary-subtle" style="width: 100px;" value="<?php echo htmlspecialchars($session_val); ?>" placeholder="Session" title="Session (e.g. 2025-2026)">
+                                <input type="text" name="academic_year_val" class="form-control form-control-sm border-secondary-subtle" style="width: 85px;" value="<?php echo htmlspecialchars($academic_year); ?>" placeholder="Year" title="Academic Year">
+                                <input type="text" name="semester_val" class="form-control form-control-sm border-secondary-subtle" style="width: 55px;" value="<?php echo htmlspecialchars($semester_val); ?>" placeholder="Sem" title="Semester">
+                                <button type="submit" name="filter_session_sem" class="btn btn-sm btn-secondary px-2 shadow-sm" title="Apply Session/Sem Filter"><i class="fa-solid fa-check"></i></button>
+                            </form>
+
+                            <div class="vr d-none d-md-block text-secondary opacity-25"></div>
+
+                            <!-- Month View Filter Form -->
+                            <form method="POST" action="student_calendar.php" class="d-flex align-items-center gap-2">
+                                <label for="selected_month" class="small text-muted text-nowrap fw-medium">Month:</label>
                                 <input type="month" id="selected_month" name="selected_month" class="form-control form-control-sm border-secondary-subtle" 
                                        value="<?php echo $target_month_str; ?>">
                                 <button type="submit" name="filter_month" class="btn btn-sm btn-primary px-2 shadow-sm">Load</button>
@@ -305,9 +346,9 @@ if (isset($_POST['export_excel']) && $is_range_search) {
 
                             <div class="vr d-none d-md-block text-secondary opacity-25"></div>
 
-                            <!-- Newly Added Date Range Form Filter (Defaults to Today's system dates) -->
+                            <!-- Date Range Filter Form -->
                             <form method="POST" action="student_calendar.php" class="d-flex align-items-center gap-2">
-                                <label class="small text-muted text-nowrap fw-medium">Search Range:</label>
+                                <label class="small text-muted text-nowrap fw-medium">Range:</label>
                                 <input type="date" name="start_date" class="form-control form-control-sm border-secondary-subtle" value="<?php echo $start_date_default; ?>" required>
                                 <span class="small text-muted">to</span>
                                 <input type="date" name="end_date" class="form-control form-control-sm border-secondary-subtle" value="<?php echo $end_date_default; ?>" required>
@@ -320,9 +361,7 @@ if (isset($_POST['export_excel']) && $is_range_search) {
                     </div>
 
                     <?php if (!$is_range_search): ?>
-                        <!-- Interactive Calendar View Grid Module -->
                         <div class="calendar-grid">
-                            <!-- Weekdays Header Rows Initialization -->
                             <div class="calendar-weekday">Sun</div>
                             <div class="calendar-weekday">Mon</div>
                             <div class="calendar-weekday">Tue</div>
@@ -332,12 +371,10 @@ if (isset($_POST['export_excel']) && $is_range_search) {
                             <div class="calendar-weekday">Sat</div>
 
                             <?php
-                            // 1. Render empty offset tracking boxes for week launch alignment
                             for ($i = 0; $i < $first_day_of_week; $i++) {
                                 echo "<div class='calendar-day empty'></div>";
                             }
 
-                            // 2. Render actual month numeric operational calendar date blocks
                             for ($day = 1; $day <= $days_in_month; $day++) {
                                 $status_class = '';
                                 $badge_markup = '';
@@ -360,13 +397,9 @@ if (isset($_POST['export_excel']) && $is_range_search) {
                             ?>
                         </div>
                     <?php else: ?>
-                        <!-- Interactive Range Results Log List Module -->
-                        
-                        <!-- NEW: Export to Excel Button Block -->
                         <?php if (!empty($attendance_data)): ?>
                             <div class="d-flex justify-content-end mb-3">
                                 <form method="POST" action="student_calendar.php">
-                                    <!-- Send the export flag -->
                                     <button type="submit" name="export_excel" class="btn btn-success btn-sm shadow-sm px-3">
                                         <i class="fa-solid fa-file-excel me-1"></i> Export to Excel
                                     </button>
@@ -408,7 +441,6 @@ if (isset($_POST['export_excel']) && $is_range_search) {
                         </div>
                     <?php endif; ?>
 
-                    <!-- Operational Color Legends Explanations Strip Footer -->
                     <div class="d-flex justify-content-center gap-4 mt-4 pt-3 border-top small text-secondary fw-medium">
                         <div><span class="status-dot bg-success-subtle border border-success"></span> Present Status</div>
                         <div><span class="status-dot bg-danger-subtle border border-danger"></span> Absent Status</div>
