@@ -23,10 +23,19 @@ if (isset($_GET['download_sample'])) {
 }
 
 // 3. Process Manual Entry
+// 3. Process Manual Entry
 if (isset($_POST['insert_subject'])) {
     if (!empty($_POST['course_name']) && !empty($_POST['subject_name'])) {
         $stmt = $conn->prepare("INSERT INTO subjects (course_name, Year, semester, subject_name, faculty_name, subject_code) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("siisss", $_POST['course_name'], (int)$_POST['year'], (int)$_POST['semester'], $_POST['subject_name'], $faculty_name, $_POST['subject_code']);
+        
+        // Store casted values in variables first to prevent the reference error
+        $course_name = $_POST['course_name'];
+        $year = (int)$_POST['year'];
+        $semester = (int)$_POST['semester'];
+        $subject_name = $_POST['subject_name'];
+        $subject_code = $_POST['subject_code'];
+
+        $stmt->bind_param("siisss", $course_name, $year, $semester, $subject_name, $faculty_name, $subject_code);
         
         if ($stmt->execute()) {
             echo "<script>alert('Subject added successfully!');</script>";
@@ -38,9 +47,7 @@ if (isset($_POST['insert_subject'])) {
         echo "<script>alert('Please fill in all required fields.');</script>";
     }
 }
-
 // 4. Process CSV Import
-// 4. Process CSV Import (Updated Loop)
 elseif (isset($_POST['import_csv'])) {
     if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
         $handle = fopen($_FILES['csv_file']['tmp_name'], "r");
@@ -111,12 +118,12 @@ elseif (isset($_POST['import_csv'])) {
             </div>
 
             <!-- Manual Entry -->
-            <div class="col-lg-12">
+            <div class="col-lg-12"> 
                 <div class="card main-card p-4">
                     <h5 class="mb-4 text-primary"><i class="fa-solid fa-plus-circle me-2"></i>Manual Entry</h5>
                     <form method="POST" class="row g-3">
                         <div class="col-md-6">
-                            <h6>Faculty: <?php echo htmlspecialchars($faculty_name); ?></h6>
+                            <h6> <?php echo htmlspecialchars($faculty_name); ?></h6>
                             <label class="form-label">Course</label>
                             <?php
                             $stmt = $conn->prepare("SELECT DISTINCT course_name FROM courses_list WHERE faculty_name = ?");

@@ -24,12 +24,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['dept_name'])) {
     
     if (!empty($department_name) && !empty($department_full_name)) {
         // Checking duplicate entry barrier index mapping
-        $check_duplicate = mysqli_query($conn, "SELECT * FROM `faculty` WHERE dep_name = '$department_name'");
+        $check_duplicate = mysqli_query($conn, "SELECT * FROM `faculty` WHERE faculty_name = '$department_name'");
         
         if (mysqli_num_rows($check_duplicate) > 0) {
             $message = "danger|⚠️ Department short code already exists!";
         } else {
-            $query = "INSERT INTO `faculty` (dep_name, full_name) VALUES ('$department_name', '$department_full_name')";
+            $query = "INSERT INTO `faculty` (faculty_name, faculty_full_name) VALUES ('$department_name', '$department_full_name')";
             if (mysqli_query($conn, $query)) {
                 $message = "success|🎉 Department registered successfully into indices directory!";
             } else {
@@ -114,26 +114,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['dept_name'])) {
                     <form method="POST" action="" class="needs-validation" novalidate>
                         <!-- Department Short Identity Input -->
                         <div class="mb-3">
-                            <label for="dept_name" class="form-label small fw-bold text-secondary">Department Code / Alias</label>
+                            <label for="dept_name" class="form-label small fw-bold text-secondary">Faculty Name</label>
                             <div class="input-group">
                                 <span class="input-group-text text-muted"><i class="fa-solid fa-address-card"></i></span>
-                                <input type="text" class="form-control" name="dept_name" id="dept_name" placeholder="e.g., BBA, MBA, CSE" required autocomplete="off">
+                                <input type="text" class="form-control" name="dept_name" id="dept_name" placeholder="First Keyword - FOCBS" required autocomplete="off">
                             </div>
                             <div class="form-text text-muted extra-small" style="font-size: 0.75rem;">Use standard capitalized tracking aliases.</div>
                         </div>
 
                         <!-- Department Full Identity Input -->
                         <div class="mb-4">
-                            <label for="dept_full_name" class="form-label small fw-bold text-secondary">Department Full Title</label>
+                            <label for="dept_full_name" class="form-label small fw-bold text-secondary">Department Full Name</label>
                             <div class="input-group">
                                 <span class="input-group-text text-muted"><i class="fa-solid fa-font"></i></span>
-                                <input type="text" class="form-control" name="dept_full_name" id="dept_full_name" placeholder="e.g., Bachelor of Business Administration" required autocomplete="off">
+                                <input type="text" class="form-control" name="dept_full_name" id="dept_full_name" placeholder="Faculty of -------- studies" required autocomplete="off">
                             </div>
                         </div>
 
                         <!-- Execution Commit Action Trigger Buttons -->
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary py-2.5 fw-bold shadow-sm"><i class="fa-solid fa-plus-circle me-1"></i> Add Department System</button>
+                            <button type="submit" class="btn btn-primary py-2.5 fw-bold shadow-sm"><i class="fa-solid fa-plus-circle me-1"></i> Add New Faculty</button>
                             <a href="index.php" class="btn btn-link btn-sm text-decoration-none text-muted mt-1">Cancel & Return</a>
                         </div>
                     </form>

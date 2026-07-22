@@ -29,19 +29,20 @@ include "../db_connect.php";
         <div class="col"> <?php
         $query = "SELECT dean_name FROM `deans`";
         $result = mysqli_query($conn, $query);
-        echo "<table class='table-primary'><tr><th>Faculty Dean</th></tr></table>";
+        $index=1;
+        echo "<table class='table-primary'><tr><th>#Faculty Dean</th></tr></table>";
         while ($row = mysqli_fetch_assoc($result)) {
             $val = $row['dean_name'];
-            echo "$val  </br>";
+            echo " $index. $val  </br>";
         }
         ?></div>
         <div class="col">
             <?php
-            $query = "SELECT dept_name FROM `deans`";
+            $query = "SELECT faculty_name FROM `deans`";
             $result = mysqli_query($conn, $query);
             echo "<table class='table-primary'><tr><th>Faculty Dept</th></tr></table>";
             while ($row = mysqli_fetch_assoc($result)) {
-                $val = $row['dept_name'];
+                $val = $row['faculty_name'];
                 echo "$val  </br>";
             }
             ?>

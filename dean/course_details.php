@@ -266,7 +266,6 @@ $list_res = $stmt->get_result();
                                     <input type="hidden" name="student_name" value="<?php $row['student_name']?>">
                                     <?= htmlspecialchars($row['student_name']) ?>
                                     </td>
-                                    
                                     <td><span class="badge bg-secondary text-white"><?= htmlspecialchars($row['roll_number']) ?></span></td>
                                     <td class="text-muted"><?= htmlspecialchars($row['subject_name'] ?? 'N/A') ?></td>
                                     <td>

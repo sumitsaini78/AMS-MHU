@@ -112,7 +112,7 @@ $pending_count = ($correction_count_result) ? mysqli_fetch_assoc($correction_cou
         <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-6 mb-4">
             <?php
             $actions = [
-                ['Add Faculty', 'fa-network-wired', 'text-info', 'add_Faculty.php'],
+                ['Add Faculty & Departments', 'fa-network-wired', 'text-info', 'add_Faculty.php'],
                 ['Add Students', 'fa-user-graduate', 'text-info', 'add_Students.php'],
                 ['View Students', 'fa-users-viewfinder', 'text-primary', 'view_students.php'],
                 ['Add Subjects', 'fa-book-bookmark', 'text-info', 'add_bulk_subject.php'],

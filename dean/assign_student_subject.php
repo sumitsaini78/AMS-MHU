@@ -1,15 +1,15 @@
 <?php
 include "../db_connect.php";
 session_start();
-
+$faculty_name=$_SESSION['faculty_name'];
 // 1. Secure the page: Check if the teacher is actually logged in
-if (!isset($_SESSION['teacher_id']) || !isset($_SESSION['teacher_name'])) {
+if (!isset($_SESSION['dean_id']) || !isset($_SESSION['dean_name'])) {
     header("Location: ../index.php");
     exit;
 }
 
-$id = $_SESSION['teacher_id'];
-$teacher_name = $_SESSION['teacher_name'];
+$id = $_SESSION['dean_id'];
+$teacher_name = $_SESSION['dean_name'];
 
 // ==========================================
 // 2A. SINGLE ASSIGNMENT PROCESSOR
@@ -156,7 +156,7 @@ if (isset($_POST['bulk_assign_subject'])) {
 // Fetch general students and subjects for single assign dropdowns
 $query = "SELECT * FROM `students`";
 $result = mysqli_query($conn, $query);
-$subject_query = "SELECT DISTINCT subject_name FROM `subjected_teacher` WHERE teacher_id = '$id'";
+$subject_query = "SELECT DISTINCT subject_name FROM `subjects` WHERE faculty_name = '$faculty_name'";
 $subject_result = mysqli_query($conn, $subject_query);
 
 $subjects_list = [];

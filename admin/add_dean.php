@@ -4,7 +4,7 @@ if (isset($_POST['ins_dean'])) {
     echo "<script>added successfull</script>";
     $Dean_name = $_POST['Dean_name'];
     $Dept_name = $_POST['Dept_name'];
-    $query = "insert into `Deans`(Dean_name,Dept_name) VALUES('$Dean_name','$Dept_name')";
+    $query = "insert into `Deans`(Dean_name,faculty_name) VALUES('$Dean_name','$Dept_name')";
     mysqli_query($conn, $query);
 }
 
