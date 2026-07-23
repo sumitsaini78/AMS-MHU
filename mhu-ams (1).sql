@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 22, 2026 at 01:48 PM
+-- Generation Time: Jul 23, 2026 at 03:17 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -58,17 +58,22 @@ CREATE TABLE `attendance` (
   `semester` int(11) NOT NULL,
   `date_of_attendence` int(11) NOT NULL,
   `attendance_status` varchar(12) NOT NULL,
-  `teacher_name` varchar(100) NOT NULL
+  `teacher_name` varchar(100) NOT NULL,
+  `session` varchar(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `attendance`
 --
 
-INSERT INTO `attendance` (`id`, `student_name`, `roll_number`, `subject_name`, `subject_code`, `course`, `year`, `semester`, `date_of_attendence`, `attendance_status`, `teacher_name`) VALUES
-(1, 'radha', '2', 'Business Management ', 'bms1', 'BBA', 1, 1, 220726, 'Present', ''),
-(2, 'radha', '2', 'Business Management ', 'bms1', 'BBA', 1, 1, 220726, 'Present', ''),
-(3, 'madhav', '3', 'Business Management ', 'bms1', 'BBA', 1, 1, 220726, 'Present', '');
+INSERT INTO `attendance` (`id`, `student_name`, `roll_number`, `subject_name`, `subject_code`, `course`, `year`, `semester`, `date_of_attendence`, `attendance_status`, `teacher_name`, `session`) VALUES
+(21, 'sumti', '123', 'Business Management ', 'bms1', 'BBA', 1, 1, 210726, 'Present', '', '2026-27'),
+(22, 'sumti', '1232', 'Business Management ', 'bms1', 'BBA', 1, 1, 230726, 'Present', '', '2025-26'),
+(23, 'sumitaaaaa', '1277', 'Business Management ', 'bms1', 'BBA', 1, 1, 230726, 'Present', '', '2026-27'),
+(24, 'sumti', '123', 'Business Management ', 'bms1', 'BBA', 1, 1, 230726, 'Absent', '', '2026-27'),
+(25, 'sumitaaaaa', '1277', 'Business Management ', 'bms1', 'BBA', 1, 1, 230726, 'Absent', '', '2026-27'),
+(26, 'aaa', '111', 'Business Management ', 'bms1', 'BBA', 1, 1, 230726, 'Present', '', '2025-26'),
+(27, 'sumti', '123', 'Business care', 'bms1', 'BBA', 1, 2, 230726, 'Present', '', '2026-27');
 
 -- --------------------------------------------------------
 
@@ -177,20 +182,18 @@ CREATE TABLE `students` (
   `section` varchar(11) NOT NULL,
   `year` int(11) NOT NULL,
   `sem` int(11) NOT NULL,
-  `date_of_admission` int(11) NOT NULL
+  `date_of_admission` int(11) NOT NULL,
+  `session` varchar(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `students`
 --
 
-INSERT INTO `students` (`id`, `name`, `enrollment_number`, `roll_number`, `faculty`, `course`, `section`, `year`, `sem`, `date_of_admission`) VALUES
-(1, 'a', 1, '1', 'FOCBS', 'MBA', 'A', 1, 1, 0),
-(2, 'radha', 1, '2', 'FOCBS', 'BBA', 'A', 1, 1, 0),
-(3, 'madhav', 2, '3', 'FOCBS', 'BBA', 'A', 2, 1, 0),
-(4, 'a', 2, '1', 'FOCBS', 'BBA', 'A', 1, 1, 2026),
-(5, 'stu1', 1, '1', 'FOCBS', 'BBA', 'A', 1, 1, 26),
-(6, 'stu2', 2, '2', 'FOCBS', 'MBA', 'A', 1, 1, 26);
+INSERT INTO `students` (`id`, `name`, `enrollment_number`, `roll_number`, `faculty`, `course`, `section`, `year`, `sem`, `date_of_admission`, `session`) VALUES
+(12, 'sumti', 1234, '123', 'FOCBS', 'BBA', 'A', 1, 1, 2026, '2026-27'),
+(13, 'sumitaaaaa', 1234, '1277', 'FOCBS', 'BBA', 'A', 1, 1, 2026, '2025-26'),
+(18, 'aarti', 111, '188', 'FOCBS', 'BBA', 'A', 1, 1, 2026, '2026-27');
 
 -- --------------------------------------------------------
 
@@ -207,16 +210,18 @@ CREATE TABLE `subjected_student` (
   `course` varchar(122) NOT NULL,
   `year` int(11) NOT NULL,
   `semester` int(11) NOT NULL,
-  `roll_number` int(11) NOT NULL
+  `roll_number` int(11) NOT NULL,
+  `session` varchar(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `subjected_student`
 --
 
-INSERT INTO `subjected_student` (`id`, `student_name`, `subject_name`, `subject_code`, `faculty`, `course`, `year`, `semester`, `roll_number`) VALUES
-(14, 'madhav', 'Business Management ', '', 'FOCBS', 'BBA', 1, 1, 3),
-(15, 'radha', 'Business Management ', '', 'FOCBS', 'BBA', 1, 1, 2);
+INSERT INTO `subjected_student` (`id`, `student_name`, `subject_name`, `subject_code`, `faculty`, `course`, `year`, `semester`, `roll_number`, `session`) VALUES
+(17, 'sumti', 'Business care', 'bms1', 'FOCBS', 'BBA', 1, 1, 123, '2026-27'),
+(18, 'sumitaaaaa', 'Business Management ', 'bms1', 'FOCBS', 'BBA', 1, 1, 1277, '2026-27'),
+(25, 'aarti', 'Business Management', 'bms1', 'FOCBS', 'BBA', 1, 1, 188, '');
 
 -- --------------------------------------------------------
 
@@ -241,7 +246,8 @@ CREATE TABLE `subjected_teacher` (
 --
 
 INSERT INTO `subjected_teacher` (`id`, `teacher_id`, `sub_id`, `teacher_name`, `subject_name`, `course_name`, `year`, `semester`, `subject_code`) VALUES
-(1, 3, 2, 'DR. SNEHASHISH BHARDWAJ', 'Business Management ', 'BBA', 1, 1, 'bms1');
+(1, 3, 2, 'DR. SNEHASHISH BHARDWAJ', 'Business Management ', 'BBA', 1, 1, 'bms1'),
+(3, 3, 7, 'DR. SNEHASHISH BHARDWAJ', 'Business care', 'BBA', 1, 2, 'bms1');
 
 -- --------------------------------------------------------
 
@@ -270,7 +276,8 @@ INSERT INTO `subjects` (`course_id`, `course_name`, `Year`, `semester`, `subject
 (3, 'B.Sc CS', 2026, 1, 'Introduction to Programming', '', 'CS-101', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
 (4, 'B.Sc CS', 2026, 1, 'Mathematics-I', '', 'MAT-101', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
 (5, 'MBA', 1, 2, 'mba sum ', '', 'mbacd', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
-(6, 'BBA', 1, 2, 'bba 12', '', '', 'FACULTY OF COMMERCE AND BUSINESS STUDIES');
+(6, 'BBA', 1, 2, 'bba 12', '', '', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
+(7, 'BBA', 1, 1, 'Business care', '', 'bms1', 'FACULTY OF COMMERCE AND BUSINESS STUDIES');
 
 -- --------------------------------------------------------
 
@@ -373,7 +380,7 @@ ALTER TABLE `teachers`
 -- AUTO_INCREMENT for table `attendance`
 --
 ALTER TABLE `attendance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `attendance_corrections`
@@ -397,31 +404,31 @@ ALTER TABLE `deans`
 -- AUTO_INCREMENT for table `faculty`
 --
 ALTER TABLE `faculty`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `subjected_student`
 --
 ALTER TABLE `subjected_student`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `subjected_teacher`
 --
 ALTER TABLE `subjected_teacher`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `subjects`
 --
 ALTER TABLE `subjects`
-  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `teachers`
