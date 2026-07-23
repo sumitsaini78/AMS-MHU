@@ -2,7 +2,7 @@
 include "../db_connect.php";
 
 session_start();
-if ($_SESSION['teacher_name'] == null) {
+if (!isset($_SESSION['teacher_name']) || $_SESSION['teacher_name'] == null) {
     header("Location: ../index.php");
     exit();
 }
@@ -17,6 +17,16 @@ if (isset($_POST['post_faculty'])) {
 // PRG PATTERN: PROCESS POST AND REDIRECT
 // ==========================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 0. Handle Session Filter Submission
+    if (isset($_POST['session_filter'])) {
+        $html_session = $_POST['session_filter'] ?? '';
+        if (!empty($html_session)) {
+            $_SESSION['selected_session'] = $html_session;
+        } else {
+            unset($_SESSION['selected_session']);
+        }
+    }
+
     // 1. Handle Single Date Search Submission
     if (isset($_POST['search_single_date'])) {
         $html_single = $_POST['single-date'] ?? '';
@@ -66,6 +76,7 @@ $start_search_int = null;
 $end_search_int = null;
 $single_search_int = null;
 $search_type = $_SESSION['search_type'] ?? '';
+$selected_session = $_SESSION['selected_session'] ?? '';
 
 if ($search_type === 'single' && isset($_SESSION['single_date'])) {
     $is_set = 1;
@@ -76,8 +87,22 @@ if ($search_type === 'single' && isset($_SESSION['single_date'])) {
     $end_search_int = (int) date('dmy', strtotime($_SESSION['end_date']));
 }
 
-// Getting distinct subject data using GROUP BY to prevent duplicate subject rows
-$query = "SELECT subject_name FROM `attendance` GROUP BY subject_name";
+// Fetch distinct sessions for dropdown
+$sessions_result = mysqli_query($conn, "SELECT DISTINCT session FROM attendance WHERE session != '' ORDER BY session DESC");
+
+// Session condition for queries
+$session_condition = "";
+if (!empty($selected_session)) {
+    $session_esc = mysqli_real_escape_string($conn, $selected_session);
+    $session_condition = "AND session = '$session_esc'";
+}
+
+// Getting distinct subject data using GROUP BY and Session Filter
+if (!empty($selected_session)) {
+    $query = "SELECT subject_name FROM `attendance` WHERE session = '$session_esc' GROUP BY subject_name";
+} else {
+    $query = "SELECT subject_name FROM `attendance` GROUP BY subject_name";
+}
 $result = mysqli_query($conn, $query);
 ?>
 <!doctype html>
@@ -100,6 +125,11 @@ $result = mysqli_query($conn, $query);
         #mhu-text {
             color: #a2c250;
             text-shadow: 1px 2px 14px rgb(46 195 41);
+        }
+
+        .filter-card-session {
+            background-color: #fff9db;
+            border-left: 4px solid #f59e0b;
         }
 
         .filter-card-single {
@@ -144,8 +174,28 @@ $result = mysqli_query($conn, $query);
         <!-- Optimized Toolbar Container -->
         <nav class="navbar navbar-light bg-white shadow-sm py-3">
             <div class="container-fluid justify-content-center">
-                <div class="d-flex flex-wrap align-items-center justify-content-center gap-4 w-100"
-                    style="max-width: 1100px;">
+                <div class="d-flex flex-wrap align-items-center justify-content-center gap-3 w-100"
+                    style="max-width: 1200px;">
+
+                    <!-- Session Filter Box -->
+                    <div class="filter-card-session p-2 px-3 rounded shadow-sm d-flex align-items-center">
+                        <form class="d-flex align-items-center" method="POST" action="subject_attendence.php">
+                            <span class="text-warning me-2"><i class="fa-solid fa-calendar-days"></i></span>
+                            <label for="session-filter" class="me-2 fw-semibold text-secondary small text-nowrap">Session:</label>
+                            <select id="session-filter" name="session_filter"
+                                class="form-select form-select-sm me-2 border-warning-subtle" onchange="this.form.submit()">
+                                <option value="">All Sessions</option>
+                                <?php while ($sess = mysqli_fetch_assoc($sessions_result)): ?>
+                                    <option value="<?= htmlspecialchars($sess['session']) ?>" <?= ($selected_session == $sess['session']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($sess['session']) ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
+                        </form>
+                    </div>
+
+                    <!-- Visual Separator Line -->
+                    <div class="divider-vertical d-none d-md-block mx-1"></div>
 
                     <!-- Single Date Filter Box -->
                     <div class="filter-card-single p-2 px-3 rounded shadow-sm d-flex align-items-center">
@@ -164,7 +214,7 @@ $result = mysqli_query($conn, $query);
                     </div>
 
                     <!-- Visual Separator Line -->
-                    <div class="divider-vertical d-none d-md-block mx-2"></div>
+                    <div class="divider-vertical d-none d-md-block mx-1"></div>
 
                     <!-- Date Range Filter Box -->
                     <div class="filter-card-range p-2 px-3 rounded shadow-sm d-flex align-items-center">
@@ -195,6 +245,12 @@ $result = mysqli_query($conn, $query);
 
     <main>
         <div class="container w-50 mt-4 text-center">
+            <?php if (!empty($selected_session)): ?>
+                <div class="alert alert-warning py-2 d-inline-block shadow-sm me-2">
+                    <i class="fa-solid fa-calendar-days me-1"></i> Session: <strong><?php echo htmlspecialchars($selected_session); ?></strong>
+                </div>
+            <?php endif; ?>
+
             <?php if ($is_set && $search_type === 'single'): ?>
                 <div class="alert alert-primary py-2 d-inline-block shadow-sm">
                     <i class="fa-solid fa-circle-info me-1"></i> Showing attendance report for date:
@@ -215,7 +271,7 @@ $result = mysqli_query($conn, $query);
                     <th scope="col">#</th>
                     <th scope="col">Subject Name</th>
                     <th scope="col">Total Lectures</th>
-                    <th scope="col">Total Students</th> <!-- Added Column Header -->
+                    <th scope="col">Total Students</th>
                     <th scope="col">Students Present</th>
                     <th scope="col">Status</th>
                 </tr>
@@ -224,52 +280,54 @@ $result = mysqli_query($conn, $query);
                 <?php
                 $index = 1;
 
-                while ($val = mysqli_fetch_assoc($result)) {
-                    $subject_escaped = mysqli_real_escape_string($conn, $val['subject_name']);
-                    $date_condition = "";
+                if (mysqli_num_rows($result) > 0) {
+                    while ($val = mysqli_fetch_assoc($result)) {
+                        $subject_escaped = mysqli_real_escape_string($conn, $val['subject_name']);
+                        $date_condition = "";
 
-                    if ($is_set && $search_type === 'single' && $single_search_int !== null) {
-                        $single_str = str_pad($single_search_int, 6, "0", STR_PAD_LEFT);
-                        $date_condition = "AND STR_TO_DATE(LPAD(date_of_attendence, 6, '0'), '%d%m%y') = STR_TO_DATE('$single_str', '%d%m%y')";
-                    } elseif ($is_set && $search_type === 'range' && $start_search_int !== null && $end_search_int !== null) {
-                        $start_str = str_pad($start_search_int, 6, "0", STR_PAD_LEFT);
-                        $end_str = str_pad($end_search_int, 6, "0", STR_PAD_LEFT);
-                        $date_condition = "AND STR_TO_DATE(LPAD(date_of_attendence, 6, '0'), '%d%m%y') BETWEEN STR_TO_DATE('$start_str', '%d%m%y') AND STR_TO_DATE('$end_str', '%d%m%y')";
-                    }
-
-                    // 1. Get Total Lectures
-                    $lecture_count_query = "SELECT COUNT(DISTINCT `date_of_attendence`) as total_lectures FROM `attendance` WHERE subject_name = '$subject_escaped' $date_condition";
-                    $lecture_count_result = mysqli_query($conn, $lecture_count_query);
-                    $total_lectures = mysqli_fetch_assoc($lecture_count_result)['total_lectures'] ?? 0;
-
-                    // 2. Get Total Unique Students enrolled in this subject (Assuming column name is 'student_id')
-                    // Remove $date_condition if you want the total class size regardless of selected date
-                    // Use 'roll_number' instead of 'student_id' as per your database structure
-                    $student_count_query = "SELECT COUNT(DISTINCT `roll_number`) as total_students FROM `attendance` WHERE subject_name = '$subject_escaped'";
-                    $student_count_result = mysqli_query($conn, $student_count_query);
-                    $total_students = mysqli_fetch_assoc($student_count_result)['total_students'] ?? 0;
-
-                    // 3. Get Attendance Stats
-                    $status_query = "SELECT attendance_status FROM `attendance` WHERE subject_name = '$subject_escaped' $date_condition";
-                    $status_result = mysqli_query($conn, $status_query);
-                    $present_count = 0;
-                    $total_records = 0;
-                    while ($status_row = mysqli_fetch_assoc($status_result)) {
-                        $total_records++;
-                        if (strtolower($status_row['attendance_status']) === 'present' || $status_row['attendance_status'] == '1') {
-                            $present_count++;
+                        if ($is_set && $search_type === 'single' && $single_search_int !== null) {
+                            $single_str = str_pad($single_search_int, 6, "0", STR_PAD_LEFT);
+                            $date_condition = "AND STR_TO_DATE(LPAD(date_of_attendence, 6, '0'), '%d%m%y') = STR_TO_DATE('$single_str', '%d%m%y')";
+                        } elseif ($is_set && $search_type === 'range' && $start_search_int !== null && $end_search_int !== null) {
+                            $start_str = str_pad($start_search_int, 6, "0", STR_PAD_LEFT);
+                            $end_str = str_pad($end_search_int, 6, "0", STR_PAD_LEFT);
+                            $date_condition = "AND STR_TO_DATE(LPAD(date_of_attendence, 6, '0'), '%d%m%y') BETWEEN STR_TO_DATE('$start_str', '%d%m%y') AND STR_TO_DATE('$end_str', '%d%m%y')";
                         }
-                    }
-                    $percentage = ($total_records > 0) ? round(($present_count / $total_records) * 100, 2) : 0;
 
-                    echo "<tr>";
-                    echo "<td>" . $index++ . "</td>";
-                    echo "<td>" . htmlspecialchars($val['subject_name']) . "</td>";
-                    echo "<td><span class='badge bg-secondary'>" . $total_lectures . "</span></td>";
-                    echo "<td><span class='badge bg-info text-dark'>" . $total_students . "</span></td>"; // New Data
-                    echo "<td><span class='badge bg-success'>" . $present_count . "</span></td>";
-                    echo "<td>" . $percentage . "%</td>";
-                    echo "</tr>";
+                        // 1. Get Total Lectures
+                        $lecture_count_query = "SELECT COUNT(DISTINCT `date_of_attendence`) as total_lectures FROM `attendance` WHERE subject_name = '$subject_escaped' $session_condition $date_condition";
+                        $lecture_count_result = mysqli_query($conn, $lecture_count_query);
+                        $total_lectures = mysqli_fetch_assoc($lecture_count_result)['total_lectures'] ?? 0;
+
+                        // 2. Get Total Unique Students enrolled in this subject
+                        $student_count_query = "SELECT COUNT(DISTINCT `roll_number`) as total_students FROM `attendance` WHERE subject_name = '$subject_escaped' $session_condition";
+                        $student_count_result = mysqli_query($conn, $student_count_query);
+                        $total_students = mysqli_fetch_assoc($student_count_result)['total_students'] ?? 0;
+
+                        // 3. Get Attendance Stats
+                        $status_query = "SELECT attendance_status FROM `attendance` WHERE subject_name = '$subject_escaped' $session_condition $date_condition";
+                        $status_result = mysqli_query($conn, $status_query);
+                        $present_count = 0;
+                        $total_records = 0;
+                        while ($status_row = mysqli_fetch_assoc($status_result)) {
+                            $total_records++;
+                            if (strtolower($status_row['attendance_status']) === 'present' || $status_row['attendance_status'] == '1') {
+                                $present_count++;
+                            }
+                        }
+                        $percentage = ($total_records > 0) ? round(($present_count / $total_records) * 100, 2) : 0;
+
+                        echo "<tr>";
+                        echo "<td>" . $index++ . "</td>";
+                        echo "<td>" . htmlspecialchars($val['subject_name']) . "</td>";
+                        echo "<td><span class='badge bg-secondary'>" . $total_lectures . "</span></td>";
+                        echo "<td><span class='badge bg-info text-dark'>" . $total_students . "</span></td>";
+                        echo "<td><span class='badge bg-success'>" . $present_count . "</span></td>";
+                        echo "<td>" . $percentage . "%</td>";
+                        echo "</tr>";
+                    }
+                } else {
+                    echo "<tr><td colspan='6' class='text-center text-muted py-4'>No attendance records found for the selected filters.</td></tr>";
                 }
                 ?>
             </tbody>

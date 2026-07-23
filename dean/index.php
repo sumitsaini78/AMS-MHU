@@ -123,7 +123,7 @@ if ($courses_result) {
         <div class="row mb-4">
             <div class="col-12">
                 <h2 class="fw-bold text-dark">Dashboard Overview</h2>
-                <p class="text-muted">Manage your department operations and     monitor daily attendance flow.</p>
+                <p class="text-muted">Manage your department operations and monitor daily attendance flow.</p>
             </div>
         </div>
 
@@ -137,7 +137,8 @@ if ($courses_result) {
                 ['Add Subjects', 'fa-book-bookmark', 'text-info', 'add_bulk_subject.php'],
                 ['Add Teachers', 'fa-chalkboard-user', 'text-info', 'add_Teacher.php'],
                 ['Manage Subjected Students', 'fa-user-pen', 'text-warning', 'dean_subjected_students.php'],
-                ['Manage Subjected Teachers', 'fa-chalkboard-user', 'text-warning', 'dean_subjected_teachers.php']
+                ['Manage Subjected Teachers', 'fa-chalkboard-user', 'text-warning', 'dean_subjected_teachers.php'],
+                ['Download Attendance Reports', 'fa-file-excel', 'text-success', 'attendance_report.php']
             ];
             foreach ($actions as $act): ?>  
                 <div class="col">
