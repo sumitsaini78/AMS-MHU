@@ -18,19 +18,32 @@ if (empty($course) || empty($subject)) {
     exit;
 }
 
-// Date Filter Logic
+// Date Filter & Session Filter Logic
 $today_dmy = date('dmy');
 $filter_text = "Showing records for: Today (" . date('d/m/Y') . ")";
 
+$single_date = $_GET['single_date'] ?? '';
 $date_from = $_GET['date_from'] ?? '';
 $date_to = $_GET['date_to'] ?? '';
+$selected_session = trim($_GET['session'] ?? '');
 
-// 2. Initialize WHERE clauses
+// Fetch distinct sessions for the dropdown filter
+$sessions_query = "SELECT DISTINCT session FROM students WHERE session IS NOT NULL AND session != '' ORDER BY session DESC";
+$sessions_res = $conn->query($sessions_query);
+
+// 2. Initialize WHERE clauses for attendance table
 $where_clauses = ["course = ?", "subject_name = ?"];
 $params = [$course, $subject];
 $types = "ss";
 
-if (!empty($date_from)) {
+// Priority: Single Date > Date Range > Default (Today)
+if (!empty($single_date)) {
+    $s_date = date('dmy', strtotime($single_date));
+    $where_clauses[] = "date_of_attendence = ?";
+    $params[] = $s_date;
+    $types .= "s";
+    $filter_text = "For Date: " . htmlspecialchars($single_date);
+} elseif (!empty($date_from)) {
     $d_from = date('dmy', strtotime($date_from));
     if (!empty($date_to)) {
         $d_to = date('dmy', strtotime($date_to));
@@ -43,7 +56,7 @@ if (!empty($date_from)) {
         $where_clauses[] = "date_of_attendence = ?";
         $params[] = $d_from;
         $types .= "s";
-        $filter_text = "For date: " . htmlspecialchars($date_from);
+        $filter_text = "For Date: " . htmlspecialchars($date_from);
     }
 } else {
     $where_clauses[] = "date_of_attendence = ?";
@@ -51,9 +64,17 @@ if (!empty($date_from)) {
     $types .= "s";
 }
 
+// Session filter using EXISTS to prevent any table join duplication
+if (!empty($selected_session)) {
+    $where_clauses[] = "EXISTS (SELECT 1 FROM students s WHERE s.roll_number = attendance.roll_number AND s.session = ?)";
+    $params[] = $selected_session;
+    $types .= "s";
+    $filter_text .= " | Session: " . htmlspecialchars($selected_session);
+}
+
 $sql_where = "WHERE " . implode(" AND ", $where_clauses);
 
-// 3. Summary Stats
+// 3. Summary Stats (No JOIN needed)
 $stats_query = "SELECT 
                     COUNT(DISTINCT date_of_attendence) as total_lectures,
                     COUNT(*) as total_entries,
@@ -69,8 +90,12 @@ $percentage = ($stats['total_entries'] > 0)
     ? round(($stats['present_count'] / $stats['total_entries']) * 100, 2)
     : 0;
 
-// 4. Detailed Records
-$list_query = "SELECT * FROM attendance $sql_where ORDER BY date_of_attendence DESC, student_name ASC";
+// 4. Detailed Records (Fetching session safely via subquery to avoid duplication)
+$list_query = "SELECT attendance.*, 
+               (SELECT s.session FROM students s WHERE s.roll_number = attendance.roll_number LIMIT 1) AS session 
+               FROM attendance 
+               $sql_where 
+               ORDER BY date_of_attendence DESC, student_name ASC";
 $stmt = $conn->prepare($list_query);
 $stmt->bind_param($types, ...$params);
 $stmt->execute();
@@ -183,32 +208,61 @@ $list_res = $stmt->get_result();
             </div>
         </div>
 
-        <!-- Filter Form -->
+        <!-- Filter Form (Compact / Smaller Size) -->
         <div class="card filter-card mb-4 shadow-sm">
-            <div class="card-body p-4">
-                <h6 class="card-title fw-bold text-muted mb-3"><i class="fa-solid fa-filter me-1"></i> Filter Attendance
-                    Data</h6>
-                <form method="GET" class="row g-3 align-items-end">
+            <div class="card-body p-3">
+                <h6 class="card-title fw-bold text-muted mb-2 small"><i class="fa-solid fa-filter me-1"></i> Filter Attendance Data</h6>
+                <form method="GET" class="row g-2 align-items-end">
                     <input type="hidden" name="course" value="<?= htmlspecialchars($course) ?>">
                     <input type="hidden" name="subject" value="<?= htmlspecialchars($subject) ?>">
 
-                    <div class="col-md-3">
-                        <label class="form-label text-muted fw-medium small">From Date</label>
-                        <input type="date" name="date_from" class="form-control shadow-none"
-                            value="<?= htmlspecialchars($date_from) ?>">
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label text-muted fw-medium small">To Date</label>
-                        <input type="date" name="date_to" class="form-control shadow-none"
-                            value="<?= htmlspecialchars($date_to) ?>">
+                    <!-- Single Date Calendar Selector -->
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fw-medium small mb-1"><i class="fa-regular fa-calendar-days text-primary me-1"></i> Specific Date</label>
+                        <input type="date" name="single_date" class="form-control form-control-sm shadow-none"
+                            value="<?= htmlspecialchars($single_date) ?>">
                     </div>
 
-                    <div class="col-md-6 d-flex flex-wrap gap-2">
-                        <button type="submit" class="btn btn-primary flex-grow-1 shadow-sm">
+                    <!-- Session Filter -->
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fw-medium small mb-1"><i class="fa-solid fa-graduation-cap text-primary me-1"></i> Session</label>
+                        <select name="session" class="form-select form-select-sm shadow-none">
+                            <option value="">All Sessions</option>
+                            <?php if ($sessions_res): ?>
+                                <?php while($s_row = $sessions_res->fetch_assoc()): ?>
+                                    <option value="<?= htmlspecialchars($s_row['session']) ?>" <?= ($selected_session === $s_row['session']) ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($s_row['session']) ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="col-md-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-sm btn-primary flex-grow-1 shadow-sm">
                             <i class="fa-solid fa-magnifying-glass me-1"></i> Search
                         </button>
                         <a href="?course=<?= urlencode($course) ?>&subject=<?= urlencode($subject) ?>"
-                            class="btn btn-outline-secondary shadow-sm px-4">Reset</a>
+                            class="btn btn-sm btn-outline-secondary shadow-sm px-3">Reset</a>
+                    </div>
+
+                    <!-- Optional Date Range Row Separator -->
+                    <div class="col-12 mt-1">
+                        <hr class="text-muted opacity-25 my-1">
+                        <small class="text-muted fw-semibold" style="font-size: 0.75rem;">Or Date Range (Optional):</small>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fw-medium small mb-1">From Date</label>
+                        <input type="date" name="date_from" class="form-control form-control-sm shadow-none"
+                            value="<?= htmlspecialchars($date_from) ?>">
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label text-muted fw-medium small mb-1">To Date</label>
+                        <input type="date" name="date_to" class="form-control form-control-sm shadow-none"
+                            value="<?= htmlspecialchars($date_to) ?>">
                     </div>
                 </form>
             </div>
@@ -216,10 +270,8 @@ $list_res = $stmt->get_result();
 
         <!-- Attendance Records -->
         <div class="card table-card shadow-sm">
-            <div
-                class="card-header bg-white py-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                <strong class="fs-5 text-dark"><i class="fa-solid fa-list-check text-primary me-2"></i>Detailed
-                    Attendance Logs</strong>
+            <div class="card-header bg-white py-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <strong class="fs-5 text-dark"><i class="fa-solid fa-list-check text-primary me-2"></i>Detailed Attendance Logs</strong>
                 <div class="d-flex gap-2 flex-wrap">
                     <button onclick="exportTableToExcel('attendanceTable', 'Attendance_Report')"
                         class="btn btn-sm btn-success shadow-sm">
@@ -235,6 +287,7 @@ $list_res = $stmt->get_result();
                             <th class="ps-4">Date</th>
                             <th>Student Name</th>
                             <th>Roll No</th>
+                            <th>Session</th>
                             <th>Subject</th>
                             <th>Status</th>
                         </tr>
@@ -244,10 +297,10 @@ $list_res = $stmt->get_result();
                             <?php while ($row = $list_res->fetch_assoc()):
                                 $status_class = (strtolower($row['attendance_status']) === 'present' || $row['attendance_status'] == '1')
                                     ? 'text-success bg-success-subtle' : 'text-danger bg-danger-subtle';
-                                ?>
+                                $student_session = !empty($row['session']) ? $row['session'] : 'N/A';
+                            ?>
                                 <tr>
-                                    <td class="ps-4 text-muted fw-medium"><?= htmlspecialchars($row['date_of_attendence']) ?>
-                                    </td>
+                                    <td class="ps-4 text-muted fw-medium"><?= htmlspecialchars($row['date_of_attendence']) ?></td>
                                     
                                     <!-- Student Name as Clickable Form Submission Link to student_calendar.php -->
                                     <td class="fw-medium">
@@ -263,9 +316,8 @@ $list_res = $stmt->get_result();
                                         </form>
                                     </td>
 
-                                    <td><span
-                                            class="badge bg-secondary text-white"><?= htmlspecialchars($row['roll_number']) ?></span>
-                                    </td>
+                                    <td><span class="badge bg-secondary text-white"><?= htmlspecialchars($row['roll_number']) ?></span></td>
+                                    <td class="text-muted font-monospace"><?= htmlspecialchars($student_session) ?></td>
                                     <td class="text-muted"><?= htmlspecialchars($row['subject_name'] ?? 'N/A') ?></td>
                                     <td>
                                         <span class="badge <?= $status_class ?> px-3 py-2 rounded-pill">
@@ -276,7 +328,7 @@ $list_res = $stmt->get_result();
                             <?php endwhile; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">
+                                <td colspan="6" class="text-center py-5 text-muted">
                                     <div class="opacity-50">
                                         <i class="fa-solid fa-box-open fa-3x mb-3"></i><br>
                                         <span class="fs-5">No attendance records found for the selected criteria.</span>

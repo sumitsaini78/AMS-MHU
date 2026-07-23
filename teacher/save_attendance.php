@@ -10,16 +10,18 @@ if (!isset($_SESSION['teacher_id'])) {
 
 if (isset($_POST['insert_attendance'])) {
     // Escaping main context strings
-    $subject_name = mysqli_real_escape_string($conn, $_POST['subject_name']);
-    $subject_code = mysqli_real_escape_string($conn, $_POST['subject_code']);
-    $course       = mysqli_real_escape_string($conn, $_POST['course_name']);
-    $year         = mysqli_real_escape_string($conn, $_POST['year']);
-    $semester     = mysqli_real_escape_string($conn, $_POST['semester']);
+    $subject_name       = mysqli_real_escape_string($conn, $_POST['subject_name']);
+    $subject_code       = mysqli_real_escape_string($conn, $_POST['subject_code']);
+    $course             = mysqli_real_escape_string($conn, $_POST['course_name']);
+    $year               = mysqli_real_escape_string($conn, $_POST['year']);
+    $semester           = mysqli_real_escape_string($conn, $_POST['semester']);
+    $date_of_attendance = mysqli_real_escape_string($conn, $_POST['date_of_attendance']);
     
-    $attendance_array = $_POST['attendance'];
-    $student_names    = $_POST['student_names'];
+    // Arrays sent from the form
+    $attendance_array   = $_POST['attendance'];
+    $student_names      = $_POST['student_names'];
+    $student_sessions   = $_POST['student_session'];
 
-  $date_of_attendance =$_POST['date_of_attendance']; // Use the date passed from the form
     $success = true; 
 
     // Loop through associative parameters
@@ -27,12 +29,15 @@ if (isset($_POST['insert_attendance'])) {
         $roll_number  = mysqli_real_escape_string($conn, $roll_number);
         $student_name = mysqli_real_escape_string($conn, $student_names[$roll_number]);
         $status       = mysqli_real_escape_string($conn, $status); 
+        
+        // Grab the specific student's session using their roll number
+        $session_val  = isset($student_sessions[$roll_number]) ? mysqli_real_escape_string($conn, $student_sessions[$roll_number]) : 'N/A';
 
-        // Match field identifiers to database schema configuration
+        // Corrected 'sesssion' to 'session'
         $query = "INSERT INTO attendance
-                  (student_name, roll_number, subject_name, subject_code, course, year, semester, date_of_attendence, attendance_status) 
+                  (student_name, roll_number, subject_name, subject_code, course, year, semester, date_of_attendence, attendance_status, session) 
                   VALUES 
-                  ('$student_name', '$roll_number', '$subject_name', '$subject_code', '$course', '$year', '$semester', '$date_of_attendance', '$status')";
+                  ('$student_name', '$roll_number', '$subject_name', '$subject_code', '$course', '$year', '$semester', '$date_of_attendance', '$status', '$session_val')";
         
         if (!mysqli_query($conn, $query)) {
             $success = false;

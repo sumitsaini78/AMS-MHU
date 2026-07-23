@@ -22,9 +22,10 @@ if (!isset($_SESSION['subject_name'])) {
 
 $current_subject = $_SESSION['subject_name'];
 
-// 3. Handle Date Filters from GET request and convert to DDMMYY integer format
+// 3. Handle Date Filters & Session Filter from GET request
 $from_date = isset($_GET['from_date']) ? $_GET['from_date'] : '';
 $to_date = isset($_GET['to_date']) ? $_GET['to_date'] : '';
+$selected_session = isset($_GET['session']) ? trim($_GET['session']) : '';
 
 $from_date_int = '';
 $to_date_int = '';
@@ -35,35 +36,60 @@ if (!empty($from_date) && !empty($to_date)) {
     $to_date_int = (int)date('dmy', strtotime($to_date));
 }
 
-// 4. Query to calculate attendance ONLY for students assigned to this subject
+// Fetch distinct sessions directly from the students table
+$sessions_sql = "SELECT DISTINCT session FROM `students` WHERE session IS NOT NULL AND session != '' ORDER BY session DESC";
+$sessions_stmt = mysqli_prepare($conn, $sessions_sql);
+mysqli_stmt_execute($sessions_stmt);
+$sessions_result = mysqli_stmt_get_result($sessions_stmt);
+
+// 4. Query to calculate attendance with dynamic filtering (Subject, Date Range, Session)
 $query = "SELECT 
             ss.student_name AS name, 
             ss.roll_number,
+            s.session,
             COUNT(a.attendance_status) AS total_days,
             SUM(CASE WHEN LOWER(a.attendance_status) = 'present' OR a.attendance_status = '1' THEN 1 ELSE 0 END) AS present_days
           FROM `subjected_student` ss
+          LEFT JOIN `students` s ON ss.roll_number = s.roll_number
           LEFT JOIN `attendance` a 
             ON ss.roll_number = a.roll_number 
             AND a.subject_name = ss.subject_name";
 
+$conditions = ["ss.subject_name = ?"];
+$params = [$current_subject];
+$types = "s";
+
 if (!empty($from_date_int) && !empty($to_date_int)) {
-    $query .= " AND a.date_of_attendence BETWEEN ? AND ?";
+    $conditions[] = "a.date_of_attendence BETWEEN ? AND ?";
+    $params[] = $from_date_int;
+    $params[] = $to_date_int;
+    $types .= "ii";
 }
 
-$query .= " WHERE ss.subject_name = ?
-            GROUP BY ss.roll_number, ss.student_name 
+if (!empty($selected_session)) {
+    $conditions[] = "s.session = ?";
+    $params[] = $selected_session;
+    $types .= "s";
+}
+
+if (!empty($conditions)) {
+    $query .= " WHERE " . implode(" AND ", $conditions);
+}
+
+$query .= " GROUP BY ss.roll_number, ss.student_name, s.session 
             ORDER BY ss.roll_number ASC";
 
 $stmt = mysqli_prepare($conn, $query);
 
-if (!empty($from_date_int) && !empty($to_date_int)) {
-    // Bind as integers ("iii" or "iis" depending on current_subject type, here current_subject is string)
-    mysqli_stmt_bind_param($stmt, "iis", $from_date_int, $to_date_int, $current_subject);
-} else {
-    mysqli_stmt_bind_param($stmt, "s", $current_subject);
+if ($stmt) {
+    $bind_params = [$types];
+    foreach ($params as $key => $value) {
+        $bind_params[] = &$params[$key];
+    }
+    call_user_func_array('mysqli_stmt_bind_param', array_merge([$stmt], $bind_params));
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
 }
-mysqli_stmt_execute($stmt);
-$result = mysqli_stmt_get_result($stmt);
 
 // =========================================================
 // 5. EXPORT TO EXCEL (CSV FORMAT) LOGIC
@@ -75,17 +101,12 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
     
-    // Create a file pointer connected to the output stream
     $output = fopen('php://output', 'w');
+    fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM for Excel
     
-    // Write UTF-8 BOM for Excel compatibility (ensures special characters render correctly)
-    fputs($output, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF)));
-    
-    // Output the column headings
-    fputcsv($output, array('#', 'Student Name', 'Roll Number', 'Present Days', 'Total Days', 'Percentage (%)'));
+    fputcsv($output, array('#', 'Student Name', 'Roll Number', 'Session', 'Present Days', 'Total Days', 'Percentage (%)'));
     
     $index = 1;
-    // Loop over the rows, outputting them
     while ($row = mysqli_fetch_assoc($result)) {
         $total = (int)$row['total_days'];
         $present = (int)$row['present_days'];
@@ -95,6 +116,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
             $index,
             $row['name'],
             $row['roll_number'],
+            !empty($row['session']) ? $row['session'] : 'N/A',
             $present,
             $total,
             $raw_pct
@@ -102,7 +124,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
         $index++;
     }
     fclose($output);
-    exit(); // Exit here to ensure the HTML below isn't printed into the CSV
+    exit();
 }
 ?>
 <!doctype html>
@@ -110,7 +132,6 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
 
 <head>
     <title>View Student Attendance</title>
-    <!-- Required meta tags -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
@@ -186,7 +207,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
 
     <main class="container py-5">
         <div class="row justify-content-center">
-            <div class="col-12 col-xl-10">
+            <div class="col-12 col-xl-11">
                 
                 <div class="custom-card shadow-sm p-4 border border-light">
                     
@@ -199,9 +220,22 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
                         </div>
                     </div>
 
-                    <!-- Date Range Filter & Export Form -->
+                    <!-- Filter & Export Form -->
                     <div class="bg-light p-3 rounded mb-4 border border-light-subtle">
                         <form method="GET" action="view_student_attendance.php" class="row g-3 align-items-end m-0">
+                            <!-- Session Filter Dropdown -->
+                            <div class="col-12 col-md-auto">
+                                <label for="session" class="form-label fw-bold text-secondary small mb-1"><i class="fa-solid fa-users-rectangle me-1"></i> Session:</label>
+                                <select id="session" name="session" class="form-select form-select-sm">
+                                    <option value="">All Sessions</option>
+                                    <?php while($s_row = mysqli_fetch_assoc($sessions_result)): ?>
+                                        <option value="<?php echo htmlspecialchars($s_row['session']); ?>" <?php echo ($selected_session === $s_row['session']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($s_row['session']); ?>
+                                        </option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+
                             <div class="col-12 col-md-auto">
                                 <label for="from_date" class="form-label fw-bold text-secondary small mb-1"><i class="fa-regular fa-calendar me-1"></i> From Date:</label>
                                 <input type="date" id="from_date" name="from_date" class="form-control form-control-sm" value="<?php echo htmlspecialchars($from_date); ?>">
@@ -212,7 +246,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
                             </div>
                             <div class="col-12 col-md-auto">
                                 <button type="submit" class="btn btn-primary btn-sm px-3"><i class="fa-solid fa-filter me-1"></i> Filter</button>
-                                <?php if(!empty($from_date) && !empty($to_date)): ?>
+                                <?php if(!empty($from_date) || !empty($to_date) || !empty($selected_session)): ?>
                                     <a href="view_student_attendance.php" class="btn btn-outline-secondary btn-sm px-3 ms-2">Clear</a>
                                 <?php endif; ?>
                             </div>
@@ -231,11 +265,12 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light text-secondary">
                                 <tr>
-                                    <th scope="col" class="ps-3" style="width: 8%">#</th>
-                                    <th scope="col" style="width: 32%">Student Name</th>
-                                    <th scope="col" style="width: 18%">Roll Number</th>
-                                    <th scope="col" style="width: 27%">Attendance Progress</th>
-                                    <th scope="col" class="text-end pe-3" style="width: 15%">Percentage</th>
+                                    <th scope="col" class="ps-3" style="width: 6%">#</th>
+                                    <th scope="col" style="width: 28%">Student Name</th>
+                                    <th scope="col" style="width: 15%">Roll Number</th>
+                                    <th scope="col" style="width: 15%">Session</th>
+                                    <th scope="col" style="width: 23%">Attendance Progress</th>
+                                    <th scope="col" class="text-end pe-3" style="width: 13%">Percentage</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -246,6 +281,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
                                 while ($row = mysqli_fetch_assoc($result)) {
                                     $total = (int)$row['total_days'];
                                     $present = (int)$row['present_days'];
+                                    $student_session = !empty($row['session']) ? $row['session'] : 'N/A';
                                     
                                     $raw_pct = ($total > 0) ? round(($present / $total) * 100, 2) : 0;
                                     
@@ -274,6 +310,7 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
                                     echo "</td>";
                                     
                                     echo "<td class='text-secondary font-monospace'>" . htmlspecialchars($row['roll_number']) . "</td>";
+                                    echo "<td class='text-secondary font-monospace'>" . htmlspecialchars($student_session) . "</td>";
                                     
                                     echo "<td>";
                                     if ($total > 0) {
@@ -313,4 +350,4 @@ if (isset($_GET['export']) && $_GET['export'] === 'excel') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 </body>
 
-</html>
+</html> 

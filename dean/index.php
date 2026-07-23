@@ -123,19 +123,21 @@ if ($courses_result) {
         <div class="row mb-4">
             <div class="col-12">
                 <h2 class="fw-bold text-dark">Dashboard Overview</h2>
-                <p class="text-muted">Manage your department operations and monitor daily attendance flow.</p>
+                <p class="text-muted">Manage your department operations and     monitor daily attendance flow.</p>
             </div>
         </div>
 
         <!-- Action Cards Grid -->
-        <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-6 mb-4">
+        <div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-4 mb-4">
             <?php
             $actions = [
                 ['Add Faculty & Departments', 'fa-network-wired', 'text-info', 'add_Faculty.php'],
                 ['Add Students', 'fa-user-graduate', 'text-info', 'add_Students.php'],
                 ['View Students', 'fa-users-viewfinder', 'text-primary', 'view_students.php'],
                 ['Add Subjects', 'fa-book-bookmark', 'text-info', 'add_bulk_subject.php'],
-                ['Add Teachers', 'fa-chalkboard-user', 'text-info', 'add_Teacher.php']
+                ['Add Teachers', 'fa-chalkboard-user', 'text-info', 'add_Teacher.php'],
+                ['Manage Subjected Students', 'fa-user-pen', 'text-warning', 'dean_subjected_students.php'],
+                ['Manage Subjected Teachers', 'fa-chalkboard-user', 'text-warning', 'dean_subjected_teachers.php']
             ];
             foreach ($actions as $act): ?>  
                 <div class="col">
