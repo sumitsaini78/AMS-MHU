@@ -440,13 +440,11 @@ if (isset($_POST['export_excel']) && $is_range_search) {
                             </table>
                         </div>
                     <?php endif; ?>
-
                     <div class="d-flex justify-content-center gap-4 mt-4 pt-3 border-top small text-secondary fw-medium">
                         <div><span class="status-dot bg-success-subtle border border-success"></span> Present Status</div>
                         <div><span class="status-dot bg-danger-subtle border border-danger"></span> Absent Status</div>
                         <div><span class="status-dot bg-light border"></span> No Lecture Logged</div>
                     </div>
-
                 </div>
             </div>
         </div>
