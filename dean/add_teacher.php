@@ -316,5 +316,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['form_type'])) {
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
 </body>
-
 </html>

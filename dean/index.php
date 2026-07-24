@@ -138,7 +138,8 @@ if ($courses_result) {
                 ['Add Teachers', 'fa-chalkboard-user', 'text-info', 'add_Teacher.php'],
                 ['Manage Subjected Students', 'fa-user-pen', 'text-warning', 'dean_subjected_students.php'],
                 ['Manage Subjected Teachers', 'fa-chalkboard-user', 'text-warning', 'dean_subjected_teachers.php'],
-                ['Download Attendance Reports', 'fa-file-excel', 'text-success', 'attendance_report.php']
+                ['Download Attendance Reports', 'fa-file-excel', 'text-success', 'attendance_report.php'],
+                ['Manage Teachers', 'fa-file-excel', 'text-success', 'manage_teachers.php']
             ];
             foreach ($actions as $act): ?>  
                 <div class="col">
