@@ -72,6 +72,11 @@ if ($courses_result) {
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
         }
 
+        /* Prevent hover transform conflict/glitch with dropdown positioning */
+        .action-card.dropdown:hover {
+            transform: none !important;
+        }
+
         .table-container {
             border-radius: 15px;
             overflow: hidden;
@@ -136,8 +141,8 @@ if ($courses_result) {
                 ['View Students', 'fa-users-viewfinder', 'text-primary', 'view_students.php'],
                 ['Add Subjects', 'fa-book-bookmark', 'text-info', 'add_bulk_subject.php'],
                 ['Add Teachers', 'fa-chalkboard-user', 'text-info', 'add_Teacher.php'],
-                ['Manage Subjected Students', 'fa-user-pen', 'text-warning', 'dean_subjected_students.php'],
-                ['Manage Subjected Teachers', 'fa-chalkboard-user', 'text-warning', 'dean_subjected_teachers.php'],
+                ['Manage Students Subjects', 'fa-user-pen', 'text-warning', 'dean_subjected_students.php'],
+                ['Manage Teachers Subject', 'fa-chalkboard-user', 'text-warning', 'dean_subjected_teachers.php'],
                 ['Download Attendance Reports', 'fa-file-excel', 'text-success', 'attendance_report.php'],
                 ['Manage Teachers', 'fa-file-excel', 'text-success', 'manage_teachers.php']
             ];
@@ -156,8 +161,8 @@ if ($courses_result) {
                 <div class="action-card card h-100 shadow-sm p-3 text-center dropdown">
                     <div class="fs-3 text-warning mb-2"><i class="fa-solid fa-address-card"></i></div>
                     <button class="btn btn-sm btn-light text-muted fw-semibold border-0 dropdown-toggle w-100"
-                        type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Add Student<br>Subject
+                        type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
+                        Assign Student<br>Subject
                     </button>
                     <ul class="dropdown-menu shadow p-2" style="max-height: 300px; overflow-y: auto; min-width: 200px;">
                         <li class="px-2 pb-2">
@@ -190,8 +195,8 @@ if ($courses_result) {
                 <div class="action-card card h-100 shadow-sm p-3 text-center dropdown">
                     <div class="fs-3 text-warning mb-2"><i class="fa-solid fa-chalkboard-teacher"></i></div>
                     <button class="btn btn-sm btn-light text-muted fw-semibold border-0 dropdown-toggle w-100"
-                        type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Add Subject<br>Teacher
+                        type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
+                        Assign<br>Teacher Subject
                     </button>
                     <ul class="dropdown-menu shadow p-2" style="max-height: 300px; overflow-y: auto; min-width: 200px;">
                         <li class="px-2 pb-2">

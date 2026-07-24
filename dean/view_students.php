@@ -14,40 +14,79 @@ $filter_course = isset($_GET['course']) ? mysqli_real_escape_string($conn, $_GET
 $filter_year = isset($_GET['year']) ? mysqli_real_escape_string($conn, $_GET['year']) : '';
 $filter_sem = isset($_GET['sem']) ? mysqli_real_escape_string($conn, $_GET['sem']) : '';
 
-// Base Query restricted to FOCBS
-$sql = "SELECT * FROM students WHERE faculty = 'FOCBS'";
+// Base Condition for filters restricted to FOCBS
+$where_clause = "WHERE faculty = 'FOCBS'";
 
-// Apply text search filter
 if ($search != '') {
-    $sql .= " AND (name LIKE '%$search%' OR enrollment_number LIKE '%$search%' OR roll_number LIKE '%$search%')";
+    $where_clause .= " AND (name LIKE '%$search%' OR enrollment_number LIKE '%$search%' OR roll_number LIKE '%$search%')";
 }
-
-// Apply course filter
 if ($filter_course != '') {
-    $sql .= " AND course = '$filter_course'";
+    $where_clause .= " AND course = '$filter_course'";
 }
-
-// Apply year filter
 if ($filter_year != '') {
-    $sql .= " AND year = '$filter_year'";
+    $where_clause .= " AND year = '$filter_year'";
 }
-
-// Apply semester filter
 if ($filter_sem != '') {
-    $sql .= " AND sem = '$filter_sem'";
+    $where_clause .= " AND sem = '$filter_sem'";
 }
 
-$sql .= " ORDER BY name ASC";
+// Handle CSV Export (Exports all rows matching current filters)
+if (isset($_GET['export_csv']) && $_GET['export_csv'] == 'true') {
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="student_directory_' . date('Y-m-d') . '.csv"');
+    
+    $output = fopen("php://output", "w");
+    
+    // CSV Header row
+    fputcsv($output, ['Name', 'Enrollment No', 'Roll No', 'Faculty', 'Course', 'Section', 'Year', 'Semester', 'Admission Date', 'Session']);
+    
+    $export_sql = "SELECT * FROM students $where_clause ORDER BY name ASC";
+    $export_result = mysqli_query($conn, $export_sql);
+    
+    while ($row = mysqli_fetch_assoc($export_result)) {
+        fputcsv($output, [
+            $row['name'],
+            $row['enrollment_number'],
+            $row['roll_number'],
+            $row['faculty'],
+            $row['course'],
+            $row['section'],
+            $row['year'],
+            $row['sem'],
+            $row['date_of_admission'],
+            $row['session']
+        ]);
+    }
+    fclose($output);
+    exit;
+}
+
+// Pagination settings
+$limit = 20; // Number of students per page
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$page = max($page, 1);
+$offset = ($page - 1) * $limit;
+
+// 1. Get total records for pagination calculation
+$count_sql = "SELECT COUNT(*) as total FROM students $where_clause";
+$count_result = mysqli_query($conn, $count_sql);
+$total_rows = mysqli_fetch_assoc($count_result)['total'];
+$total_pages = ceil($total_rows / $limit);
+
+// 2. Fetch limited results for current page
+$sql = "SELECT * FROM students $where_clause ORDER BY name ASC LIMIT $offset, $limit";
 $result = mysqli_query($conn, $sql);
 
-// Fetch available courses for the dropdown filter options
+// Fetch available options for filters
 $courses_result = mysqli_query($conn, "SELECT DISTINCT course_name FROM courses_list ORDER BY course_name ASC");
-
-// Fetch available years for the dropdown filter options
 $years_result = mysqli_query($conn, "SELECT DISTINCT year FROM students WHERE faculty = 'FOCBS' ORDER BY year DESC");
-
-// Fetch available semesters for the dropdown filter options
 $sems_result = mysqli_query($conn, "SELECT DISTINCT sem FROM students WHERE faculty = 'FOCBS' ORDER BY sem ASC");
+
+// Prepare export link query parameters
+$export_params = $_GET;
+$export_params['export_csv'] = 'true';
+unset($export_params['page']);
+$export_query_string = http_build_query($export_params);
 ?>
 
 <!doctype html>
@@ -65,21 +104,21 @@ $sems_result = mysqli_query($conn, "SELECT DISTINCT sem FROM students WHERE facu
     <div class="container py-5">
         <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="fw-bold"><i class="fa-solid fa-users text-primary me-2"></i> Student Directory</h3>
-            <a href="index.php" class="btn btn-outline-dark"><i class="fa-solid fa-arrow-left me-1"></i> Back</a>
+            <h3 class="fw-bold"><i class="fa-solid fa-users text-primary me-2"></i> Student Directory <span class="fs-6 text-muted">(Total: <?php echo $total_rows; ?>)</span></h3>
+            <div>
+                <a href="?<?php echo $export_query_string; ?>" class="btn btn-success me-2"><i class="fa-solid fa-file-excel me-1"></i> Export CSV</a>
+                <a href="index.php" class="btn btn-outline-dark"><i class="fa-solid fa-arrow-left me-1"></i> Back</a>
+            </div>
         </div>
 
         <!-- Search and Filter Bar -->
         <div class="card border-0 shadow-sm p-3 mb-4 rounded-3">
             <form method="GET" class="row g-3">
-                
-                <!-- Search -->
                 <div class="col-md-3">
                     <label class="form-label small text-muted fw-bold">Search Keywords</label>
                     <input type="text" name="search" class="form-control" placeholder="Name, enrollment..." value="<?php echo htmlspecialchars($search); ?>">
                 </div>
                 
-                <!-- Course -->
                 <div class="col-md-3">
                     <label class="form-label small text-muted fw-bold">Filter by Course</label>
                     <select name="course" class="form-select">
@@ -93,7 +132,6 @@ $sems_result = mysqli_query($conn, "SELECT DISTINCT sem FROM students WHERE facu
                     </select>
                 </div>
 
-                <!-- Year -->
                 <div class="col-md-2">
                     <label class="form-label small text-muted fw-bold">Filter by Year</label>
                     <select name="year" class="form-select">
@@ -107,7 +145,6 @@ $sems_result = mysqli_query($conn, "SELECT DISTINCT sem FROM students WHERE facu
                     </select>
                 </div>
 
-                <!-- Semester -->
                 <div class="col-md-2">
                     <label class="form-label small text-muted fw-bold">Filter by Sem</label>
                     <select name="sem" class="form-select">
@@ -121,7 +158,6 @@ $sems_result = mysqli_query($conn, "SELECT DISTINCT sem FROM students WHERE facu
                     </select>
                 </div>
 
-                <!-- Filter Button -->
                 <div class="col-md-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-filter me-1"></i> Filter</button>
                 </div>
@@ -150,7 +186,7 @@ $sems_result = mysqli_query($conn, "SELECT DISTINCT sem FROM students WHERE facu
                                         <td>{$row['enrollment_number']}</td>
                                         <td>{$row['roll_number']}</td>
                                         <td><span class='badge bg-info-subtle text-info fw-bold'>{$row['course']}</span></td>
-                                        <td>{$row['year']} /  {$row['sem']}</td>
+                                        <td>{$row['year']} / {$row['sem']}</td>
                                      </tr>";
                             }
                         } else {
@@ -161,7 +197,26 @@ $sems_result = mysqli_query($conn, "SELECT DISTINCT sem FROM students WHERE facu
                 </table>
             </div>
         </div>
+
+        <!-- Pagination Navigation -->
+        <?php if ($total_pages > 1): ?>
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                <?php 
+                $query_params = $_GET;
+                for ($i = 1; $i <= $total_pages; $i++): 
+                    $query_params['page'] = $i;
+                    $queryString = http_build_query($query_params);
+                    $active = ($page == $i) ? 'active' : '';
+                ?>
+                    <li class="page-item <?php echo $active; ?>">
+                        <a class="page-link" href="?<?php echo $queryString; ?>"><?php echo $i; ?></a>
+                    </li>
+                <?php endfor; ?>
+            </ul>
+        </nav>
+        <?php endif; ?>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html>
+</html>.

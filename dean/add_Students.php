@@ -7,7 +7,8 @@ if (!isset($_SESSION['dean_id'])) {
     exit;
 }
 
-$id = $_SESSION['dean_id'];$query = "SELECT * FROM deans WHERE id = '$id'";
+$id = $_SESSION['dean_id'];
+$query = "SELECT * FROM deans WHERE id = '$id'";
 $result = mysqli_query($conn,$query);
 $dean_name = ($result && mysqli_num_rows($result) == 1) ? mysqli_fetch_assoc($result)['Dean_name'] : 'Admin';
 
@@ -22,45 +23,90 @@ if (isset($_GET['download_sample'])) {
     exit;
 }
 
-// 2. Handle Manual Insert (Added session)
+// 2. Handle Manual Insert (Added session & duplicate check)
 if (isset($_POST['insert_student'])) {
-    $name = mysqli_real_escape_string($conn, $_POST['student_name']);$roll = mysqli_real_escape_string($conn,$_POST['roll_number']);
-    $enroll = mysqli_real_escape_string($conn, $_POST['enroll_number']);$faculty = mysqli_real_escape_string($conn,$_POST['faculty']);
-    $course = mysqli_real_escape_string($conn, $_POST['course']);$section = mysqli_real_escape_string($conn,$_POST['section']);
+    $name = mysqli_real_escape_string($conn, $_POST['student_name']);
+    $roll = mysqli_real_escape_string($conn, $_POST['roll_number']);
+    $enroll = mysqli_real_escape_string($conn, $_POST['enroll_number']);
+    $faculty = mysqli_real_escape_string($conn, $_POST['faculty']);
+    $course = mysqli_real_escape_string($conn, $_POST['course']);
+    $section = mysqli_real_escape_string($conn, $_POST['section']);
     $year = (int)$_POST['year'];
     $sem = (int)$_POST['semester'];
-    $admission_date = mysqli_real_escape_string($conn, $_POST['admission_date']);$session = mysqli_real_escape_string($conn,$_POST['session']);
+    $admission_date = mysqli_real_escape_string($conn, $_POST['admission_date']);
+    $session = mysqli_real_escape_string($conn, $_POST['session']);
 
-    $sql = "INSERT INTO students (name, enrollment_number, roll_number, faculty, course, section, year, sem, date_of_admission, session) 
-            VALUES ('$name', '$enroll', '$roll', '$faculty', '$course', '$section', $year,$sem, '$admission_date', '$session')";
+    // Check if enrollment number already exists
+    $check_sql = "SELECT id FROM students WHERE enrollment_number = '$enroll'";
+    $check_result = mysqli_query($conn, $check_sql);
 
-    if (mysqli_query($conn,$sql)) {
-        echo "<script>alert('Student added successfully!');</script>";
+    if (mysqli_num_rows($check_result) > 0) {
+        echo "<script>alert('Error: Enrollment number $enroll already exists!');</script>";
     } else {
-        echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
+        $sql = "INSERT INTO students (name, enrollment_number, roll_number, faculty, course, section, year, sem, date_of_admission, session) 
+                VALUES ('$name', '$enroll', '$roll', '$faculty', '$course', '$section', $year, $sem, '$admission_date', '$session')";
+
+        if (mysqli_query($conn, $sql)) {
+            echo "<script>alert('Student added successfully!');</script>";
+        } else {
+            echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
+        }
     }
 }
 
-// 3. Handle CSV Import (Added mapping for $row[9] - Session)
+// 3. Handle CSV Import (Added duplicate checking & skipping)
+// 3. Handle CSV Import (With Date Conversion)
 if (isset($_POST['import_csv'])) {
-    $filename =$_FILES["csv_file"]["tmp_name"];
+    $filename = $_FILES["csv_file"]["tmp_name"];
     if ($_FILES["csv_file"]["size"] > 0) {
         $file = fopen($filename, "r");
         fgetcsv($file); // Skip header
+        
+        $success_count = 0;
+        $duplicate_count = 0;
+
         while (($row = fgetcsv($file, 10000, ",")) !== FALSE) {
-            $name = mysqli_real_escape_string($conn, $row[0]);$enroll = mysqli_real_escape_string($conn,$row[1]);
-            $roll = mysqli_real_escape_string($conn, $row[2]);$faculty = mysqli_real_escape_string($conn,$row[3]);
-            $course = mysqli_real_escape_string($conn, $row[4]);$section = mysqli_real_escape_string($conn,$row[5]);
+            $name = mysqli_real_escape_string($conn, $row[0]);
+            $enroll = mysqli_real_escape_string($conn, $row[1]);
+            $roll = mysqli_real_escape_string($conn, $row[2]);
+            $faculty = mysqli_real_escape_string($conn, $row[3]);
+            $course = mysqli_real_escape_string($conn, $row[4]);
+            $section = mysqli_real_escape_string($conn, $row[5]);
             $year = (int)$row[6];
             $sem = (int)$row[7];
-            $admission_date = mysqli_real_escape_string($conn, $row[8]);$session = mysqli_real_escape_string($conn,$row[9]); // 10th column (index 9)
+            
+            // --- CONVERT DATE FORMAT FROM DD-MM-YYYY TO YYYY-MM-DD ---
+            $raw_date = trim($row[8]);
+            $date_parts = explode('-', $raw_date);
+            if (count($date_parts) == 3) {
+                // Reorder: Year (index 2) - Month (index 1) - Day (index 0)
+                $admission_date = $date_parts[2] . '-' . $date_parts[1] . '-' . $date_parts[0];
+            } else {
+                $admission_date = $raw_date; // Fallback
+            }
+            $admission_date = mysqli_real_escape_string($conn, $admission_date);
+            // ---------------------------------------------------------
+
+            $session = mysqli_real_escape_string($conn, $row[9]); 
+
+            // Check if enrollment number already exists
+            $check_sql = "SELECT id FROM students WHERE enrollment_number = '$enroll'";
+            $check_result = mysqli_query($conn, $check_sql);
+
+            if (mysqli_num_rows($check_result) > 0) {
+                $duplicate_count++;
+                continue; // Skip duplicates
+            }
 
             $sql = "INSERT INTO students (name, enrollment_number, roll_number, faculty, course, section, year, sem, date_of_admission, session) 
-                    VALUES ('$name', '$enroll', '$roll', '$faculty', '$course', '$section', $year,$sem, '$admission_date', '$session')";
-            mysqli_query($conn,$sql);
+                    VALUES ('$name', '$enroll', '$roll', '$faculty', '$course', '$section', $year, $sem, '$admission_date', '$session')";
+            
+            if (mysqli_query($conn, $sql)) {
+                $success_count++;
+            }
         }
         fclose($file);
-        echo "<script>alert('CSV Imported Successfully!'); window.location.href='add_students.php';</script>";
+        echo "<script>alert('CSV Import Complete! Imported: $success_count, Skipped (Duplicates): $duplicate_count'); window.location.href='add_students.php';</script>";
     }
 }
 ?>
@@ -139,7 +185,6 @@ if (isset($_POST['import_csv'])) {
                             <div class="col-md-3"><label class="form-label">Year</label><input type="number" class="form-control" name="year" required></div>
                             <div class="col-md-3"><label class="form-label">Semester</label><input type="number" class="form-control" name="semester" required></div>
                             <div class="col-md-6"><label class="form-label">Date of Admission</label><input type="date" class="form-control" name="admission_date" required></div>
-                            <!-- Added Session Input Field -->
                             <div class="col-md-6"><label class="form-label">Session</label><input type="text" class="form-control" name="session" placeholder="e.g., 2026-2027" required></div>
                             
                             <div class="col-12 mt-4"><button type="submit" name="insert_student" class="btn btn-primary px-5 fw-bold">Save Student</button></div>

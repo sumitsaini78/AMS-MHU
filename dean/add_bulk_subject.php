@@ -22,32 +22,46 @@ if (isset($_GET['download_sample'])) {
     exit;
 }
 
-// 3. Process Manual Entry
-// 3. Process Manual Entry
+// 3. Process Manual Entry with Duplicate Check
 if (isset($_POST['insert_subject'])) {
-    if (!empty($_POST['course_name']) && !empty($_POST['subject_name'])) {
-        $stmt = $conn->prepare("INSERT INTO subjects (course_name, Year, semester, subject_name, faculty_name, subject_code) VALUES (?, ?, ?, ?, ?, ?)");
+    if (!empty($_POST['course_name']) && !empty($_POST['subject_name']) && !empty($_POST['subject_code'])) {
         
-        // Store casted values in variables first to prevent the reference error
         $course_name = $_POST['course_name'];
         $year = (int)$_POST['year'];
         $semester = (int)$_POST['semester'];
         $subject_name = $_POST['subject_name'];
-        $subject_code = $_POST['subject_code'];
+        $subject_code = trim($_POST['subject_code']);
 
-        $stmt->bind_param("siisss", $course_name, $year, $semester, $subject_name, $faculty_name, $subject_code);
-        
-        if ($stmt->execute()) {
-            echo "<script>alert('Subject added successfully!');</script>";
+        // Check if subject_code already exists
+        $check_stmt = $conn->prepare("SELECT subject_code FROM subjects WHERE subject_code = ?");
+        $check_stmt->bind_param("s", $subject_code);
+        $check_stmt->execute();
+        $check_stmt->store_result();
+
+        if ($check_stmt->num_rows > 0) {
+            echo "<script>alert('Error: Subject code ($subject_code) already exists!');</script>";
         } else {
-            echo "<script>alert('Database Error: " . $stmt->error . "');</script>";
+            $check_stmt->close();
+
+            $stmt = $conn->prepare("INSERT INTO subjects (course_name, Year, semester, subject_name, faculty_name, subject_code) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("siisss", $course_name, $year, $semester, $subject_name, $faculty_name, $subject_code);
+            
+            if ($stmt->execute()) {
+                echo "<script>alert('Subject added successfully!');</script>";
+            } else {
+                echo "<script>alert('Database Error: " . $stmt->error . "');</script>";
+            }
+            $stmt->close();
         }
-        $stmt->close();
+        if (isset($check_stmt) && $check_stmt->num_rows > 0) {
+            // Clean close if not already closed
+            @$check_stmt->close();
+        }
     } else {
         echo "<script>alert('Please fill in all required fields.');</script>";
     }
 }
-// 4. Process CSV Import
+// 4. Process CSV Import with Duplicate Check
 elseif (isset($_POST['import_csv'])) {
     if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
         $handle = fopen($_FILES['csv_file']['tmp_name'], "r");
@@ -55,24 +69,45 @@ elseif (isset($_POST['import_csv'])) {
         // Skip the header row
         fgetcsv($handle); 
 
+        $check_stmt = $conn->prepare("SELECT subject_code FROM subjects WHERE subject_code = ?");
         $stmt = $conn->prepare("INSERT INTO subjects (course_name, Year, semester, subject_name, faculty_name, subject_code) VALUES (?, ?, ?, ?, ?, ?)");
 
+        $success_count = 0;
+        $duplicate_count = 0;
+
         while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-            // Store values in variables first to avoid the "passed by reference" error
             $course = $data[0];
             $year = (int)$data[1];
             $sem = (int)$data[2];
             $sub_name = $data[3];
-            $sub_code = $data[4];
+            $sub_code = trim($data[4]);
 
-            // Now pass these variables, which are safe references
+            if (empty($sub_code)) {
+                continue;
+            }
+
+            // Check if subject_code already exists in database
+            $check_stmt->bind_param("s", $sub_code);
+            $check_stmt->execute();
+            $check_stmt->store_result();
+
+            if ($check_stmt->num_rows > 0) {
+                $duplicate_count++;
+                continue; // Skip duplicate code
+            }
+
+            // Insert new unique record
             $stmt->bind_param("siisss", $course, $year, $sem, $sub_name, $faculty_name, $sub_code);
-            $stmt->execute();
+            if ($stmt->execute()) {
+                $success_count++;
+            }
         }
         
         fclose($handle);
+        $check_stmt->close();
         $stmt->close();
-        echo "<script>alert('Bulk import complete!');</script>";
+        
+        echo "<script>alert('CSV Import Complete! Imported: $success_count, Skipped (Duplicates): $duplicate_count'); window.location.href='" . basename($_SERVER['PHP_SELF']) . "';</script>";
     }
 }
 ?>
@@ -123,7 +158,7 @@ elseif (isset($_POST['import_csv'])) {
                     <h5 class="mb-4 text-primary"><i class="fa-solid fa-plus-circle me-2"></i>Manual Entry</h5>
                     <form method="POST" class="row g-3">
                         <div class="col-md-6">
-                            <h6> <?php echo htmlspecialchars($faculty_name); ?></h6>
+                            <h6 class="text-muted mb-2">Faculty: <?php echo htmlspecialchars($faculty_name); ?></h6>
                             <label class="form-label">Course</label>
                             <?php
                             $stmt = $conn->prepare("SELECT DISTINCT course_name FROM courses_list WHERE faculty_name = ?");
@@ -138,6 +173,7 @@ elseif (isset($_POST['import_csv'])) {
                             $stmt->close();
                             ?>
                         </div>
+                        <div class="col-md-6"></div>
                         <div class="col-md-8"><label class="form-label">Subject Name</label><input type="text" class="form-control" name="subject_name" required></div>
                         <div class="col-md-4"><label class="form-label">Subject Code</label><input type="text" class="form-control" name="subject_code" required></div>
                         <div class="col-md-6"><label class="form-label">Year</label><input type="number" class="form-control" name="year" required></div>
