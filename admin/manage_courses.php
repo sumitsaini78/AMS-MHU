@@ -49,8 +49,8 @@ if (isset($_GET['delete_id'])) {
                         <div class="mb-3"><label class="form-label small fw-semibold">Faculty *</label>
                             <select name="faculty_name" class="form-select" required>
                                 <option value="" selected disabled>Select Faculty</option>
-                                <?php $fr = $conn->query("SELECT DISTINCT faculty_name FROM faculty"); while($f = $fr->fetch_assoc()): ?>
-                                    <option value="<?= htmlspecialchars($f['faculty_name']) ?>"><?= htmlspecialchars($f['faculty_name']) ?></option>
+                                <?php $fr = $conn->query("SELECT DISTINCT faculty_full_name FROM faculty"); while($f = $fr->fetch_assoc()): ?>
+                                    <option value="<?= htmlspecialchars($f['faculty_full_name']) ?>"><?= htmlspecialchars($f['faculty_full_name']) ?></option>
                                 <?php endwhile; ?>
                             </select>
                         </div>

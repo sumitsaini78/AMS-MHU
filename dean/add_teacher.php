@@ -16,10 +16,10 @@ if (isset($_GET['download_sample'])) {
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="teachers_sample.csv"');
     $output = fopen('php://output', 'w');
-    // Add header and sample rows
-    fputcsv($output, ['Name', 'Number']);
-    fputcsv($output, ['Dr. Snehashish Bhardwaj', '333']);
-    fputcsv($output, ['Prof. John Smith', '9876543210']);
+    // Add header and sample rows with designation
+    fputcsv($output, ['Name', 'Designation', 'Number']);
+    fputcsv($output, ['Dr. Snehashish Bhardwaj', 'Professor', '333']);
+    fputcsv($output, ['Prof. John Smith', 'Associate Professor', '9876543210']);
     fclose($output);
     exit;
 }
@@ -31,18 +31,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['form_type'])) {
     // --- HANDLER: SINGLE TEACHER ---
     if ($form_type === 'single_teacher') {
         $teacher_name = trim($_POST['teacher_name']);
+        $designation = trim($_POST['teacher_designation']);
         $number = trim($_POST['teacher_number']);
 
-        if (!empty($teacher_name) && !empty($number)) {
-            $stmt = $conn->prepare("INSERT INTO `teachers` (name, faculty, number) VALUES (?, ?, ?)");
-            $stmt->bind_param("ssi", $teacher_name, $faculty_name, $number);
+        if (!empty($teacher_name) && !empty($designation) && !empty($number)) {
             
-            if ($stmt->execute()) {
-                $message = "success|🎉 Teacher <b>" . htmlspecialchars($teacher_name) . "</b> registered successfully!";
+            // Check for duplicate entry (by number or same name in same faculty)
+            $check_stmt = $conn->prepare("SELECT id FROM `teachers` WHERE number = ? OR (name = ? AND faculty = ?)");
+            $check_stmt->bind_param("iss", $number, $teacher_name, $faculty_name);
+            $check_stmt->execute();
+            $check_stmt->store_result();
+
+            if ($check_stmt->num_rows > 0) {
+                $message = "warning|⚠️ Teacher with this name or mobile number already exists!";
             } else {
-                $message = "danger|❌ System Error: " . $conn->error;
+                $stmt = $conn->prepare("INSERT INTO `teachers` (name, designation, faculty, number) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param("sssi", $teacher_name, $designation, $faculty_name, $number);
+                
+                if ($stmt->execute()) {
+                    $message = "success|🎉 Teacher <b>" . htmlspecialchars($teacher_name) . "</b> registered successfully!";
+                } else {
+                    $message = "danger|❌ System Error: " . $conn->error;
+                }
+                $stmt->close();
             }
-            $stmt->close();
+            $check_stmt->close();
+
         } else {
             $message = "warning|⚠️ Please fill in all required input fields.";
         }
@@ -62,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['form_type'])) {
                     $success_count = 0;
                     $error_count = 0;
 
-                    $stmt = $conn->prepare("INSERT INTO `teachers` (name, faculty, number) VALUES (?, ?, ?)");
+                    $stmt = $conn->prepare("INSERT INTO `teachers` (name, designation, faculty, number) VALUES (?, ?, ?, ?)");
 
                     while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
                         // Skip header row if it contains text labels like 'name'
@@ -73,23 +87,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['form_type'])) {
                             }
                         }
 
-                        if (count($data) >= 2) {
+                        // Expecting 3 columns: Name, Designation, Number
+                        if (count($data) >= 3) {
                             $t_name = trim($data[0]);
-                            $t_num = trim($data[1]);
+                            $t_desig = trim($data[1]);
+                            $t_num = trim($data[2]);
 
-                            if (!empty($t_name) && !empty($t_num)) {
-                                $stmt->bind_param("ssi", $t_name, $faculty_name, $t_num);
-                                if ($stmt->execute()) {
-                                    $success_count++;
+                            if (!empty($t_name) && !empty($t_desig) && !empty($t_num)) {
+                                
+                                // Check if duplicate exists before inserting
+                                $check_stmt = $conn->prepare("SELECT id FROM `teachers` WHERE number = ?");
+                                $check_stmt->bind_param("i", $t_num);
+                                $check_stmt->execute();
+                                $check_stmt->store_result();
+
+                                if ($check_stmt->num_rows > 0) {
+                                    $error_count++; // Skip duplicate and count as failed/skipped
                                 } else {
-                                    $error_count++;
+                                    $stmt->bind_param("sssi", $t_name, $t_desig, $faculty_name, $t_num);
+                                    if ($stmt->execute()) {
+                                        $success_count++;
+                                    } else {
+                                        $error_count++;
+                                    }
                                 }
+                                $check_stmt->close();
                             }
                         }
                     }
                     fclose($handle);
                     $stmt->close();
-                    $message = "success|🎉 Bulk upload complete! Successfully added <b>$success_count</b> teachers." . ($error_count > 0 ? " ($error_count rows failed)" : "");
+                    $message = "success|🎉 Bulk upload complete! Successfully added <b>$success_count</b> teachers." . ($error_count > 0 ? " ($error_count rows skipped/failed due to duplicates or errors)" : "");
                 } else {
                     $message = "danger|❌ Error opening the uploaded CSV file.";
                 }
@@ -186,6 +214,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['form_type'])) {
                             </div>
                         </div>
 
+                        <div class="mb-3">
+                            <label for="teacher_designation" class="form-label small fw-bold text-secondary">Designation</label>
+                            <div class="input-group">
+                                <span class="input-group-text text-muted"><i class="fa-solid fa-id-badge"></i></span>
+                                <input type="text" class="form-control" name="teacher_designation" id="teacher_designation" placeholder="E.g., Professor / Assistant Professor" required autocomplete="off">
+                            </div>
+                        </div>
+
                         <div class="mb-4">
                             <label for="teacher_number" class="form-label small fw-bold text-secondary">Teacher Mobile/ID Number</label>
                             <div class="input-group">
@@ -232,11 +268,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['form_type'])) {
 
                         <div class="p-3 bg-light rounded-3 mb-4 border small text-muted">
                             <span class="fw-bold text-dark"><i class="fa-solid fa-circle-info text-info me-1"></i> CSV Format Note:</span>
-                            <p class="mb-1 mt-1">Your CSV file should look like this (Column 1 = Name, Column 2 = Number):</p>
+                            <p class="mb-1 mt-1">Your CSV file should look like this (Column 1 = Name, Column 2 = Designation, Column 3 = Number):</p>
                             <code class="d-block bg-white p-2 border rounded text-dark">
-                                Name,Number<br>
-                                Dr. Snehashish Bhardwaj,333<br>
-                                Prof. John Smith,9876543210
+                                Name,Designation,Number<br>
+                                Dr. Snehashish Bhardwaj,Professor,333<br>
+                                Prof. John Smith,Associate Professor,9876543210
                             </code>
                         </div>
 
@@ -281,4 +317,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['form_type'])) {
         crossorigin="anonymous"></script>
 </body>
 
-</html> 
+</html>
