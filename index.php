@@ -108,7 +108,7 @@ if (isset($_POST['teacher-login'])) {
 
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
-
+ 
                 <!-- Admin Form (Visible by default) -->
                 <div id="adminForm" class="card shadow role-form">
                     <div class="card-header bg-primary text-white text-center">
