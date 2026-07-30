@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 24, 2026 at 09:02 PM
+-- Generation Time: Jul 30, 2026 at 03:41 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -180,6 +180,7 @@ INSERT INTO `faculty` (`id`, `faculty_name`, `faculty_full_name`, `department`) 
 CREATE TABLE `students` (
   `id` int(11) NOT NULL,
   `name` varchar(122) NOT NULL,
+  `father_name` varchar(77) NOT NULL,
   `enrollment_number` int(11) NOT NULL,
   `roll_number` varchar(122) NOT NULL,
   `faculty` varchar(111) NOT NULL,
@@ -195,22 +196,9 @@ CREATE TABLE `students` (
 -- Dumping data for table `students`
 --
 
-INSERT INTO `students` (`id`, `name`, `enrollment_number`, `roll_number`, `faculty`, `course`, `section`, `year`, `sem`, `date_of_admission`, `session`) VALUES
-(84, ' ANANT SINGH ', 202601, '2505000161', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-202'),
-(85, ' ASHISH KUMAR ', 202602, '2505000020', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-2028'),
-(86, ' AVIRAJ AHLAWAT ', 202603, '2505000136', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-2029'),
-(87, ' GOURAV CHAUDHARY ', 202604, '2505000040', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-2030'),
-(88, ' KARTIK YADAV ', 202605, '2505000049', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-2031'),
-(89, ' LUCKY PUNDIR ', 202606, '2505000141', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-2032'),
-(90, ' MOHD AADIL ', 202607, '2505000066', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-2033'),
-(91, ' MOHD SOYAB ', 202608, '2505000071', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-2034'),
-(92, ' MOHIT ', 202609, '2505000074', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-2035'),
-(93, ' NIKHIL CHAUDHARY ', 202610, '2505000081', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-2036'),
-(94, ' PARSHANT KUMAR ', 202611, '2505000086', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-2037'),
-(95, ' SALONI CHAUDHARY ', 202612, '2505000097', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-2038'),
-(96, ' SAWAN PANWAR ', 202613, '2505000101', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-2039'),
-(97, ' SHIVAM RANA ', 202614, '2505000104', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-2040'),
-(98, ' SHRIKANT ', 202615, '2505000143', 'FOCBS', 'BBA', 'A', 2026, 1, '2026-07-26', '2026-2041');
+INSERT INTO `students` (`id`, `name`, `father_name`, `enrollment_number`, `roll_number`, `faculty`, `course`, `section`, `year`, `sem`, `date_of_admission`, `session`) VALUES
+(103, 'fgsd', '', 234, '', 'FOCBS', 'dfg', '', 0, 3, '0000-00-00', ''),
+(104, 'asasasa', '', 1221, '12212', '2112', 'B.Tech', 'A', 2026, 4, '2026-07-01', '2026-2027');
 
 -- --------------------------------------------------------
 
@@ -295,9 +283,8 @@ INSERT INTO `subjects` (`course_id`, `course_name`, `Year`, `semester`, `subject
 (29, 'BBA', 2026, 1, 'Financial Accounting', '', 'MUBBA 104', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
 (30, 'BBA', 2026, 1, 'Business Economics', '', 'MUBBA 105', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
 (31, 'BBA', 2026, 2, 'Marketing', '', 'MUBBA 106', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
-(32, 'BBA', 2026, 2, 'HRM', '', 'MUBBA 107', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
 (33, 'BBA', 2026, 2, 'Business Environment', '', 'MUBBA 108', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
-(34, 'BBA', 2026, 2, 'Production Management', '', 'MUBBA 109', 'FACULTY OF COMMERCE AND BUSINESS STUDIES');
+(35, 'bba', 0, 1, 'jkj', '', '', '');
 
 -- --------------------------------------------------------
 
@@ -321,7 +308,10 @@ INSERT INTO `teachers` (`id`, `name`, `faculty`, `number`, `designation`) VALUES
 (3, 'DR. SNEHASHISH BHARDWAJ', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 333, 'Assistant Professor'),
 (15, 'Dr. Madhu Singh', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 1, 'Assistant Professor'),
 (16, 'Mr. Daleep Choudhary', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 2, 'Assistant Professor'),
-(17, 'Mr. Gorav Yadav', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 3, 'Assistant Professor');
+(17, 'Mr. Gorav Yadav', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 3, 'Assistant Professor'),
+(23, 'a', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 1, ''),
+(24, 'aa', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 21212, ''),
+(25, 'bb', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 34344, '');
 
 --
 -- Indexes for dumped tables
@@ -433,7 +423,7 @@ ALTER TABLE `faculty`
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=99;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=105;
 
 --
 -- AUTO_INCREMENT for table `subjected_student`
@@ -451,13 +441,13 @@ ALTER TABLE `subjected_teacher`
 -- AUTO_INCREMENT for table `subjects`
 --
 ALTER TABLE `subjects`
-  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `teachers`
 --
 ALTER TABLE `teachers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
