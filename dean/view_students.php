@@ -158,8 +158,11 @@ $export_query_string = http_build_query($export_params);
                     </select>
                 </div>
 
-                <div class="col-md-2 d-flex align-items-end">
+                <div class="col-md-2 d-flex align-items-end gap-2">
                     <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-filter me-1"></i> Filter</button>
+                    <a href="view_students.php" class="btn btn-outline-secondary" title="Reset Filters">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                    </a>
                 </div>
             </form>
         </div>

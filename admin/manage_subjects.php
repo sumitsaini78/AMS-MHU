@@ -8,8 +8,13 @@ if (!isset($_SESSION['admin_id'])) {
     exit; 
 }
 
-$msg = ""; 
-$error = "";
+$msg = ""; $error = "";
+
+// --- FLASH MESSAGE HANDLING ---
+if (isset($_SESSION['flash_msg'])) {
+    $msg = $_SESSION['flash_msg'];
+    unset($_SESSION['flash_msg']);
+}
 
 // 2. Handle CSV Sample Download
 if (isset($_GET['download_sample'])) {
@@ -27,19 +32,33 @@ if (isset($_GET['download_sample'])) {
 if (isset($_POST['add_subject'])) {
     $subject_name = trim($_POST['subject_name']);
     $course_name  = trim($_POST['course_name']);
-    $semester     = trim($_POST['semester']);
+    $semester     = (int)trim($_POST['semester']);
     
-    if (!empty($subject_name)) {
-        $stmt = $conn->prepare("INSERT INTO subjects (subject_name, course_name, semester) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $subject_name, $course_name, $semester);
-        if ($stmt->execute()) { 
-            $msg = "Subject added successfully!"; 
-        } else { 
-            $error = "Error: " . $conn->error; 
+    if (!empty($subject_name) && !empty($course_name) && !empty($semester)) {
+        // Check for duplicates
+        $check_stmt = $conn->prepare("SELECT course_id FROM subjects WHERE subject_name = ? AND course_name = ? AND semester = ?");
+        $check_stmt->bind_param("ssi", $subject_name, $course_name, $semester);
+        $check_stmt->execute();
+        $check_stmt->store_result();
+
+        if ($check_stmt->num_rows > 0) {
+            $error = "This subject already exists for the selected course and semester.";
+        } else {
+            // No duplicate found, proceed with insertion
+            $stmt = $conn->prepare("INSERT INTO subjects (subject_name, course_name, semester) VALUES (?, ?, ?)");
+            $stmt->bind_param("ssi", $subject_name, $course_name, $semester);
+            if ($stmt->execute()) { 
+                $_SESSION['flash_msg'] = "Subject added successfully!";
+                header("Location: manage_subjects.php");
+                exit;
+            } else { 
+                $error = "Error: " . $conn->error; 
+            }
+            $stmt->close();
         }
-        $stmt->close();
+        $check_stmt->close();
     } else { 
-        $error = "Subject name is required."; 
+        $error = "Subject Name, Course, and Semester are all required fields."; 
     }
 }
 
@@ -96,18 +115,34 @@ elseif (isset($_POST['import_csv'])) {
         $check_stmt->close();
         $stmt->close();
         
-        $msg = "CSV Import Complete! Successfully Imported: $success_count, Skipped/Duplicates: $duplicate_count";
+        $_SESSION['flash_msg'] = "CSV Import Complete! Successfully Imported: $success_count, Skipped/Duplicates: $duplicate_count";
+        header("Location: manage_subjects.php");
+        exit;
     } else {
         $error = "Please select a valid CSV file.";
     }
 }
 
-// 5. Delete Subject Handler
-if (isset($_GET['delete_id'])) {
+// 5. Delete Subject Handler (check for POST to avoid conflict)
+if (isset($_GET['delete_id']) && $_SERVER['REQUEST_METHOD'] !== 'POST') {
     $did = intval($_GET['delete_id']);
-    $conn->query("DELETE FROM subjects WHERE course_id = $did");
-    $msg = "Subject deleted successfully!";
+    if ($conn->query("DELETE FROM subjects WHERE course_id = $did")) {
+        $_SESSION['flash_msg'] = "Subject deleted successfully!";
+    } else {
+        $error = "Error deleting subject.";
+    }
+    header("Location: manage_subjects.php");
+    exit;
 }
+
+// 6. Fetch data for dropdowns
+$courses_res = $conn->query("
+    SELECT cl.course_name, f.faculty_name AS faculty_short_name 
+    FROM courses_list cl 
+    LEFT JOIN faculty f ON cl.faculty_name = f.faculty_full_name 
+    GROUP BY cl.course_name, f.faculty_name
+    ORDER BY f.faculty_name ASC, cl.course_name ASC
+");
 ?>
 <!doctype html>
 <html lang="en">
@@ -151,8 +186,21 @@ if (isset($_GET['delete_id'])) {
                             <h5 class="fw-bold mb-3">Add Subject</h5>
                             <form method="POST">
                                 <div class="mb-3"><label class="form-label small fw-semibold">Subject Name *</label><input type="text" name="subject_name" class="form-control" required></div>
-                                <div class="mb-3"><label class="form-label small fw-semibold">Course Name</label><input type="text" name="course_name" class="form-control"></div>
-                                <div class="mb-3"><label class="form-label small fw-semibold">Semester</label><input type="text" name="semester" class="form-control"></div>
+                                <div class="mb-3">
+                                    <label class="form-label small fw-semibold">Course Name</label>
+                                    <select name="course_name" class="form-select" required>
+                                        <option value="" selected disabled>Select a course</option>
+                                        <?php if ($courses_res && $courses_res->num_rows > 0): mysqli_data_seek($courses_res, 0); ?>
+                                            <?php while($c = $courses_res->fetch_assoc()):
+                                                $display_text = (isset($c['faculty_short_name']) ? htmlspecialchars($c['faculty_short_name']) . ' - ' : '') . htmlspecialchars($c['course_name']);
+                                            ?>
+                                                <option value="<?= htmlspecialchars($c['course_name']) ?>"><?= $display_text ?></option>
+                                            <?php endwhile; endif; ?>
+                                    </select>
+                                </div>
+                                <div class="mb-3"><label class="form-label small fw-semibold">Semester</label>
+                                    <input type="number" name="semester" class="form-control" min="1" max="12" placeholder="e.g., 1" required>
+                                </div>
                                 <button type="submit" name="add_subject" class="btn btn-secondary w-100 rounded-pill fw-semibold">Save Subject</button>
                             </form>
                         </div>
@@ -206,7 +254,7 @@ if (isset($_GET['delete_id'])) {
                         </table>
                     </div>
                 </div>
-            </div>
+            </div> 
         </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>

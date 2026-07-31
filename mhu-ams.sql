@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 30, 2026 at 03:41 AM
+-- Generation Time: Jul 31, 2026 at 07:06 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -128,7 +128,8 @@ INSERT INTO `courses_list` (`id`, `course_name`, `faculty_name`) VALUES
 (2, 'MBA', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
 (3, 'BCOM', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
 (4, 'MCOM', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
-(7, 'BCOM (HONS)', 'FACULTY OF COMMERCE AND BUSINESS STUDIES');
+(7, 'BCOM (HONS)', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
+(10, 'd pharma', 'FACULTY OF PHARMACEUTICAL SCIENCES');
 
 -- --------------------------------------------------------
 
@@ -168,8 +169,17 @@ CREATE TABLE `faculty` (
 --
 
 INSERT INTO `faculty` (`id`, `faculty_name`, `faculty_full_name`, `department`) VALUES
-(1, 'FOCBS', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', ''),
-(8, 'FOCBS', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 'asa');
+(1, 'FOA', 'FACULTY OF AGRICULTURE', ''),
+(2, 'FAHSS', 'FACULTY OF ARTS, HUMANITIES & SOCIAL SCIENCES', ''),
+(3, 'FOCBS', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', ''),
+(4, 'FCSIT', 'FACULTY OF COMPUTER SCIENCE AND IT', ''),
+(5, 'FOE', 'FACULTY OF EDUCATION', ''),
+(6, 'FOET', 'FACULTY OF ENGINEERING AND TECHNOLOGY', ''),
+(7, 'FOLS', 'FACULTY OF LEGAL STUDIES', ''),
+(8, 'FON', 'FACULTY OF NURSING', ''),
+(9, 'FPAHS', 'FACULTY OF PARAMEDICAL AND ALLIED HEALTH SCIENCES', ''),
+(10, 'FOPS', 'FACULTY OF PHARMACEUTICAL SCIENCES', ''),
+(11, 'FOS', 'FACULTY OF SCIENCES', '');
 
 -- --------------------------------------------------------
 
@@ -197,8 +207,8 @@ CREATE TABLE `students` (
 --
 
 INSERT INTO `students` (`id`, `name`, `father_name`, `enrollment_number`, `roll_number`, `faculty`, `course`, `section`, `year`, `sem`, `date_of_admission`, `session`) VALUES
-(103, 'fgsd', '', 234, '', 'FOCBS', 'dfg', '', 0, 3, '0000-00-00', ''),
-(104, 'asasasa', '', 1221, '12212', '2112', 'B.Tech', 'A', 2026, 4, '2026-07-01', '2026-2027');
+(134, 'sss', 'ssaasa', 12345678, 'A-101', 'Computer Science', 'B.TECH', 'A', 2026, 4, '2026-07-01', '2026-2027'),
+(135, 'aas', 'fgd', 0, 'A-1013', 'Computer Science', 'B.TECH', 'A', 2026, 4, '2026-07-01', '2026-2027');
 
 -- --------------------------------------------------------
 
@@ -277,14 +287,8 @@ CREATE TABLE `subjects` (
 --
 
 INSERT INTO `subjects` (`course_id`, `course_name`, `Year`, `semester`, `subject_name`, `dept_name`, `subject_code`, `faculty_name`) VALUES
-(26, 'BBA', 2026, 1, 'Principles and Practice of Management', '', 'MUBBA 101', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
-(27, 'BBA', 2026, 1, 'Computer Applications in Business', '', 'MUBBA 102', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
-(28, 'BBA', 2026, 1, 'Business Communication', '', 'MUBBA 103', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
-(29, 'BBA', 2026, 1, 'Financial Accounting', '', 'MUBBA 104', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
-(30, 'BBA', 2026, 1, 'Business Economics', '', 'MUBBA 105', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
-(31, 'BBA', 2026, 2, 'Marketing', '', 'MUBBA 106', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
-(33, 'BBA', 2026, 2, 'Business Environment', '', 'MUBBA 108', 'FACULTY OF COMMERCE AND BUSINESS STUDIES'),
-(35, 'bba', 0, 1, 'jkj', '', '', '');
+(47, 'BCOM', 0, 1, 'a', '', '', ''),
+(48, 'BCOM', 0, 5, 'a', '', '', '');
 
 -- --------------------------------------------------------
 
@@ -305,13 +309,9 @@ CREATE TABLE `teachers` (
 --
 
 INSERT INTO `teachers` (`id`, `name`, `faculty`, `number`, `designation`) VALUES
-(3, 'DR. SNEHASHISH BHARDWAJ', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 333, 'Assistant Professor'),
-(15, 'Dr. Madhu Singh', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 1, 'Assistant Professor'),
-(16, 'Mr. Daleep Choudhary', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 2, 'Assistant Professor'),
-(17, 'Mr. Gorav Yadav', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 3, 'Assistant Professor'),
-(23, 'a', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 1, ''),
-(24, 'aa', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 21212, ''),
-(25, 'bb', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 34344, '');
+(34, 'Dr. Snehesshish Bardwaj', 'FACULTY OF COMMERCE & BUSINESS STUDIES', 22, ''),
+(35, 'Dr. Madhu Rani', 'FACULTY OF COMMERCE & BUSINESS STUDIES', 22, ''),
+(36, 'sumit', 'FACULTY OF COMMERCE AND BUSINESS STUDIES', 123, 'oa');
 
 --
 -- Indexes for dumped tables
@@ -405,7 +405,7 @@ ALTER TABLE `attendance_corrections`
 -- AUTO_INCREMENT for table `courses_list`
 --
 ALTER TABLE `courses_list`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `deans`
@@ -417,13 +417,13 @@ ALTER TABLE `deans`
 -- AUTO_INCREMENT for table `faculty`
 --
 ALTER TABLE `faculty`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=105;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=136;
 
 --
 -- AUTO_INCREMENT for table `subjected_student`
@@ -441,13 +441,13 @@ ALTER TABLE `subjected_teacher`
 -- AUTO_INCREMENT for table `subjects`
 --
 ALTER TABLE `subjects`
-  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT for table `teachers`
 --
 ALTER TABLE `teachers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

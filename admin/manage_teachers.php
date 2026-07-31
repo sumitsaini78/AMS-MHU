@@ -10,8 +10,8 @@ if (isset($_GET['download_sample'])) {
     header('Content-Disposition: attachment; filename="teachers_sample.csv"');
     $output = fopen('php://output', 'w');
     fputcsv($output, ['Name', 'Designation', 'Number']);
-    fputcsv($output, ['Dr. Snehashish Bhardwaj', 'Professor', '9876543210']);
-    fputcsv($output, ['Prof. John Smith', 'Associate Professor', '9876543211']);
+    fputcsv($output, ['Dr. ', 'Professor', '9876543210']);
+    fputcsv($output, ['Mr.', 'Associate Professor', '9876543211']);
     fclose($output);
     exit;
 }
@@ -24,10 +24,22 @@ if (isset($_POST['add_teacher'])) {
     if (!empty($teacher_name) && !empty($faculty_name)) {
         $check_col = mysqli_query($conn, "SHOW COLUMNS FROM teachers LIKE 'teacher_name'");
         $col_name = (mysqli_num_rows($check_col) > 0) ? "teacher_name" : "name";
-        $stmt = $conn->prepare("INSERT INTO teachers ($col_name, faculty, number) VALUES (?, ?, ?)");
-        $stmt->bind_param("sss", $teacher_name, $faculty_name, $number);
-        if ($stmt->execute()) { $msg = "Teacher added successfully!"; } else { $error = "Error: " . $conn->error; }
-        $stmt->close();
+
+        // Prevent Duplicate Check
+        $check_stmt = $conn->prepare("SELECT id FROM teachers WHERE `$col_name` = ? AND faculty = ?");
+        $check_stmt->bind_param("ss", $teacher_name, $faculty_name);
+        $check_stmt->execute();
+        $check_stmt->store_result();
+
+        if ($check_stmt->num_rows > 0) {
+            $error = "Teacher '$teacher_name' already exists in '$faculty_name'.";
+        } else {
+            $stmt = $conn->prepare("INSERT INTO teachers ($col_name, faculty, number) VALUES (?, ?, ?)");
+            $stmt->bind_param("sss", $teacher_name, $faculty_name, $number);
+            if ($stmt->execute()) { $msg = "Teacher added successfully!"; } else { $error = "Error: " . $conn->error; }
+            $stmt->close();
+        }
+        $check_stmt->close();
     } else { $error = "Fill all required fields."; }
 }
 
@@ -44,11 +56,13 @@ if (isset($_POST['bulk_upload_teacher'])) {
             if ($handle !== FALSE) {
                 $is_first_row = true;
                 $success_count = 0;
+                $skipped_count = 0;
                 $error_count = 0;
 
                 $check_col = mysqli_query($conn, "SHOW COLUMNS FROM teachers LIKE 'teacher_name'");
                 $col_name = (mysqli_num_rows($check_col) > 0) ? "teacher_name" : "name";
 
+                $check_stmt = $conn->prepare("SELECT id FROM teachers WHERE `$col_name` = ? AND faculty = ?");
                 $stmt = $conn->prepare("INSERT INTO teachers ($col_name, faculty, number) VALUES (?, ?, ?)");
 
                 while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
@@ -62,19 +76,29 @@ if (isset($_POST['bulk_upload_teacher'])) {
                         $t_name = trim($data[0]);
                         $t_num = trim($data[2]);
 
-                        if (!empty($t_name) && !empty($t_num)) {
-                            $stmt->bind_param("sss", $t_name, $faculty_name, $t_num);
-                            if ($stmt->execute()) {
-                                $success_count++;
+                        if (!empty($t_name)) {
+                            // Check Duplicate in CSV Loop
+                            $check_stmt->bind_param("ss", $t_name, $faculty_name);
+                            $check_stmt->execute();
+                            $check_stmt->store_result();
+
+                            if ($check_stmt->num_rows > 0) {
+                                $skipped_count++;
                             } else {
-                                $error_count++;
+                                $stmt->bind_param("sss", $t_name, $faculty_name, $t_num);
+                                if ($stmt->execute()) {
+                                    $success_count++;
+                                } else {
+                                    $error_count++;
+                                }
                             }
                         }
                     }
                 }
                 fclose($handle);
+                $check_stmt->close();
                 $stmt->close();
-                $msg = "Bulk upload complete! Added $success_count teachers." . ($error_count > 0 ? " ($error_count failed/skipped)" : "");
+                $msg = "Bulk upload complete! Added $success_count teachers." . ($skipped_count > 0 ? " ($skipped_count duplicates skipped)" : "") . ($error_count > 0 ? " ($error_count failed)" : "");
             } else { $error = "Error opening CSV file."; }
         } else { $error = "Please upload a valid .csv file format."; }
     } else { $error = "Please select a CSV file to upload."; }

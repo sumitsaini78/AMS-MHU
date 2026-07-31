@@ -137,14 +137,15 @@ if ($courses_result) {
             <?php
             $actions = [
                 ['Add Faculty & Departments', 'fa-network-wired', 'text-info', 'add_Faculty.php'],
-                ['Add Students', 'fa-user-graduate', 'text-info', 'add_Students.php'],
+                ['Manage Students', 'fa-user-graduate', 'text-info', 'Manage_Students.php'],
                 ['View Students', 'fa-users-viewfinder', 'text-primary', 'view_students.php'],
                 ['Add Subjects', 'fa-book-bookmark', 'text-info', 'add_bulk_subject.php'],
                 ['Add Teachers', 'fa-chalkboard-user', 'text-info', 'add_Teacher.php'],
                 ['Manage Students Subjects', 'fa-user-pen', 'text-warning', 'dean_subjected_students.php'],
                 ['Manage Teachers Subject', 'fa-chalkboard-user', 'text-warning', 'dean_subjected_teachers.php'],
                 ['Download Attendance Reports', 'fa-file-excel', 'text-success', 'attendance_report.php'],
-                ['Manage Teachers', 'fa-file-excel', 'text-success', 'manage_teachers.php']
+                ['Manage Teachers', 'fa-file-excel', 'text-success', 'manage_teachers.php'],
+                ['Roll/ Enrollment Manage', 'fa-file-excel', 'text-success', 'add_roll_enroll_number.php']
             ];
             foreach ($actions as $act): ?>  
                 <div class="col">

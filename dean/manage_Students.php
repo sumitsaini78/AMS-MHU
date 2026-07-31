@@ -9,10 +9,6 @@ if (isset($_SESSION['flash_msg'])) {
     $msg = $_SESSION['flash_msg'];
     unset($_SESSION['flash_msg']);
 }
-if (isset($_SESSION['flash_error'])) {
-    $error = $_SESSION['flash_error'];
-    unset($_SESSION['flash_error']);
-}
 
 
 // --- HANDLER: DOWNLOAD SAMPLE CSV ---
@@ -36,31 +32,6 @@ if (isset($_POST['add_student'])) {
     $semester = trim($_POST['semester']);
     $faculty_name = trim($_POST['faculty_name']);
     if (!empty($student_name)) {
-        $can_insert = true;
-        // Check for duplicate enrollment number
-        if (!empty($enrollment_number)) {
-            $stmt_check = $conn->prepare("SELECT id FROM students WHERE enrollment_number = ?");
-            $stmt_check->bind_param("s", $enrollment_number);
-            $stmt_check->execute();
-            if ($stmt_check->get_result()->num_rows > 0) {
-                $error = "Error: Enrollment number '$enrollment_number' already exists!";
-                $can_insert = false;
-            }
-            $stmt_check->close();
-        }
-        // Check for duplicate roll number
-        if ($can_insert && !empty($roll_number)) {
-            $stmt_check = $conn->prepare("SELECT id FROM students WHERE roll_number = ?");
-            $stmt_check->bind_param("s", $roll_number);
-            $stmt_check->execute();
-            if ($stmt_check->get_result()->num_rows > 0) {
-                $error = "Error: Roll number '$roll_number' already exists!";
-                $can_insert = false;
-            }
-            $stmt_check->close();
-        }
-
-        if ($can_insert) {
         $stmt = $conn->prepare("INSERT INTO students (name, father_name, enrollment_number, roll_number, course, sem, faculty) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("sssssss", $student_name, $father_name, $enrollment_number, $roll_number, $course_name, $semester, $faculty_name);
         if ($stmt->execute()) { 
@@ -69,7 +40,6 @@ if (isset($_POST['add_student'])) {
             exit;
         } else { $error = "Error: " . $conn->error; }
         $stmt->close();
-        }
     } else { $error = "Student Name is a required field."; }
 }
 
@@ -106,26 +76,12 @@ if (isset($_POST['import_csv'])) {
                 $admission_date = mysqli_real_escape_string($conn, $admission_date);
                 $session = mysqli_real_escape_string($conn, trim($row[10] ?? '')); 
 
-                if (!empty($name)) {
-                    $is_duplicate = false;
+                if (!empty($name) && !empty($enroll)) {
                     // Check duplicate enrollment
-                    if (!empty($enroll)) {
-                        $check_sql = "SELECT id FROM students WHERE enrollment_number = '$enroll'";
-                        $check_result = mysqli_query($conn, $check_sql);
-                        if ($check_result && mysqli_num_rows($check_result) > 0) {
-                            $is_duplicate = true;
-                        }
-                    }
-                    // Check duplicate roll number
-                    if (!$is_duplicate && !empty($roll)) {
-                        $check_sql = "SELECT id FROM students WHERE roll_number = '$roll'";
-                        $check_result = mysqli_query($conn, $check_sql);
-                        if ($check_result && mysqli_num_rows($check_result) > 0) {
-                            $is_duplicate = true;
-                        }
-                    }
+                    $check_sql = "SELECT id FROM students WHERE enrollment_number = '$enroll'";
+                    $check_result = mysqli_query($conn, $check_sql);
 
-                    if ($is_duplicate) {
+                    if ($check_result && mysqli_num_rows($check_result) > 0) {
                         $duplicate_count++;
                     } else {
                         // Attempt full insert, fallback to basic columns if extra columns don't exist
@@ -135,19 +91,14 @@ if (isset($_POST['import_csv'])) {
                         if (mysqli_query($conn, $sql)) {
                             $success_count++;
                         } else {
-                            $fallback_sql = "INSERT INTO students (name, father_name, enrollment_number, roll_number, course, sem, faculty) 
-                                             VALUES ('$name', '$father_name', '$enroll', '$roll', '$course', '$sem', '$faculty')";
+                            $fallback_sql = "INSERT INTO students (name, father_name, enrollment_number, course, sem, faculty) 
+                                             VALUES ('$name', '$father_name', '$enroll', '$course', '$sem', '$faculty')";
                             if (mysqli_query($conn, $fallback_sql)) {
                                 $success_count++;
                             } else {
                                 $duplicate_count++;
                             }
                         }
-                    }
-                } else {
-                    // If name is empty, but other data exists, count as an error.
-                    if (implode('', $row) != '') {
-                        $duplicate_count++;
                     }
                 }
             }
@@ -184,37 +135,10 @@ if (isset($_POST['update_student'])) {
     $semester = trim($_POST['semester']);
     $faculty_name = trim($_POST['faculty_name']);
 
-    $can_update = true;
-    if (!empty($enrollment_number)) {
-        $stmt_check = $conn->prepare("SELECT id FROM students WHERE enrollment_number = ? AND id != ?");
-        $stmt_check->bind_param("si", $enrollment_number, $student_id);
-        $stmt_check->execute();
-        if ($stmt_check->get_result()->num_rows > 0) {
-            $_SESSION['flash_error'] = "Error: Enrollment number '$enrollment_number' is already assigned to another student.";
-            $can_update = false;
-        }
-        $stmt_check->close();
-    }
-    if ($can_update && !empty($roll_number)) {
-        $stmt_check = $conn->prepare("SELECT id FROM students WHERE roll_number = ? AND id != ?");
-        $stmt_check->bind_param("si", $roll_number, $student_id);
-        $stmt_check->execute();
-        if ($stmt_check->get_result()->num_rows > 0) {
-            $_SESSION['flash_error'] = "Error: Roll number '$roll_number' is already assigned to another student.";
-            $can_update = false;
-        }
-        $stmt_check->close();
-    }
-
-    if ($can_update) {
-        $stmt = $conn->prepare("UPDATE students SET name=?, father_name=?, enrollment_number=?, roll_number=?, course=?, sem=?, faculty=? WHERE id=?");
-        $stmt->bind_param("sssssssi", $student_name, $father_name, $enrollment_number, $roll_number, $course_name, $semester, $faculty_name, $student_id);
-        if ($stmt->execute()) { $_SESSION['flash_msg'] = "Student record updated successfully!"; } else { $_SESSION['flash_error'] = "Error updating record: " . $conn->error; }
-        $stmt->close();
-    } else {
-        header("Location: manage_students.php?edit_id=$student_id"); // Redirect back to edit form on failure
-        exit;
-    }
+    $stmt = $conn->prepare("UPDATE students SET name=?, father_name=?, enrollment_number=?, roll_number=?, course=?, sem=?, faculty=? WHERE id=?");
+    $stmt->bind_param("sssssssi", $student_name, $father_name, $enrollment_number, $roll_number, $course_name, $semester, $faculty_name, $student_id);
+    if ($stmt->execute()) { $_SESSION['flash_msg'] = "Student record updated successfully!"; } else { $error = "Error updating record: " . $conn->error; }
+    $stmt->close();
     header("Location: manage_students.php");
     exit;
 }
