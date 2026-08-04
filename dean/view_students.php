@@ -13,9 +13,11 @@ $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['searc
 $filter_course = isset($_GET['course']) ? mysqli_real_escape_string($conn, $_GET['course']) : '';
 $filter_year = isset($_GET['year']) ? mysqli_real_escape_string($conn, $_GET['year']) : '';
 $filter_sem = isset($_GET['sem']) ? mysqli_real_escape_string($conn, $_GET['sem']) : '';
+$filter_section = isset($_GET['section']) ? mysqli_real_escape_string($conn, $_GET['section']) : '';
 
-// Base Condition for filters restricted to FOCBS
-$where_clause = "WHERE faculty = 'FOCBS'";
+// Base Condition for filters dynamically based on logged-in faculty
+$faculty_name = $_SESSION['faculty_name'];
+$where_clause = "WHERE faculty = '$faculty_name'";
 
 if ($search != '') {
     $where_clause .= " AND (name LIKE '%$search%' OR enrollment_number LIKE '%$search%' OR roll_number LIKE '%$search%')";
@@ -29,8 +31,11 @@ if ($filter_year != '') {
 if ($filter_sem != '') {
     $where_clause .= " AND sem = '$filter_sem'";
 }
+if ($filter_section != '') {
+    $where_clause .= " AND section = '$filter_section'";
+}
 
-// Handle CSV Export (Exports all rows matching current filters)
+// Handle CSV Export
 if (isset($_GET['export_csv']) && $_GET['export_csv'] == 'true') {
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="student_directory_' . date('Y-m-d') . '.csv"');
@@ -62,25 +67,26 @@ if (isset($_GET['export_csv']) && $_GET['export_csv'] == 'true') {
 }
 
 // Pagination settings
-$limit = 20; // Number of students per page
+$limit = 20; 
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 $page = max($page, 1);
 $offset = ($page - 1) * $limit;
 
-// 1. Get total records for pagination calculation
+// 1. Get total records
 $count_sql = "SELECT COUNT(*) as total FROM students $where_clause";
 $count_result = mysqli_query($conn, $count_sql);
 $total_rows = mysqli_fetch_assoc($count_result)['total'];
 $total_pages = ceil($total_rows / $limit);
 
-// 2. Fetch limited results for current page
+// 2. Fetch limited results
 $sql = "SELECT * FROM students $where_clause ORDER BY name ASC LIMIT $offset, $limit";
 $result = mysqli_query($conn, $sql);
 
-// Fetch available options for filters
+// 3. Fetch available options for filters (Dynamic based on logged-in faculty)
 $courses_result = mysqli_query($conn, "SELECT DISTINCT course_name FROM courses_list ORDER BY course_name ASC");
-$years_result = mysqli_query($conn, "SELECT DISTINCT year FROM students WHERE faculty = 'FOCBS' ORDER BY year DESC");
-$sems_result = mysqli_query($conn, "SELECT DISTINCT sem FROM students WHERE faculty = 'FOCBS' ORDER BY sem ASC");
+$years_result = mysqli_query($conn, "SELECT DISTINCT year FROM students WHERE faculty = '$faculty_name' AND year IS NOT NULL AND year != '' ORDER BY year DESC");
+$sems_result = mysqli_query($conn, "SELECT DISTINCT sem FROM students WHERE faculty = '$faculty_name' AND sem IS NOT NULL AND sem != '' ORDER BY sem ASC");
+$sections_result = mysqli_query($conn, "SELECT DISTINCT section FROM students WHERE faculty = '$faculty_name' AND section IS NOT NULL AND section != '' ORDER BY section ASC");
 
 // Prepare export link query parameters
 $export_params = $_GET;
@@ -119,7 +125,7 @@ $export_query_string = http_build_query($export_params);
                     <input type="text" name="search" class="form-control" placeholder="Name, enrollment..." value="<?php echo htmlspecialchars($search); ?>">
                 </div>
                 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label small text-muted fw-bold">Filter by Course</label>
                     <select name="course" class="form-select">
                         <option value="">All Courses</option>
@@ -133,26 +139,39 @@ $export_query_string = http_build_query($export_params);
                 </div>
 
                 <div class="col-md-2">
-                    <label class="form-label small text-muted fw-bold">Filter by Year</label>
-                    <select name="year" class="form-select">
-                        <option value="">All Years</option>
+                    <label class="form-label small text-muted fw-bold">Filter by Section</label>
+                    <select name="section" class="form-select">
+                        <option value="">All Sections</option>
                         <?php 
-                        while($y = mysqli_fetch_assoc($years_result)) {
-                            $selected = ($filter_year == $y['year']) ? 'selected' : '';
-                            echo "<option value='{$y['year']}' $selected>Year {$y['year']}</option>";
+                        while($sec = mysqli_fetch_assoc($sections_result)) {
+                            $selected = ($filter_section == $sec['section']) ? 'selected' : '';
+                            echo "<option value='{$sec['section']}' $selected>{$sec['section']}</option>";
                         }
                         ?>
                     </select>
                 </div>
 
                 <div class="col-md-2">
-                    <label class="form-label small text-muted fw-bold">Filter by Sem</label>
+                    <label class="form-label small text-muted fw-bold">Filter by Year</label>
+                    <select name="year" class="form-select">
+                        <option value="">All Years</option>
+                        <?php 
+                        while($y = mysqli_fetch_assoc($years_result)) {
+                            $selected = ($filter_year == $y['year']) ? 'selected' : '';
+                            echo "<option value='{$y['year']}' $selected>{$y['year']}</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <div class="col-md-1">
+                    <label class="form-label small text-muted fw-bold">Sem</label>
                     <select name="sem" class="form-select">
-                        <option value="">All Sems</option>
+                        <option value="">All</option>
                         <?php 
                         while($s = mysqli_fetch_assoc($sems_result)) {
                             $selected = ($filter_sem == $s['sem']) ? 'selected' : '';
-                            echo "<option value='{$s['sem']}' $selected>Semester {$s['sem']}</option>";
+                            echo "<option value='{$s['sem']}' $selected>{$s['sem']}</option>";
                         }
                         ?>
                     </select>
@@ -177,6 +196,7 @@ $export_query_string = http_build_query($export_params);
                             <th>Enrollment No</th>
                             <th>Roll No</th>
                             <th>Course</th>
+                            <th>Section</th>
                             <th>Year/Sem</th>
                         </tr>
                     </thead>
@@ -189,11 +209,12 @@ $export_query_string = http_build_query($export_params);
                                         <td>{$row['enrollment_number']}</td>
                                         <td>{$row['roll_number']}</td>
                                         <td><span class='badge bg-info-subtle text-info fw-bold'>{$row['course']}</span></td>
+                                        <td><span class='badge bg-secondary-subtle text-dark fw-bold'>{$row['section']}</span></td>
                                         <td>{$row['year']} / {$row['sem']}</td>
                                      </tr>";
                             }
                         } else {
-                            echo "<tr><td colspan='5' class='text-center py-5 text-muted'>No students found matching your filters.</td></tr>";
+                            echo "<tr><td colspan='6' class='text-center py-5 text-muted'>No students found matching your filters.</td></tr>";
                         }
                         ?>
                     </tbody>
@@ -222,4 +243,4 @@ $export_query_string = http_build_query($export_params);
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html>.
+</html>

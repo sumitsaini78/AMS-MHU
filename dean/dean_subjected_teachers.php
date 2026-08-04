@@ -1,5 +1,5 @@
 <?php
-// Database configuration based on your provided schema[cite: 1, 2]
+// Database configuration based on your provided schema
 $host = '127.0.0.1';
 $dbname = 'mhu-ams';
 $username = 'root';
@@ -16,12 +16,15 @@ try {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_teacher_subject'])) {
     $id = $_POST['id'];
     $teacher_name = $_POST['teacher_name'];
-    $subject_name = $_POST['subject_name'];
+    
+    // The dropdown value contains "subject_name|year|semester" combined using a delimiter
+    $selected_subject_data = $_POST['subject_data'];
+    list($subject_name, $year, $semester) = explode('|', $selected_subject_data);
+
     $course_name = $_POST['course_name'];
-    $year = $_POST['year'];
-    $semester = $_POST['semester'];
     $subject_code = $_POST['subject_code'];
 
+    // Update query now includes the extracted subject name, year, and semester automatically
     $stmt = $pdo->prepare("UPDATE subjected_teacher SET teacher_name = ?, subject_name = ?, course_name = ?, year = ?, semester = ?, subject_code = ? WHERE id = ?");
     $stmt->execute([$teacher_name, $subject_name, $course_name, $year, $semester, $subject_code, $id]);
     
@@ -37,7 +40,11 @@ if (isset($_GET['edit_id'])) {
     $editData = $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-// Fetch all subjected teachers from the database[cite: 1, 2]
+// Fetch unique combinations of subject name, year, and semester from database
+$subjectsStmt = $pdo->query("SELECT DISTINCT subject_name, year, semester FROM subjected_teacher WHERE subject_name IS NOT NULL AND subject_name != ''");
+$availableSubjects = $subjectsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Fetch all subjected teachers from the database
 $stmt = $pdo->query("SELECT * FROM subjected_teacher");
 $teachers_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -72,21 +79,33 @@ $teachers_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <label class="form-label">Teacher Name</label>
                         <input type="text" class="form-control" name="teacher_name" value="<?= htmlspecialchars($editData['teacher_name']) ?>" required>
                     </div>
+
+                    <!-- Subject Name Dropdown (Handles Subject, Year, and Semester together) -->
                     <div class="mb-3">
-                        <label class="form-label">Subject Name</label>
-                        <input type="text" class="form-control" name="subject_name" value="<?= htmlspecialchars($editData['subject_name']) ?>" required>
+                        <label class="form-label">Select Subject (Includes Year & Semester)</label>
+                        <select class="form-select" name="subject_data" required>
+                            <option value="">-- Choose Subject, Year & Semester --</option>
+                            <?php foreach ($availableSubjects as $sub): ?>
+                                <?php 
+                                    // Package values together using a pipe separator
+                                    $optionValue = $sub['subject_name'] . '|' . $sub['year'] . '|' . $sub['semester'];
+                                    
+                                    // Label shown to user
+                                    $displayLabel = $sub['subject_name'] . ' (Year: ' . $sub['year'] . ', Semester: ' . $sub['semester'] . ')';
+                                    
+                                    // Check if this matches current record
+                                    $isSelected = ($editData['subject_name'] === $sub['subject_name'] && $editData['year'] == $sub['year'] && $editData['semester'] == $sub['semester']);
+                                ?>
+                                <option value="<?= htmlspecialchars($optionValue) ?>" <?= $isSelected ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($displayLabel) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Course Name</label>
                         <input type="text" class="form-control" name="course_name" value="<?= htmlspecialchars($editData['course_name']) ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Year</label>
-                        <input type="number" class="form-control" name="year" value="<?= htmlspecialchars($editData['year']) ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Semester</label>
-                        <input type="number" class="form-control" name="semester" value="<?= htmlspecialchars($editData['semester']) ?>" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Subject Code</label>

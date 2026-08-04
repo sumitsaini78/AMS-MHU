@@ -3,7 +3,7 @@ include "../db_connect.php";
 session_start();
 
 // Security Check
-if (!isset($_SESSION['admin_id'])) {
+if (!isset($_SESSION['dean_id'])) {
     header("Location: ../index.php");
     exit;
 }

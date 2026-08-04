@@ -4,20 +4,35 @@ session_start();
 if (!isset($_SESSION['dean_id'])) { header("Location: ../index.php"); exit; }
 $msg = ""; $error = "";
 
+// --- AUTOMATICALLY GET FACULTY FROM SESSION ---
+$session_faculty = $_SESSION['faculty_name'] ?? 'Default Faculty'; 
+
+// --- DYNAMICALLY GENERATE SESSION OPTIONS ---
+$current_year = date('Y');
+$current_month = date('m');
+$session_options = [];
+for ($y = $current_year - 4; $y <= $current_year + 4; $y++) {
+    $session_options[] = $y . '-' . ($y + 1);
+}
+// Default session logic: If month is June or later, start this year, else start last year
+$default_session = ($current_month >= 6) ? $current_year . '-' . ($current_year + 1) : ($current_year - 1) . '-' . $current_year;
+
 // --- FLASH MESSAGE HANDLING ---
 if (isset($_SESSION['flash_msg'])) {
     $msg = $_SESSION['flash_msg'];
     unset($_SESSION['flash_msg']);
 }
 
+// Fetch courses early so we can use them in both filters and forms
+$courses_res = $conn->query("SELECT DISTINCT course_name FROM courses_list ORDER BY course_name ASC");
 
 // --- HANDLER: DOWNLOAD SAMPLE CSV ---
 if (isset($_GET['download_sample'])) {
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="sample_students.csv"');
     $output = fopen("php://output", "w");
-    fputcsv($output, ['Name', 'Father Name', 'Enroll', 'Roll', 'Faculty', 'Course', 'Section', 'Year', 'Sem', 'Admission Date', 'Session']);
-    fputcsv($output, ['John Doe', 'Richard Doe', '12345678', 'A-101', 'Computer Science', 'B.Tech', 'A', '2026', '4', '2026-07-01', '2026-2027']);
+    fputcsv($output, ['Name', 'Father Name', 'Enroll', 'Roll', 'Course', 'Section', 'Year', 'Sem', 'Admission Date', 'Session']);
+    fputcsv($output, ['John Doe', 'Richard Doe', '12345678', 'A-101', 'B.Tech', 'A', '2026', '4', '2026-07-01', '2026-2027']);
     fclose($output);
     exit;
 }
@@ -26,18 +41,16 @@ if (isset($_GET['download_sample'])) {
 if (isset($_POST['add_student'])) {
     $student_name = trim($_POST['student_name']);
     $father_name = trim($_POST['father_name']);
-    
-    // FIX: Set to null if empty so it doesn't default to 0
     $enrollment_number = !empty(trim($_POST['enrollment_number'])) ? trim($_POST['enrollment_number']) : null; 
-    
     $roll_number = trim($_POST['roll_number']);
     $course_name = strtoupper(trim($_POST['course_name']));
     $semester = trim($_POST['semester']);
-    $faculty_name = trim($_POST['faculty_name']);
+    $session_val = trim($_POST['session']); 
+    $faculty_name = $session_faculty; 
     
     if (!empty($student_name)) {
-        $stmt = $conn->prepare("INSERT INTO students (name, father_name, enrollment_number, roll_number, course, sem, faculty) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssssss", $student_name, $father_name, $enrollment_number, $roll_number, $course_name, $semester, $faculty_name);
+        $stmt = $conn->prepare("INSERT INTO students (name, father_name, enrollment_number, roll_number, course, sem, faculty, session) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssssss", $student_name, $father_name, $enrollment_number, $roll_number, $course_name, $semester, $faculty_name, $session_val);
         if ($stmt->execute()) { 
             $_SESSION['flash_msg'] = "Student registered successfully!";
             header("Location: manage_students.php");
@@ -63,14 +76,13 @@ if (isset($_POST['import_csv'])) {
                 $father_name = mysqli_real_escape_string($conn, trim($row[1] ?? ''));
                 $enroll      = trim($row[2] ?? '');
                 $roll        = mysqli_real_escape_string($conn, trim($row[3] ?? ''));
-                $faculty     = mysqli_real_escape_string($conn, trim($row[4] ?? ''));
-                $course      = mysqli_real_escape_string($conn, strtoupper(trim($row[5] ?? '')));
-                $section     = mysqli_real_escape_string($conn, trim($row[6] ?? ''));
-                $year        = (int)($row[7] ?? 0);
-                $sem         = mysqli_real_escape_string($conn, trim($row[8] ?? ''));
+                $faculty     = mysqli_real_escape_string($conn, $session_faculty);
+                $course      = mysqli_real_escape_string($conn, strtoupper(trim($row[4] ?? '')));
+                $section     = mysqli_real_escape_string($conn, trim($row[5] ?? ''));
+                $year        = (int)($row[6] ?? 0);
+                $sem         = mysqli_real_escape_string($conn, trim($row[7] ?? ''));
                 
-                // --- CONVERT DATE FORMAT FROM DD-MM-YYYY TO YYYY-MM-DD ---
-                $raw_date = trim($row[9] ?? '');
+                $raw_date = trim($row[8] ?? '');
                 $date_parts = explode('-', $raw_date);
                 if (count($date_parts) == 3) {
                     $admission_date = $date_parts[2] . '-' . $date_parts[1] . '-' . $date_parts[0];
@@ -78,17 +90,12 @@ if (isset($_POST['import_csv'])) {
                     $admission_date = $raw_date;
                 }
                 $admission_date = mysqli_real_escape_string($conn, $admission_date);
-                $session = mysqli_real_escape_string($conn, trim($row[10] ?? '')); 
+                $session = mysqli_real_escape_string($conn, trim($row[9] ?? '')); 
 
-                // FIX: Check if name is provided (enrollment is now optional)
                 if (!empty($name)) {
-                    
-                    // FIX: Format enrollment for SQL (NULL if empty, otherwise escaped and quoted string)
                     $enroll_sql = !empty($enroll) ? "'" . mysqli_real_escape_string($conn, $enroll) . "'" : "NULL";
-                    
                     $is_duplicate = false;
 
-                    // Only check for duplicate if an enrollment number was actually provided
                     if (!empty($enroll)) {
                         $check_sql = "SELECT id FROM students WHERE enrollment_number = '$enroll'";
                         $check_result = mysqli_query($conn, $check_sql);
@@ -99,16 +106,14 @@ if (isset($_POST['import_csv'])) {
                     }
 
                     if (!$is_duplicate) {
-                        // Notice that $enroll_sql does not have quotes around it in the VALUES statement
                         $sql = "INSERT INTO students (name, father_name, enrollment_number, roll_number, faculty, course, section, year, sem, date_of_admission, session) 
                                 VALUES ('$name', '$father_name', $enroll_sql, '$roll', '$faculty', '$course', '$section', $year, '$sem', '$admission_date', '$session')";
                         
                         if (mysqli_query($conn, $sql)) {
                             $success_count++;
                         } else {
-                            // Fallback SQL also using the non-quoted $enroll_sql
-                            $fallback_sql = "INSERT INTO students (name, father_name, enrollment_number, course, sem, faculty) 
-                                             VALUES ('$name', '$father_name', $enroll_sql, '$course', '$sem', '$faculty')";
+                            $fallback_sql = "INSERT INTO students (name, father_name, enrollment_number, course, sem, faculty, session) 
+                                             VALUES ('$name', '$father_name', $enroll_sql, '$course', '$sem', '$faculty', '$session')";
                             if (mysqli_query($conn, $fallback_sql)) {
                                 $success_count++;
                             } else {
@@ -145,33 +150,54 @@ if (isset($_POST['update_student'])) {
     $student_id = intval($_POST['student_id']);
     $student_name = trim($_POST['student_name']);
     $father_name = trim($_POST['father_name']);
-    
-    // FIX: Set to null if empty so it doesn't default to 0
     $enrollment_number = !empty(trim($_POST['enrollment_number'])) ? trim($_POST['enrollment_number']) : null;
-    
     $roll_number = trim($_POST['roll_number']);
     $course_name = strtoupper(trim($_POST['course_name']));
     $semester = trim($_POST['semester']);
-    $faculty_name = trim($_POST['faculty_name']);
+    $session_val = trim($_POST['session']); 
+    $faculty_name = $session_faculty; 
 
-    $stmt = $conn->prepare("UPDATE students SET name=?, father_name=?, enrollment_number=?, roll_number=?, course=?, sem=?, faculty=? WHERE id=?");
-    $stmt->bind_param("sssssssi", $student_name, $father_name, $enrollment_number, $roll_number, $course_name, $semester, $faculty_name, $student_id);
+    $stmt = $conn->prepare("UPDATE students SET name=?, father_name=?, enrollment_number=?, roll_number=?, course=?, sem=?, faculty=?, session=? WHERE id=?");
+    $stmt->bind_param("ssssssssi", $student_name, $father_name, $enrollment_number, $roll_number, $course_name, $semester, $faculty_name, $session_val, $student_id);
     if ($stmt->execute()) { $_SESSION['flash_msg'] = "Student record updated successfully!"; } else { $error = "Error updating record: " . $conn->error; }
     $stmt->close();
     header("Location: manage_students.php");
     exit;
 }
 
-// --- DATA FETCHING & PAGINATION ---
+// --- DATA FETCHING, FILTERING & PAGINATION ---
 $limit = 20; // Records per page
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $limit;
 
+// Filter Variables
+$search_term = $_GET['search'] ?? '';
+$course_filter = $_GET['course_filter'] ?? '';
+$sem_filter = $_GET['sem_filter'] ?? '';
+$session_filter = $_GET['session_filter'] ?? '';
+
+$where_clauses = [];
+
+if (!empty($search_term)) {
+    $search_term_esc = mysqli_real_escape_string($conn, $search_term);
+    $where_clauses[] = "(name LIKE '%$search_term_esc%' OR enrollment_number LIKE '%$search_term_esc%' OR roll_number LIKE '%$search_term_esc%')";
+}
+if (!empty($course_filter)) {
+    $course_filter_esc = mysqli_real_escape_string($conn, $course_filter);
+    $where_clauses[] = "course = '$course_filter_esc'";
+}
+if (!empty($sem_filter)) {
+    $sem_filter_esc = mysqli_real_escape_string($conn, $sem_filter);
+    $where_clauses[] = "sem = '$sem_filter_esc'";
+}
+if (!empty($session_filter)) {
+    $session_filter_esc = mysqli_real_escape_string($conn, $session_filter);
+    $where_clauses[] = "session = '$session_filter_esc'";
+}
+
 $search_query = "";
-$search_term = "";
-if (isset($_GET['search']) && !empty($_GET['search'])) {
-    $search_term = mysqli_real_escape_string($conn, $_GET['search']);
-    $search_query = "WHERE name LIKE '%$search_term%' OR enrollment_number LIKE '%$search_term%' OR roll_number LIKE '%$search_term%'";
+if (count($where_clauses) > 0) {
+    $search_query = "WHERE " . implode(" AND ", $where_clauses);
 }
 
 // Count total records for pagination
@@ -182,9 +208,6 @@ $total_pages = ceil($total_records / $limit);
 // Fetch students for the current page
 $students_res = $conn->query("SELECT * FROM students $search_query ORDER BY id DESC LIMIT $limit OFFSET $offset");
 
-// Fetch courses for the dropdown
-$courses_res = $conn->query("SELECT DISTINCT course_name FROM courses_list ORDER BY course_name ASC");
-$faculties_res = $conn->query("SELECT DISTINCT faculty_full_name FROM faculty ORDER BY faculty_full_name ASC");
 
 // --- EDIT MODE DATA FETCHING ---
 $edit_data = null;
@@ -237,7 +260,7 @@ if (isset($_GET['edit_id'])) {
                         <div class="col-md-6"><label class="form-label small fw-semibold">Roll No.</label><input type="text" name="roll_number" class="form-control" value="<?= htmlspecialchars($edit_data['roll_number'] ?? '') ?>"></div>
                     </div>
                     <div class="row g-2 mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label small fw-semibold">Course Name</label>
                             <select name="course_name" class="form-select">
                                 <?php mysqli_data_seek($courses_res, 0); while($c = $courses_res->fetch_assoc()): ?>
@@ -245,20 +268,27 @@ if (isset($_GET['edit_id'])) {
                                 <?php endwhile; ?>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label small fw-semibold">Semester</label>
                             <select name="semester" class="form-select">
                                 <?php for($i=1; $i<=10; $i++): ?><option value="<?= $i ?>" <?= ($edit_data['sem'] == $i) ? 'selected' : '' ?>><?= $i ?></option><?php endfor; ?>
                             </select>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Faculty</label>
-                        <select name="faculty_name" class="form-select" required>
-                            <?php mysqli_data_seek($faculties_res, 0); while($f = $faculties_res->fetch_assoc()): ?>
-                                <option value="<?= htmlspecialchars($f['faculty_full_name']) ?>" <?= ($edit_data['faculty'] == $f['faculty_full_name']) ? 'selected' : '' ?>><?= htmlspecialchars($f['faculty_full_name']) ?></option>
-                            <?php endwhile; ?>
-                        </select>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Session</label>
+                            <select name="session" class="form-select" required>
+                                <option value="" disabled>Select Session</option>
+                                <?php foreach($session_options as $sess): ?>
+                                    <option value="<?= $sess ?>" <?= (isset($edit_data['session']) && $edit_data['session'] == $sess) ? 'selected' : '' ?>><?= $sess ?></option>
+                                <?php endforeach; ?>
+                                <?php 
+                                // Old session check fallback
+                                if (isset($edit_data['session']) && !in_array($edit_data['session'], $session_options) && !empty($edit_data['session'])): 
+                                ?>
+                                    <option value="<?= htmlspecialchars($edit_data['session']) ?>" selected><?= htmlspecialchars($edit_data['session']) ?></option>
+                                <?php endif; ?>
+                            </select>
+                        </div>
                     </div>
                     <button type="submit" name="update_student" class="btn btn-primary w-100 rounded-pill fw-semibold">Update Student</button>
                 </form>
@@ -282,10 +312,18 @@ if (isset($_GET['edit_id'])) {
                                     <div class="col-md-6"><label class="form-label small fw-semibold">Roll No.</label><input type="text" name="roll_number" class="form-control" placeholder="Optional"></div>
                                 </div>
                                 <div class="row g-2 mb-3">
-                                    <div class="col-md-6"><label class="form-label small fw-semibold">Course Name</label><select name="course_name" class="form-select"><option value="" selected disabled>Select Course</option><?php mysqli_data_seek($courses_res, 0); ?><?php while($c = $courses_res->fetch_assoc()): ?><option value="<?= htmlspecialchars($c['course_name']) ?>"><?= htmlspecialchars($c['course_name']) ?></option><?php endwhile; ?></select></div>
-                                    <div class="col-md-6"><label class="form-label small fw-semibold">Semester</label><select name="semester" class="form-select"><option value="" selected disabled>Select Semester</option><?php for($i=1; $i<=10; $i++): ?><option value="<?= $i ?>"><?= $i ?></option><?php endfor; ?></select></div>
+                                    <div class="col-md-4"><label class="form-label small fw-semibold">Course Name</label><select name="course_name" class="form-select"><option value="" selected disabled>Select Course</option><?php mysqli_data_seek($courses_res, 0); ?><?php while($c = $courses_res->fetch_assoc()): ?><option value="<?= htmlspecialchars($c['course_name']) ?>"><?= htmlspecialchars($c['course_name']) ?></option><?php endwhile; ?></select></div>
+                                    <div class="col-md-4"><label class="form-label small fw-semibold">Semester</label><select name="semester" class="form-select"><option value="" selected disabled>Select Semester</option><?php for($i=1; $i<=10; $i++): ?><option value="<?= $i ?>"><?= $i ?></option><?php endfor; ?></select></div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Session</label>
+                                        <select name="session" class="form-select" required>
+                                            <option value="" disabled>Select Session</option>
+                                            <?php foreach($session_options as $sess): ?>
+                                                <option value="<?= $sess ?>" <?= ($sess == $default_session) ? 'selected' : '' ?>><?= $sess ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="mb-3"><label class="form-label small fw-semibold">Faculty</label><select name="faculty_name" class="form-select" required><option value="" selected disabled>Select Faculty</option><?php mysqli_data_seek($faculties_res, 0); ?><?php while($f = $faculties_res->fetch_assoc()): ?><option value="<?= htmlspecialchars($f['faculty_full_name']) ?>"><?= htmlspecialchars($f['faculty_full_name']) ?></option><?php endwhile; ?></select></div>
                                 <button type="submit" name="add_student" class="btn btn-success w-100 rounded-pill fw-semibold">Save Student</button>
                             </form>
                         </div>
@@ -302,7 +340,7 @@ if (isset($_GET['edit_id'])) {
                             <div class="d-flex justify-content-between align-items-center mb-3"><h5 class="fw-bold mb-0">Bulk CSV Upload</h5><a href="?download_sample=1" class="btn btn-sm btn-outline-secondary rounded-pill" style="font-size:0.75rem;"><i class="fa-solid fa-download me-1"></i> Sample CSV</a></div>
                             <form method="POST" enctype="multipart/form-data">
                                 <div class="mb-3"><label class="form-label small fw-semibold">Select CSV File *</label><input type="file" name="csv_file" class="form-control" accept=".csv" required></div>
-                                <div class="p-2 bg-light rounded-3 mb-3 small text-muted border"><strong>Format:</strong> Name, Father Name, Enroll, Roll, Faculty, Course, Section, Year, Sem, Admission Date, Session</div>
+                                <div class="p-2 bg-light rounded-3 mb-3 small text-muted border"><strong>Format:</strong> Name, Father Name, Enroll, Roll, Course, Section, Year, Sem, Admission Date, Session <br><em>(Note: Faculty is assigned automatically based on your login)</em></div>
                                 <button type="submit" name="import_csv" class="btn btn-success w-100 rounded-pill fw-semibold"><i class="fa-solid fa-upload me-1"></i> Upload Data</button>
                             </form>
                         </div>
@@ -315,18 +353,56 @@ if (isset($_GET['edit_id'])) {
         <div class="row">
             <div class="col-12">
                 <div class="card border-0 shadow-sm p-4 rounded-4 bg-white">
-                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
-                        <h5 class="fw-bold mb-2 mb-md-0">Students List (<?= $total_records ?>)</h5>
-                        <form method="GET" class="d-flex" style="max-width: 300px;">
-                            <div class="input-group">
-                                <input type="text" name="search" class="form-control" placeholder="Search by name, enroll..." value="<?= htmlspecialchars($search_term) ?>">
-                                <button class="btn btn-outline-primary" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
-                                <?php if (!empty($search_term)): ?>
-                                <a href="manage_students.php" class="btn btn-outline-secondary" title="Reset Search"><i class="fa-solid fa-xmark"></i></a>
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+                        <h5 class="fw-bold mb-3 mb-md-0 w-100">Students List (<?= $total_records ?>)</h5>
+                    </div>
+
+                    <!-- SEARCH AND FILTER FORM -->
+                    <form method="GET" class="row g-2 mb-4 align-items-center p-3 bg-light rounded-3 border">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold mb-1 text-muted">Search Query</label>
+                            <input type="text" name="search" class="form-control form-control-sm" placeholder="Name, Enroll, Roll..." value="<?= htmlspecialchars($search_term) ?>">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold mb-1 text-muted">Course</label>
+                            <select name="course_filter" class="form-select form-select-sm">
+                                <option value="">All Courses</option>
+                                <?php 
+                                mysqli_data_seek($courses_res, 0); 
+                                while($c = $courses_res->fetch_assoc()): 
+                                ?>
+                                    <option value="<?= htmlspecialchars($c['course_name']) ?>" <?= ($course_filter == $c['course_name']) ? 'selected' : '' ?>><?= htmlspecialchars($c['course_name']) ?></option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold mb-1 text-muted">Semester</label>
+                            <select name="sem_filter" class="form-select form-select-sm">
+                                <option value="">All Semesters</option>
+                                <?php for($i=1; $i<=10; $i++): ?>
+                                    <option value="<?= $i ?>" <?= ($sem_filter == $i) ? 'selected' : '' ?>><?= $i ?></option>
+                                <?php endfor; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold mb-1 text-muted">Session</label>
+                            <select name="session_filter" class="form-select form-select-sm">
+                                <option value="">All Sessions</option>
+                                <?php foreach($session_options as $sess): ?>
+                                    <option value="<?= $sess ?>" <?= ($session_filter == $sess) ? 'selected' : '' ?>><?= $sess ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end mt-2 mt-md-0">
+                            <div class="w-100 d-flex gap-2">
+                                <button class="btn btn-sm btn-primary flex-grow-1" type="submit" style="margin-top: 26px;"><i class="fa-solid fa-filter me-1"></i> Apply Filters</button>
+                                <?php if (!empty($search_term) || !empty($course_filter) || !empty($sem_filter) || !empty($session_filter)): ?>
+                                <a href="manage_students.php" class="btn btn-sm btn-outline-secondary" title="Reset Filters" style="margin-top: 26px;"><i class="fa-solid fa-rotate-left"></i></a>
                                 <?php endif; ?>
                             </div>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
+                    <!-- END SEARCH AND FILTER FORM -->
 
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
@@ -335,7 +411,7 @@ if (isset($_GET['edit_id'])) {
                                     <th>Name</th>
                                     <th>Identifiers</th>
                                     <th>Course & Sem</th>
-                                    <th>Faculty</th>
+                                    <th>Faculty & Session</th>
                                     <th class="text-end">Action</th>
                                 </tr>
                             </thead>
@@ -357,7 +433,10 @@ if (isset($_GET['edit_id'])) {
                                         <div class="fw-semibold"><?= htmlspecialchars($row['course'] ?? 'N/A') ?></div>
                                         <div class="small text-muted">Sem: <?= htmlspecialchars($row['sem'] ?? 'N/A') ?></div>
                                     </td>
-                                    <td><span class="badge bg-primary-subtle text-primary fw-semibold"><?= htmlspecialchars($row['faculty'] ?? 'N/A') ?></span></td>
+                                    <td>
+                                        <span class="badge bg-primary-subtle text-primary fw-semibold mb-1"><?= htmlspecialchars($row['faculty'] ?? 'N/A') ?></span>
+                                        <div class="small text-muted">Session: <?= htmlspecialchars($row['session'] ?? 'N/A') ?></div>
+                                    </td>
                                     <td class="text-end">
                                         <a href="manage_students.php?edit_id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-primary" title="Edit Student"><i class="fa-solid fa-pencil"></i></a>
                                         <a href="manage_students.php?delete_id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete student?');" title="Delete"><i class="fa-solid fa-trash"></i></a>
@@ -365,7 +444,7 @@ if (isset($_GET['edit_id'])) {
                                 </tr>
                                 <?php endwhile; ?>
                                 <?php else: ?>
-                                <tr><td colspan="5" class="text-center text-muted py-4">No students found.</td></tr>
+                                <tr><td colspan="5" class="text-center text-muted py-4">No students found matching your filters.</td></tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>
@@ -376,6 +455,7 @@ if (isset($_GET['edit_id'])) {
                         <ul class="pagination justify-content-center">
                             <?php for ($i = 1; $i <= $total_pages; $i++): ?>
                             <?php
+                                // Carry over current filters to pagination links
                                 $query_params = $_GET;
                                 $query_params['page'] = $i;
                             ?>
