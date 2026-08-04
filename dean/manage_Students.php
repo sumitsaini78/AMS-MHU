@@ -1,7 +1,7 @@
 <?php
 include "../db_connect.php";
 session_start();
-if (!isset($_SESSION['admin_id'])) { header("Location: ../index.php"); exit; }
+if (!isset($_SESSION['dean_id'])) { header("Location: ../index.php"); exit; }
 $msg = ""; $error = "";
 
 // --- FLASH MESSAGE HANDLING ---
@@ -26,11 +26,15 @@ if (isset($_GET['download_sample'])) {
 if (isset($_POST['add_student'])) {
     $student_name = trim($_POST['student_name']);
     $father_name = trim($_POST['father_name']);
-    $enrollment_number = trim($_POST['enrollment_number']);
+    
+    // FIX: Set to null if empty so it doesn't default to 0
+    $enrollment_number = !empty(trim($_POST['enrollment_number'])) ? trim($_POST['enrollment_number']) : null; 
+    
     $roll_number = trim($_POST['roll_number']);
     $course_name = strtoupper(trim($_POST['course_name']));
     $semester = trim($_POST['semester']);
     $faculty_name = trim($_POST['faculty_name']);
+    
     if (!empty($student_name)) {
         $stmt = $conn->prepare("INSERT INTO students (name, father_name, enrollment_number, roll_number, course, sem, faculty) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("sssssss", $student_name, $father_name, $enrollment_number, $roll_number, $course_name, $semester, $faculty_name);
@@ -55,15 +59,15 @@ if (isset($_POST['import_csv'])) {
 
         while (($row = fgetcsv($file, 10000, ",")) !== FALSE) {
             if (count($row) >= 2) {
-                $name    = mysqli_real_escape_string($conn, trim($row[0] ?? ''));
+                $name        = mysqli_real_escape_string($conn, trim($row[0] ?? ''));
                 $father_name = mysqli_real_escape_string($conn, trim($row[1] ?? ''));
-                $enroll  = mysqli_real_escape_string($conn, trim($row[2] ?? ''));
-                $roll    = mysqli_real_escape_string($conn, trim($row[3] ?? ''));
-                $faculty = mysqli_real_escape_string($conn, trim($row[4] ?? ''));
-                $course  = mysqli_real_escape_string($conn, strtoupper(trim($row[5] ?? '')));
-                $section = mysqli_real_escape_string($conn, trim($row[6] ?? ''));
-                $year    = (int)($row[7] ?? 0);
-                $sem     = mysqli_real_escape_string($conn, trim($row[8] ?? ''));
+                $enroll      = trim($row[2] ?? '');
+                $roll        = mysqli_real_escape_string($conn, trim($row[3] ?? ''));
+                $faculty     = mysqli_real_escape_string($conn, trim($row[4] ?? ''));
+                $course      = mysqli_real_escape_string($conn, strtoupper(trim($row[5] ?? '')));
+                $section     = mysqli_real_escape_string($conn, trim($row[6] ?? ''));
+                $year        = (int)($row[7] ?? 0);
+                $sem         = mysqli_real_escape_string($conn, trim($row[8] ?? ''));
                 
                 // --- CONVERT DATE FORMAT FROM DD-MM-YYYY TO YYYY-MM-DD ---
                 $raw_date = trim($row[9] ?? '');
@@ -76,23 +80,35 @@ if (isset($_POST['import_csv'])) {
                 $admission_date = mysqli_real_escape_string($conn, $admission_date);
                 $session = mysqli_real_escape_string($conn, trim($row[10] ?? '')); 
 
-                if (!empty($name) && !empty($enroll)) {
-                    // Check duplicate enrollment
-                    $check_sql = "SELECT id FROM students WHERE enrollment_number = '$enroll'";
-                    $check_result = mysqli_query($conn, $check_sql);
+                // FIX: Check if name is provided (enrollment is now optional)
+                if (!empty($name)) {
+                    
+                    // FIX: Format enrollment for SQL (NULL if empty, otherwise escaped and quoted string)
+                    $enroll_sql = !empty($enroll) ? "'" . mysqli_real_escape_string($conn, $enroll) . "'" : "NULL";
+                    
+                    $is_duplicate = false;
 
-                    if ($check_result && mysqli_num_rows($check_result) > 0) {
-                        $duplicate_count++;
-                    } else {
-                        // Attempt full insert, fallback to basic columns if extra columns don't exist
+                    // Only check for duplicate if an enrollment number was actually provided
+                    if (!empty($enroll)) {
+                        $check_sql = "SELECT id FROM students WHERE enrollment_number = '$enroll'";
+                        $check_result = mysqli_query($conn, $check_sql);
+                        if ($check_result && mysqli_num_rows($check_result) > 0) {
+                            $is_duplicate = true;
+                            $duplicate_count++;
+                        }
+                    }
+
+                    if (!$is_duplicate) {
+                        // Notice that $enroll_sql does not have quotes around it in the VALUES statement
                         $sql = "INSERT INTO students (name, father_name, enrollment_number, roll_number, faculty, course, section, year, sem, date_of_admission, session) 
-                                VALUES ('$name', '$father_name', '$enroll', '$roll', '$faculty', '$course', '$section', $year, '$sem', '$admission_date', '$session')";
+                                VALUES ('$name', '$father_name', $enroll_sql, '$roll', '$faculty', '$course', '$section', $year, '$sem', '$admission_date', '$session')";
                         
                         if (mysqli_query($conn, $sql)) {
                             $success_count++;
                         } else {
+                            // Fallback SQL also using the non-quoted $enroll_sql
                             $fallback_sql = "INSERT INTO students (name, father_name, enrollment_number, course, sem, faculty) 
-                                             VALUES ('$name', '$father_name', '$enroll', '$course', '$sem', '$faculty')";
+                                             VALUES ('$name', '$father_name', $enroll_sql, '$course', '$sem', '$faculty')";
                             if (mysqli_query($conn, $fallback_sql)) {
                                 $success_count++;
                             } else {
@@ -129,7 +145,10 @@ if (isset($_POST['update_student'])) {
     $student_id = intval($_POST['student_id']);
     $student_name = trim($_POST['student_name']);
     $father_name = trim($_POST['father_name']);
-    $enrollment_number = trim($_POST['enrollment_number']);
+    
+    // FIX: Set to null if empty so it doesn't default to 0
+    $enrollment_number = !empty(trim($_POST['enrollment_number'])) ? trim($_POST['enrollment_number']) : null;
+    
     $roll_number = trim($_POST['roll_number']);
     $course_name = strtoupper(trim($_POST['course_name']));
     $semester = trim($_POST['semester']);
