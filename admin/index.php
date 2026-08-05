@@ -85,6 +85,7 @@ $pending_corrections = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) a
                 <a href="#students" class="anchor-pill btn btn-sm btn-light text-secondary border rounded-pill px-3 py-1 small">Students</a>
                 <a href="#courses" class="anchor-pill btn btn-sm btn-light text-secondary border rounded-pill px-3 py-1 small">Courses</a>
                 <a href="#subjects" class="anchor-pill btn btn-sm btn-light text-secondary border rounded-pill px-3 py-1 small">Subjects</a>
+                <a href="#assign_subjects" class="anchor-pill btn btn-sm btn-light text-secondary border rounded-pill px-3 py-1 small">Assign Subjects</a>
                 <a href="#corrections" class="anchor-pill btn btn-sm btn-light text-secondary border rounded-pill px-3 py-1 small">Corrections</a>
                 <a href="#settings" class="anchor-pill btn btn-sm btn-light text-secondary border rounded-pill px-3 py-1 small">Settings</a>
             </div>
@@ -208,6 +209,22 @@ $pending_corrections = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) a
                         <p class="text-muted small mb-4">Configure course subjects, semester mappings, and codes.</p>
                     </div>
                     <a href="manage_subjects.php" class="btn btn-sm btn-outline-dark w-100 fw-semibold py-2 rounded-pill">Open Module <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                </div>
+            </div>
+            
+            <!-- NEW CARD: Assign Student Subjects -->
+            <div class="col admin-card-item" id="assign_subjects">
+                <div class="action-card card h-100 shadow-sm p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-box bg-dark-subtle text-dark rounded-3 p-3 fs-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="fa-solid fa-list-check"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold text-dark fs-5 mb-2">Assign Student Subjects</h5>
+                        <p class="text-muted small mb-4">Map and assign specific subjects to student profiles.</p>
+                    </div>
+                    <a href="assign_student_subject.php" class="btn btn-sm btn-outline-dark w-100 fw-semibold py-2 rounded-pill">Open Module <i class="fa-solid fa-arrow-right ms-1"></i></a>
                 </div>
             </div>
 

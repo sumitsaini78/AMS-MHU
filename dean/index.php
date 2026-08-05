@@ -137,7 +137,7 @@ if ($courses_result) {
             <?php
             $actions = [
                 ['Add Faculty & Departments', 'fa-network-wired', 'text-info', 'add_Faculty.php'],
-                ['Manage Students', 'fa-user-graduate', 'text-info', 'Manage_Students.php'],
+                ['Manage Students', 'fa-user-graduate', 'text-info', 'manage_Students.php'],
                 ['View Students', 'fa-users-viewfinder', 'text-primary', 'view_students.php'],
                 ['Add Subjects', 'fa-book-bookmark', 'text-info', 'add_bulk_subject.php'],
                 ['Add Teachers', 'fa-chalkboard-user', 'text-info', 'add_Teacher.php'],

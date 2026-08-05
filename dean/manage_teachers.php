@@ -1,40 +1,98 @@
 <?php 
-include "../db_connect.php";
+include "./db_connect.php";
+session_start();
 
-// Handle form submission for assigning a subject to a teacher
-if (isset($_POST['submit_assignment'])) {
-    $teacher_id = $_POST['teacher_id'];
-    $subject_id = $_POST['subject_id'];
-
-    // Fetch teacher details
-    $teacher_query = mysqli_query($conn, "SELECT * FROM teachers WHERE id = '$teacher_id'");
-    $teacher = mysqli_fetch_assoc($teacher_query);
-
-    // Fetch subject details
-    $subject_query = mysqli_query($conn, "SELECT * FROM subjects WHERE course_id = '$subject_id'");
-    $subject = mysqli_fetch_assoc($subject_query);
-
-    if ($teacher && $subject) {
-        $teacher_name = $teacher['name'];
-        $subject_name = $subject['subject_name'];
-        $course_name = $subject['course_name'];
-        $year = $subject['Year'];
-        $semester = $subject['semester'];
-        $subject_code = $subject['subject_code'];
-
-        $insert_query = "INSERT INTO subjected_teacher (teacher_id, sub_id, teacher_name, subject_name, course_name, year, semester, subject_code) 
-                         VALUES ('$teacher_id', '$subject_id', '$teacher_name', '$subject_name', '$course_name', '$year', '$semester', '$subject_code')";
-        mysqli_query($conn, $insert_query);
+// Handle deletion with flash message
+if (isset($_GET['delete'])) {
+    $id = intval($_GET['delete']);
+    $del_query = mysqli_query($conn, "DELETE FROM subjected_teacher WHERE id = '$id'");
+    if ($del_query) {
+        $_SESSION['flash_message'] = "Assignment deleted successfully!";
+        $_SESSION['flash_type'] = "success";
+    } else {
+        $_SESSION['flash_message'] = "Failed to delete assignment.";
+        $_SESSION['flash_type'] = "danger";
     }
+    header("Location: " . strtok($_SERVER["REQUEST_URI"], '?'));
+    exit();
+}
+
+// --- FILTER HANDLING ---
+if (isset($_POST['reset_assignment_filters'])) {
+    unset($_SESSION['assign_filter_teacher'], $_SESSION['assign_filter_course']);
     header("Location: " . $_SERVER['PHP_SELF']);
     exit();
 }
 
-// Handle deletion
-if (isset($_GET['delete'])) {
-    $id = $_GET['delete'];
-    mysqli_query($conn, "DELETE FROM subjected_teacher WHERE id = '$id'");
+if (isset($_POST['apply_assignment_filters'])) {
+    $_SESSION['assign_filter_teacher'] = trim($_POST['assign_filter_teacher'] ?? '');
+    $_SESSION['assign_filter_course'] = trim($_POST['assign_filter_course'] ?? '');
     header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+}
+
+$filter_teacher = $_SESSION['assign_filter_teacher'] ?? '';
+$filter_course = $_SESSION['assign_filter_course'] ?? '';
+
+// Build WHERE clause securely
+$where_clause = "WHERE 1=1";
+if (!empty($filter_teacher)) {
+    $where_clause .= " AND teacher_id = '" . intval($filter_teacher) . "'";
+}
+if (!empty($filter_course)) {
+    $where_clause .= " AND course_name = '" . mysqli_real_escape_string($conn, $filter_course) . "'";
+}
+
+// --- CSV EXPORT: ASSIGNMENTS / RESULTS ---
+if (isset($_GET['export']) && $_GET['export'] == 'assigned') {
+    if (ob_get_level()) ob_end_clean();
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename=teacher_subject_assignments_' . date('Y-m-d') . '.csv');
+    $output = fopen('php://output', 'w');
+    fputcsv($output, array('#', 'Teacher Name', 'Assigned Subject', 'Course Name', 'Year', 'Semester', 'Subject Code'));
+    
+    $assigned_query = "SELECT * FROM subjected_teacher $where_clause ORDER BY id DESC";
+    $assigned_res = mysqli_query($conn, $assigned_query);
+    $counter = 1;
+    while ($row = mysqli_fetch_assoc($assigned_res)) {
+        fputcsv($output, array(
+            $counter++,
+            $row['teacher_name'],
+            $row['subject_name'],
+            $row['course_name'],
+            $row['year'],
+            $row['semester'],
+            $row['subject_code']
+        ));
+    }
+    fclose($output);
+    exit();
+}
+
+// --- CSV EXPORT: ALL TEACHERS WITH SUBJECTS ---
+if (isset($_GET['export']) && $_GET['export'] == 'teachers') {
+    if (ob_get_level()) ob_end_clean();
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename=all_teachers_with_subjects_' . date('Y-m-d') . '.csv');
+    $output = fopen('php://output', 'w');
+    fputcsv($output, array('#', 'Teacher Name', 'Designation', 'Faculty', 'Assigned Subjects'));
+    
+    $all_teachers_query = "SELECT t.*, GROUP_CONCAT(st.subject_name SEPARATOR ', ') as assigned_subjects 
+                           FROM teachers t 
+                           LEFT JOIN subjected_teacher st ON t.id = st.teacher_id 
+                           GROUP BY t.id";
+    $teachers_list_res = mysqli_query($conn, $all_teachers_query);
+    $t_counter = 1;
+    while ($t_row = mysqli_fetch_assoc($teachers_list_res)) {
+        fputcsv($output, array(
+            $t_counter++,
+            $t_row['name'],
+            $t_row['designation'],
+            $t_row['faculty'],
+            $t_row['assigned_subjects'] ?? 'No Subject Assigned'
+        ));
+    }
+    fclose($output);
     exit();
 }
 ?>
@@ -50,177 +108,142 @@ if (isset($_GET['delete'])) {
         <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
             rel="stylesheet"
-            integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
             crossorigin="anonymous"
         />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <style>
+            body { background-color: #f4f6f9; }
+            .filter-box { background-color: #ffffff; border-radius: 10px; padding: 16px; margin-bottom: 20px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+            .card { border: none; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        </style>
     </head>
 
     <body>  
         <header>
-            <nav class="navbar navbar-dark bg-dark shadow">
-                <div class="container-fluid">
-                    <span class="navbar-brand mb-0 h1 fs-3 fw-bold">Mhu-AMS</span>
+            <nav class="navbar navbar-dark bg-dark shadow-sm py-3">
+                <div class="container-fluid px-4">
+                    <span class="navbar-brand mb-0 h1 fs-4 fw-bold tracking-wide"><i class="fa-solid fa-graduation-cap me-2"></i>Mhu-AMS</span>
                     <div class="d-flex align-items-center gap-3">
-                        <!-- Button to open the All Teachers Modal -->
-                        <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#allTeachersModal">
-                            Show All Teachers
-                        </button>
-                        <a href="index.php" class="text-white text-decoration-none">Home</a>
+                        <a href="index.php" class="text-white text-decoration-none fw-semibold"><i class="fa-solid fa-house me-1"></i> Home</a>
                     </div>
                 </div>
             </nav>
         </header>
 
         <main class="container my-5">
-            <div class="row">
-                <!-- Form to Assign/Add Teacher & Subject -->
-                <div class="col-md-4 mb-4">
-                    <div class="card shadow">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">Assign Subject to Teacher</h5>
-                        </div>
-                        <div class="card-body">
-                            <form action="" method="POST">
-                                <div class="mb-3">
-                                    <label for="teacherSelect" class="form-label">Teacher Name</label>
-                                    <select class="form-select" id="teacherSelect" name="teacher_id" required>
-                                        <option value="" selected disabled>Select Teacher</option>
-                                        <?php
-                                        $teachers_res = mysqli_query($conn, "SELECT * FROM teachers");
-                                        while ($t = mysqli_fetch_assoc($teachers_res)) {
-                                            echo '<option value="' . $t['id'] . '">' . htmlspecialchars($t['name']) . ' (' . htmlspecialchars($t['faculty']) . ')</option>';
-                                        }
-                                        ?>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="subjectSelect" class="form-label">Assigned Subject</label>
-                                    <select class="form-select" id="subjectSelect" name="subject_id" required>
-                                        <option value="" selected disabled>Select Subject</option>
-                                        <?php
-                                        $subjects_res = mysqli_query($conn, "SELECT * FROM subjects");
-                                        while ($s = mysqli_fetch_assoc($subjects_res)) {
-                                            echo '<option value="' . $s['course_id'] . '">' . htmlspecialchars($s['subject_name']) . ' - ' . htmlspecialchars($s['course_name']) . ' (Sem ' . $s['semester'] . ')</option>';
-                                        }
-                                        ?>
-                                    </select>
-                                </div>
-                                <button type="submit" name="submit_assignment" class="btn btn-primary w-100">Save Assignment</button>
-                            </form>
-                        </div>
-                    </div>
+            <!-- Flash Message Display -->
+            <?php if (isset($_SESSION['flash_message'])): ?>
+                <div class="alert alert-<?php echo $_SESSION['flash_type']; ?> alert-dismissible fade show shadow-sm mb-4" role="alert">
+                    <i class="fa-solid fa-circle-info me-2"></i><?php echo $_SESSION['flash_message']; ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
+                <?php unset($_SESSION['flash_message'], $_SESSION['flash_type']); ?>
+            <?php endif; ?>
 
-                <!-- Table to Manage/View Teachers and Subjects -->
-                <div class="col-md-8">
-                    <div class="card shadow">
-                        <div class="card-header bg-dark text-white">
-                            <h5 class="mb-0">Teacher and Subject List</h5>
+            <div class="row">
+                <!-- Main Content Container -->
+                <div class="col-md-12">
+                    <div class="card rounded-4 overflow-hidden">
+                        <div class="card-header bg-dark text-white py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div>
+                                <h5 class="mb-0 fw-bold"><i class="fa-solid fa-chalkboard-user me-2"></i>Teacher and Subject List</h5>
+                                <p class="text-muted small mb-0 text-white-50">Manage academic assignments and export department reports.</p>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="?export=assigned" class="btn btn-sm btn-success fw-semibold px-3 py-2 shadow-sm">
+                                    <i class="fa-solid fa-file-excel me-1"></i> Export Assignments CSV
+                                </a>
+                                <a href="?export=teachers" class="btn btn-sm btn-info text-dark fw-semibold px-3 py-2 shadow-sm">
+                                    <i class="fa-solid fa-file-excel me-1"></i> Export All Teachers CSV
+                                </a>
+                            </div>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-4">
+                            
+                            <!-- FILTER PANEL -->
+                            <div class="filter-box">
+                                <form method="POST" action="" class="row g-3 align-items-end">
+                                    <div class="col-md-5">
+                                        <label class="form-label small fw-bold text-secondary mb-1">Filter by Teacher</label>
+                                        <select class="form-select" name="assign_filter_teacher">
+                                            <option value="">-- All Teachers --</option>
+                                            <?php 
+                                            $t_filter_res = mysqli_query($conn, "SELECT id, name FROM teachers ORDER BY name ASC");
+                                            while ($tf = mysqli_fetch_assoc($t_filter_res)) {
+                                                $selected = ($filter_teacher == $tf['id']) ? 'selected' : '';
+                                                echo '<option value="' . $tf['id'] . '" ' . $selected . '>' . htmlspecialchars($tf['name']) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-secondary mb-1">Filter by Course</label>
+                                        <select class="form-select" name="assign_filter_course">
+                                            <option value="">-- All Courses --</option>
+                                            <?php 
+                                            $c_filter_res = mysqli_query($conn, "SELECT DISTINCT course_name FROM subjects WHERE course_name IS NOT NULL ORDER BY course_name ASC");
+                                            while ($cf = mysqli_fetch_assoc($c_filter_res)) {
+                                                $selected = ($filter_course == $cf['course_name']) ? 'selected' : '';
+                                                echo '<option value="' . htmlspecialchars($cf['course_name']) . '" ' . $selected . '>' . htmlspecialchars($cf['course_name']) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 d-flex gap-2">
+                                        <button type="submit" name="apply_assignment_filters" class="btn btn-primary w-100 fw-semibold shadow-sm"><i class="fa-solid fa-filter me-1"></i> Filter</button>
+                                        <?php if (!empty($filter_teacher) || !empty($filter_course)): ?>
+                                            <button type="submit" name="reset_assignment_filters" class="btn btn-outline-secondary w-100 fw-semibold" title="Reset Filters"><i class="fa-solid fa-rotate-right me-1"></i> Reset</button>
+                                        <?php endif; ?>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- DATA TABLE -->
                             <div class="table-responsive">
-                                <table class="table table-striped table-hover align-middle">
-                                    <thead>
+                                <table class="table table-hover align-middle border">
+                                    <thead class="table-light text-uppercase fs-7">
                                         <tr>
-                                            <th>#</th>
-                                            <th>Teacher Name</th>
-                                            <th>Assigned Subject</th>
-                                            <th>Course / Details</th>
-                                            <th>Actions</th>
+                                            <th class="py-3 ps-3">#</th>
+                                            <th class="py-3">Teacher Name</th>
+                                            <th class="py-3">Assigned Subject</th>
+                                            <th class="py-3">Course / Academic Details</th>
+                                            <th class="py-3 text-end pe-3">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php
-                                        $assigned_res = mysqli_query($conn, "SELECT * FROM subjected_teacher");
+                                        $assigned_query = "SELECT * FROM subjected_teacher $where_clause ORDER BY id DESC";
+                                        $assigned_res = mysqli_query($conn, $assigned_query);
+                                        
                                         if (mysqli_num_rows($assigned_res) > 0) {
                                             $counter = 1;
                                             while ($row = mysqli_fetch_assoc($assigned_res)) {
                                                 echo '<tr>';
-                                                echo '<td>' . $counter++ . '</td>';
-                                                echo '<td>' . htmlspecialchars($row['teacher_name']) . '</td>';
-                                                echo '<td><span class="badge bg-secondary">' . htmlspecialchars($row['subject_name']) . '</span></td>';
-                                                echo '<td>' . htmlspecialchars($row['course_name']) . ' (Yr: ' . $row['year'] . ', Sem: ' . $row['semester'] . ')</td>';
-                                                echo '<td>
-                                                        <a href="?delete=' . $row['id'] . '" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure you want to delete this assignment?\');">Delete</a>
+                                                echo '<td class="ps-3 text-muted fw-semibold">' . $counter++ . '</td>';
+                                                echo '<td class="fw-semibold text-dark">' . htmlspecialchars($row['teacher_name']) . '</td>';
+                                                echo '<td><span class="badge bg-secondary px-2 py-1">' . htmlspecialchars($row['subject_name']) . '</span></td>';
+                                                echo '<td><span class="text-secondary">' . htmlspecialchars($row['course_name']) . '</span> <span class="badge bg-light text-dark border ms-1">Yr: ' . $row['year'] . ' | Sem: ' . $row['semester'] . '</span></td>';
+                                                echo '<td class="text-end pe-3">
+                                                        <a href="?delete=' . $row['id'] . '" class="btn btn-sm btn-outline-danger px-2 py-1" onclick="return confirm(\'Are you sure you want to delete this assignment mapping?\');" title="Delete Assignment"><i class="fa-solid fa-trash"></i></a>
                                                       </td>';
                                                 echo '</tr>';
                                             }
                                         } else {
-                                            echo '<tr><td colspan="5" class="text-center text-muted">No assignments found.</td></tr>';
+                                            echo '<tr><td colspan="5" class="text-center text-muted py-5"><div class="py-3"><i class="fa-solid fa-folder-open fs-2 text-black-50 mb-2"></i><p class="mb-0">No assignment records found matching your filters.</p></div></td></tr>';
                                         }
                                         ?>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
-                    </div>
+                    </div> 
                 </div>
             </div>
         </main>
 
-        <!-- Modal for All Teachers with Designations and Assigned Subjects -->
-        <div class="modal fade" id="allTeachersModal" tabindex="-1" aria-labelledby="allTeachersModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header bg-dark text-white">
-                        <h5 class="modal-title" id="allTeachersModalLabel">All Faculty Teachers & Assigned Subjects</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped align-middle">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Teacher Name</th>
-                                        <th>Designation</th>
-                                        <th>Faculty</th>
-                                        <th>Assigned Subject(s)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php
-                                    $all_teachers_query = "SELECT t.*, GROUP_CONCAT(st.subject_name SEPARATOR ', ') as assigned_subjects 
-                                                           FROM teachers t 
-                                                           LEFT JOIN subjected_teacher st ON t.id = st.teacher_id 
-                                                           GROUP BY t.id";
-                                    $teachers_list_res = mysqli_query($conn, $all_teachers_query);
-                                    
-                                    if (mysqli_num_rows($teachers_list_res) > 0) {
-                                        $t_counter = 1;
-                                        while ($t_row = mysqli_fetch_assoc($teachers_list_res)) {
-                                            echo '<tr>';
-                                            echo '<td>' . $t_counter++ . '</td>';
-                                            echo '<td><strong>' . htmlspecialchars($t_row['name']) . '</strong></td>';
-                                            echo '<td><span class="badge bg-info text-dark">' . htmlspecialchars($t_row['designation']) . '</span></td>';
-                                            echo '<td>' . htmlspecialchars($t_row['faculty']) . '</td>';
-                                            
-                                            $subjects = $t_row['assigned_subjects'];
-                                            if (!empty($subjects)) {
-                                                echo '<td><span class="badge bg-success">' . htmlspecialchars($subjects) . '</span></td>';
-                                            } else {
-                                                echo '<td><span class="badge bg-warning text-dark">No Subject Assigned</span></td>';
-                                            }
-                                            echo '</tr>';
-                                        }
-                                    } else {
-                                        echo '<tr><td colspan="5" class="text-center text-muted">No teachers found in the database.</td></tr>';
-                                    }
-                                    ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <!-- Bootstrap JS Bundle -->
         <script
             src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
             crossorigin="anonymous"
         ></script>
     </body>

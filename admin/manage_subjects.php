@@ -16,7 +16,64 @@ if (isset($_SESSION['flash_msg'])) {
     unset($_SESSION['flash_msg']);
 }
 
-// 2. Handle CSV Sample Download
+// --- FILTER HANDLING ---
+if (isset($_POST['reset_filters'])) {
+    unset($_SESSION['sub_filter_course'], $_SESSION['sub_filter_sem']);
+    $filter_course = "";
+    $filter_sem = "";
+    header("Location: manage_subjects.php");
+    exit;
+} else {
+    if (isset($_POST['apply_filters'])) {
+        $filter_course = $_POST['sub_filter_course'];
+        $filter_sem = $_POST['sub_filter_sem'];
+        $_SESSION['sub_filter_course'] = $filter_course;
+        $_SESSION['sub_filter_sem'] = $filter_sem;
+        header("Location: manage_subjects.php");
+        exit;
+    } else {
+        $filter_course = $_SESSION['sub_filter_course'] ?? '';
+        $filter_sem = $_SESSION['sub_filter_sem'] ?? '';
+    }
+}
+
+// Build common WHERE clause for filters
+$where_sql = "WHERE 1=1";
+if (!empty($filter_course)) {
+    $where_sql .= " AND course_name = '" . $conn->real_escape_string($filter_course) . "'";
+}
+if (!empty($filter_sem)) {
+    $where_sql .= " AND semester = " . intval($filter_sem);
+}
+
+// 2. Handle Filtered CSV Export
+if (isset($_GET['export_csv'])) {
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="filtered_subjects_export.csv"');
+    $output = fopen("php://output", "w");
+    
+    // Add header row
+    fputcsv($output, ['course_name', 'year', 'semester', 'subject_name', 'subject_code', 'faculty_name']);
+    
+    $export_query = "SELECT course_name, Year, semester, subject_name, subject_code, faculty_name FROM subjects $where_sql ORDER BY course_id DESC";
+    $export_res = $conn->query($export_query);
+    if ($export_res) {
+        while ($row = $export_res->fetch_assoc()) {
+            fputcsv($output, [
+                $row['course_name'] ?? '', 
+                $row['Year'] ?? '', 
+                $row['semester'] ?? '', 
+                $row['subject_name'] ?? '', 
+                $row['subject_code'] ?? '', 
+                $row['faculty_name'] ?? ''
+            ]);
+        }
+    }
+    fclose($output);
+    exit;
+}
+
+// 3. Handle Sample CSV Download
 if (isset($_GET['download_sample'])) {
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="sample_subjects.csv"');
@@ -28,7 +85,7 @@ if (isset($_GET['download_sample'])) {
     exit;
 }
 
-// 3. Process Single Subject Manual Add
+// 4. Process Single Subject Manual Add
 if (isset($_POST['add_subject'])) {
     $subject_name = trim($_POST['subject_name']);
     $course_name  = trim($_POST['course_name']);
@@ -62,7 +119,7 @@ if (isset($_POST['add_subject'])) {
     }
 }
 
-// 4. Process Bulk CSV Import with Duplicate Check
+// 5. Process Bulk CSV Import with Duplicate Check
 elseif (isset($_POST['import_csv'])) {
     if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
         $handle = fopen($_FILES['csv_file']['tmp_name'], "r");
@@ -123,7 +180,7 @@ elseif (isset($_POST['import_csv'])) {
     }
 }
 
-// 5. Delete Subject Handler (check for POST to avoid conflict)
+// 6. Delete Subject Handler
 if (isset($_GET['delete_id']) && $_SERVER['REQUEST_METHOD'] !== 'POST') {
     $did = intval($_GET['delete_id']);
     if ($conn->query("DELETE FROM subjects WHERE course_id = $did")) {
@@ -135,7 +192,7 @@ if (isset($_GET['delete_id']) && $_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-// 6. Fetch data for dropdowns
+// 7. Fetch data for dropdowns
 $courses_res = $conn->query("
     SELECT cl.course_name, f.faculty_name AS faculty_short_name 
     FROM courses_list cl 
@@ -143,6 +200,27 @@ $courses_res = $conn->query("
     GROUP BY cl.course_name, f.faculty_name
     ORDER BY f.faculty_name ASC, cl.course_name ASC
 ");
+
+// Fetch unique semesters for filter dropdown
+$sem_list_res = $conn->query("SELECT DISTINCT semester FROM subjects WHERE semester IS NOT NULL ORDER BY semester ASC");
+$available_semesters = [];
+if ($sem_list_res) {
+    while ($s_row = $sem_list_res->fetch_assoc()) {
+        $available_semesters[] = $s_row['semester'];
+    }
+}
+
+// 8. Pagination Setup
+$limit = 10; // Records per page
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) $page = 1;
+$offset = ($page - 1) * $limit;
+
+// Count total matching records for pagination
+$count_query = "SELECT COUNT(*) AS total FROM subjects $where_sql";
+$count_res = $conn->query($count_query);
+$total_records = $count_res ? $count_res->fetch_assoc()['total'] : 0;
+$total_pages = ceil($total_records / $limit);
 ?>
 <!doctype html>
 <html lang="en">
@@ -152,7 +230,10 @@ $courses_res = $conn->query("
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>body { background-color: #f4f6f9; font-family: 'Segoe UI', system-ui, sans-serif; }</style>
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .filter-box { background-color: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 20px; border: 1px solid #e9ecef; }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-dark bg-dark shadow-sm py-3">
@@ -234,25 +315,98 @@ $courses_res = $conn->query("
 
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm p-4 rounded-4 bg-white">
-                    <h5 class="fw-bold mb-3">Subjects List</h5>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">Subjects List</h5>
+                        <a href="manage_subjects.php?export_csv=1" class="btn btn-sm btn-success rounded-pill fw-semibold px-3">
+                            <i class="fa-solid fa-file-excel me-1"></i> Export Filtered CSV
+                        </a>
+                    </div>
+
+                    <!-- FILTER PANEL -->
+                    <div class="filter-box">
+                        <form method="POST" action="manage_subjects.php" class="row g-2 align-items-end">
+                            <div class="col-md-5">
+                                <label class="form-label small fw-semibold text-secondary mb-1">Filter by Course:</label>
+                                <select class="form-select form-select-sm" name="sub_filter_course">
+                                    <option value="">-- All Courses --</option>
+                                    <?php 
+                                    if ($courses_res && $courses_res->num_rows > 0) {
+                                        mysqli_data_seek($courses_res, 0);
+                                        while ($c_row = $courses_res->fetch_assoc()) {
+                                            $selected = ($filter_course == $c_row['course_name']) ? 'selected' : '';
+                                            echo '<option value="' . htmlspecialchars($c_row['course_name']) . '" ' . $selected . '>' . htmlspecialchars($c_row['course_name']) . '</option>';
+                                        }
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold text-secondary mb-1">Filter by Semester:</label>
+                                <select class="form-select form-select-sm" name="sub_filter_sem">
+                                    <option value="">-- All Semesters --</option>
+                                    <?php foreach ($available_semesters as $sem_val): ?>
+                                        <option value="<?= htmlspecialchars($sem_val) ?>" <?= ($filter_sem == $sem_val) ? 'selected' : '' ?>>
+                                            Semester <?= htmlspecialchars($sem_val) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex gap-1">
+                                <button type="submit" name="apply_filters" class="btn btn-sm btn-primary w-100 fw-semibold"><i class="fa-solid fa-filter me-1"></i>Filter</button>
+                                <?php if (!empty($filter_course) || !empty($filter_sem)): ?>
+                                    <button type="submit" name="reset_filters" class="btn btn-sm btn-outline-secondary w-100 fw-semibold" title="Reset Filters">Reset</button>
+                                <?php endif; ?>
+                            </div>
+                        </form>
+                    </div>
+
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light"><tr><th>#</th><th>Subject Name</th><th>Course</th><th>Semester</th><th class="text-end">Action</th></tr></thead>
                             <tbody>
                                 <?php 
-                                $res = $conn->query("SELECT * FROM subjects ORDER BY course_id DESC"); $i=1;
-                                while($row = $res->fetch_assoc()): ?>
-                                <tr>
-                                    <td><?= $i++ ?></td>
-                                    <td class="fw-semibold"><?= htmlspecialchars($row['subject_name']) ?></td>
-                                    <td><?= htmlspecialchars($row['course_name'] ?? 'N/A') ?></td>
-                                    <td><?= htmlspecialchars($row['semester'] ?? 'N/A') ?></td>
-                                    <td class="text-end"><a href="manage_subjects.php?delete_id=<?= $row['course_id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete subject?');"><i class="fa-solid fa-trash"></i></a></td>
-                                </tr>
-                                <?php endwhile; ?>
+                                $query = "SELECT * FROM subjects $where_sql ORDER BY course_id DESC LIMIT $limit OFFSET $offset";
+                                $res = $conn->query($query); 
+                                $i = $offset + 1;
+                                
+                                if ($res && $res->num_rows > 0) {
+                                    while($row = $res->fetch_assoc()): ?>
+                                    <tr>
+                                        <td><?= $i++ ?></td>
+                                        <td class="fw-semibold"><?= htmlspecialchars($row['subject_name']) ?></td>
+                                        <td><?= htmlspecialchars($row['course_name'] ?? 'N/A') ?></td>
+                                        <td><?= htmlspecialchars($row['semester'] ?? 'N/A') ?></td>
+                                        <td class="text-end"><a href="manage_subjects.php?delete_id=<?= $row['course_id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete subject?');"><i class="fa-solid fa-trash"></i></a></td>
+                                    </tr>
+                                    <?php endwhile; 
+                                } else {
+                                    echo '<tr><td colspan="5" class="text-center text-muted py-4">No subjects found matching the selected filters.</td></tr>';
+                                }
+                                ?>
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- PAGINATION CONTROLS -->
+                    <?php if ($total_pages > 1): ?>
+                        <nav aria-label="Page navigation" class="mt-4">
+                            <ul class="pagination justify-content-center mb-0">
+                                <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                                    <a class="page-link" href="?page=<?= $page - 1 ?>" tabindex="-1">Previous</a>
+                                </li>
+                                <?php for ($p = 1; $p <= $total_pages; $p++): ?>
+                                    <li class="page-item <?= ($page == $p) ? 'active' : '' ?>">
+                                        <a class="page-link" href="?page=<?= $p ?>"><?= $p ?></a>
+                                    </li>
+                                <?php endfor; ?>
+                                <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
+                                    <a class="page-link" href="?page=<?= $page + 1 ?>">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    <?php endif; ?>
+
                 </div>
             </div> 
         </div>
