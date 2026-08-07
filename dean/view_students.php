@@ -79,7 +79,7 @@ $total_rows = mysqli_fetch_assoc($count_result)['total'];
 $total_pages = ceil($total_rows / $limit);
 
 // 2. Fetch limited results
-$sql = "SELECT * FROM students $where_clause ORDER BY name ASC LIMIT $offset, $limit";
+$sql = "SELECT * FROM students  ORDER BY name ASC LIMIT $offset, $limit";
 $result = mysqli_query($conn, $sql);
 
 // 3. Fetch available options for filters (Dynamic based on logged-in faculty)

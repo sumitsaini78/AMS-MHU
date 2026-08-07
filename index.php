@@ -1,19 +1,21 @@
 <?php include "db_connect.php";
+
 // Dean login
 if (isset($_POST['dean-login'])) {
-   
     $dean_id = $_POST['dean_id'];
     $number = $_POST['number'];
     $query = "SELECT * FROM deans WHERE id = '$dean_id' AND number = '$number'";
 
-
     $result = mysqli_query($conn, $query);
 
     if (mysqli_num_rows($result) == 1) {  
+        // Fetch the row to get the Dean's name
+        $row = mysqli_fetch_assoc($result);
+
         // Successful login
         session_start(); 
         $_SESSION['dean_id'] = $dean_id;
-        $_SESSION['dean_name'] = $dean_name;
+        $_SESSION['dean_name'] = $row['Dean_name']; // Fetched from the database
         header("Location: dean/index.php" );
         exit();
     } else {
@@ -21,20 +23,23 @@ if (isset($_POST['dean-login'])) {
         echo "<script>alert('Invalid Dean ID or Password');</script>";
     } 
 }
+
 // admin login
 if (isset($_POST['admin-login'])) {
-   
     $admin_id = $_POST['admin_id'];
     $number = $_POST['number'];
     $query = "SELECT * FROM admin WHERE id = '$admin_id' AND number = '$number'";
 
-
     $result = mysqli_query($conn, $query);
-
+    
     if (mysqli_num_rows($result) == 1) {
+        // Fetch the row to get the admin's details
+        $row = mysqli_fetch_assoc($result);
+
         // Successful login
         session_start();
         $_SESSION['admin_id'] = $admin_id;
+        $_SESSION['admin_name'] = $row['name']; // Fetched from the 'name' column in the admin table
         header("Location: admin/index.php");
         exit();
     } else {
@@ -42,9 +47,9 @@ if (isset($_POST['admin-login'])) {
         echo "<script>alert('Invalid Admin ID or Password');</script>";
     }
 }
+
 // teacher login
 if (isset($_POST['teacher-login'])) {
-
     $teacher_id = $_POST['teacher_id'];
     $number = $_POST['number'];
 
@@ -55,15 +60,14 @@ if (isset($_POST['teacher-login'])) {
         // Successful login
         session_start();
         $_SESSION['teacher_id'] = $teacher_id;
+        // If you need the teacher's name in the session, fetch it here just like the admin/dean blocks!
         header("Location: teacher/index.php");
         exit();
     } else {
         // Invalid credentials
         echo "<script>alert('Invalid Teacher ID or Password');</script>";
     }
-
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">

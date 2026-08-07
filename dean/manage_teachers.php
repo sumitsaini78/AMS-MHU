@@ -1,5 +1,5 @@
 <?php 
-include "./db_connect.php";
+include "../db_connect.php";
 session_start();
 
 // Handle deletion with flash message
@@ -34,39 +34,13 @@ if (isset($_POST['apply_assignment_filters'])) {
 $filter_teacher = $_SESSION['assign_filter_teacher'] ?? '';
 $filter_course = $_SESSION['assign_filter_course'] ?? '';
 
-// Build WHERE clause securely
+// Build WHERE clause securely for teachers
 $where_clause = "WHERE 1=1";
 if (!empty($filter_teacher)) {
-    $where_clause .= " AND teacher_id = '" . intval($filter_teacher) . "'";
+    $where_clause .= " AND t.id = '" . intval($filter_teacher) . "'";
 }
 if (!empty($filter_course)) {
-    $where_clause .= " AND course_name = '" . mysqli_real_escape_string($conn, $filter_course) . "'";
-}
-
-// --- CSV EXPORT: ASSIGNMENTS / RESULTS ---
-if (isset($_GET['export']) && $_GET['export'] == 'assigned') {
-    if (ob_get_level()) ob_end_clean();
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename=teacher_subject_assignments_' . date('Y-m-d') . '.csv');
-    $output = fopen('php://output', 'w');
-    fputcsv($output, array('#', 'Teacher Name', 'Assigned Subject', 'Course Name', 'Year', 'Semester', 'Subject Code'));
-    
-    $assigned_query = "SELECT * FROM subjected_teacher $where_clause ORDER BY id DESC";
-    $assigned_res = mysqli_query($conn, $assigned_query);
-    $counter = 1;
-    while ($row = mysqli_fetch_assoc($assigned_res)) {
-        fputcsv($output, array(
-            $counter++,
-            $row['teacher_name'],
-            $row['subject_name'],
-            $row['course_name'],
-            $row['year'],
-            $row['semester'],
-            $row['subject_code']
-        ));
-    }
-    fclose($output);
-    exit();
+    $where_clause .= " AND st.course_name = '" . mysqli_real_escape_string($conn, $filter_course) . "'";
 }
 
 // --- CSV EXPORT: ALL TEACHERS WITH SUBJECTS ---
@@ -150,9 +124,6 @@ if (isset($_GET['export']) && $_GET['export'] == 'teachers') {
                                 <p class="text-muted small mb-0 text-white-50">Manage academic assignments and export department reports.</p>
                             </div>
                             <div class="d-flex gap-2 flex-wrap">
-                                <a href="?export=assigned" class="btn btn-sm btn-success fw-semibold px-3 py-2 shadow-sm">
-                                    <i class="fa-solid fa-file-excel me-1"></i> Export Assignments CSV
-                                </a>
                                 <a href="?export=teachers" class="btn btn-sm btn-info text-dark fw-semibold px-3 py-2 shadow-sm">
                                     <i class="fa-solid fa-file-excel me-1"></i> Export All Teachers CSV
                                 </a>
@@ -205,31 +176,46 @@ if (isset($_GET['export']) && $_GET['export'] == 'teachers') {
                                         <tr>
                                             <th class="py-3 ps-3">#</th>
                                             <th class="py-3">Teacher Name</th>
-                                            <th class="py-3">Assigned Subject</th>
-                                            <th class="py-3">Course / Academic Details</th>
+                                            <th class="py-3">Designation / Faculty</th>
+                                            <th class="py-3">Assigned Subject & Details</th>
                                             <th class="py-3 text-end pe-3">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php
-                                        $assigned_query = "SELECT * FROM subjected_teacher $where_clause ORDER BY id DESC";
-                                        $assigned_res = mysqli_query($conn, $assigned_query);
+                                        // Query to get all teachers and left join their assigned subjects
+                                        $teachers_query = "SELECT t.*, st.id as assignment_id, st.subject_name, st.course_name, st.year, st.semester 
+                                                           FROM teachers t 
+                                                           LEFT JOIN subjected_teacher st ON t.id = st.teacher_id 
+                                                           $where_clause 
+                                                           ORDER BY t.name ASC";
+                                        $teachers_res = mysqli_query($conn, $teachers_query);
                                         
-                                        if (mysqli_num_rows($assigned_res) > 0) {
+                                        if (mysqli_num_rows($teachers_res) > 0) {
                                             $counter = 1;
-                                            while ($row = mysqli_fetch_assoc($assigned_res)) {
+                                            while ($row = mysqli_fetch_assoc($teachers_res)) {
                                                 echo '<tr>';
                                                 echo '<td class="ps-3 text-muted fw-semibold">' . $counter++ . '</td>';
-                                                echo '<td class="fw-semibold text-dark">' . htmlspecialchars($row['teacher_name']) . '</td>';
-                                                echo '<td><span class="badge bg-secondary px-2 py-1">' . htmlspecialchars($row['subject_name']) . '</span></td>';
-                                                echo '<td><span class="text-secondary">' . htmlspecialchars($row['course_name']) . '</span> <span class="badge bg-light text-dark border ms-1">Yr: ' . $row['year'] . ' | Sem: ' . $row['semester'] . '</span></td>';
-                                                echo '<td class="text-end pe-3">
-                                                        <a href="?delete=' . $row['id'] . '" class="btn btn-sm btn-outline-danger px-2 py-1" onclick="return confirm(\'Are you sure you want to delete this assignment mapping?\');" title="Delete Assignment"><i class="fa-solid fa-trash"></i></a>
-                                                      </td>';
+                                                echo '<td class="fw-semibold text-dark">' . htmlspecialchars($row['name']) . '</td>';
+                                                echo '<td><span class="text-secondary">' . htmlspecialchars($row['designation'] ?? '-') . '</span><br><small class="text-muted">' . htmlspecialchars($row['faculty'] ?? '') . '</small></td>';
+                                                
+                                                if (!empty($row['subject_name'])) {
+                                                    echo '<td>
+                                                            <span class="badge bg-secondary px-2 py-1">' . htmlspecialchars($row['subject_name']) . '</span><br>
+                                                            <span class="text-secondary small">' . htmlspecialchars($row['course_name']) . '</span> 
+                                                            <span class="badge bg-light text-dark border ms-1">Yr: ' . $row['year'] . ' | Sem: ' . $row['semester'] . '</span>
+                                                          </td>';
+                                                    echo '<td class="text-end pe-3">
+                                                            <a href="?delete=' . $row['assignment_id'] . '" class="btn btn-sm btn-outline-danger px-2 py-1" onclick="return confirm(\'Are you sure you want to delete this assignment mapping?\');" title="Delete Assignment"><i class="fa-solid fa-trash"></i></a>
+                                                          </td>';
+                                                } else {
+                                                    echo '<td><span class="badge bg-warning text-dark">No Subject Assigned</span></td>';
+                                                    echo '<td class="text-end pe-3"><span class="text-muted small">N/A</span></td>';
+                                                }
                                                 echo '</tr>';
                                             }
                                         } else {
-                                            echo '<tr><td colspan="5" class="text-center text-muted py-5"><div class="py-3"><i class="fa-solid fa-folder-open fs-2 text-black-50 mb-2"></i><p class="mb-0">No assignment records found matching your filters.</p></div></td></tr>';
+                                            echo '<tr><td colspan="5" class="text-center text-muted py-5"><div class="py-3"><i class="fa-solid fa-folder-open fs-2 text-black-50 mb-2"></i><p class="mb-0">No teachers found matching your filters.</p></div></td></tr>';
                                         }
                                         ?>
                                     </tbody>
