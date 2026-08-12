@@ -2,6 +2,23 @@
 include "../db_connect.php";
 session_start();
 if (!isset($_SESSION['admin_id'])) { header("Location: ../index.php"); exit; }
+
+// --- FILTER HANDLING ---
+if (isset($_POST['reset_filter'])) {
+    unset($_SESSION['teacher_filter_faculty']);
+    header("Location: manage_teachers.php");
+    exit;
+}
+if (isset($_POST['apply_filter'])) {
+    $_SESSION['teacher_filter_faculty'] = trim($_POST['faculty_filter'] ?? '');
+    header("Location: manage_teachers.php");
+    exit;
+}
+if (isset($_GET['faculty'])) {
+    $_SESSION['teacher_filter_faculty'] = trim($_GET['faculty']);
+}
+$filter_faculty = $_SESSION['teacher_filter_faculty'] ?? '';
+
 $msg = ""; $error = "";
 
 // --- HANDLER: DOWNLOAD SAMPLE CSV ---
@@ -204,14 +221,64 @@ if (isset($_GET['delete_id'])) {
 
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm p-4 rounded-4 bg-white">
-                    <h5 class="fw-bold mb-3">Teachers List</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <h5 class="fw-bold mb-0">
+                            Teachers List 
+                            <?php if(!empty($filter_faculty)): ?>
+                                <span class="badge bg-primary-subtle text-primary fs-7 rounded-pill ms-2"><?= htmlspecialchars($filter_faculty) ?></span>
+                            <?php endif; ?>
+                        </h5>
+                    </div>
+
+                    <!-- Filter Box -->
+                    <form method="POST" class="row g-2 mb-4 align-items-center bg-light p-3 rounded-4 border">
+                        <div class="col-md-7">
+                            <label class="form-label small fw-bold text-secondary mb-1">Filter by Faculty</label>
+                            <select name="faculty_filter" class="form-select form-select-sm rounded-3">
+                                <option value="">-- All Faculties --</option>
+                                <?php 
+                                $fac_res = $conn->query("SELECT DISTINCT faculty_full_name FROM faculty ORDER BY faculty_full_name ASC"); 
+                                while($f_row = $fac_res->fetch_assoc()): 
+                                    $sel = ($filter_faculty === $f_row['faculty_full_name']) ? 'selected' : '';
+                                ?>
+                                    <option value="<?= htmlspecialchars($f_row['faculty_full_name']) ?>" <?= $sel ?>><?= htmlspecialchars($f_row['faculty_full_name']) ?></option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-5 d-flex gap-2 align-self-end">
+                            <button type="submit" name="apply_filter" class="btn btn-sm btn-primary rounded-pill px-3 fw-semibold w-100">
+                                <i class="fa-solid fa-filter me-1"></i> Filter
+                            </button>
+                            <?php if (!empty($filter_faculty)): ?>
+                                <button type="submit" name="reset_filter" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold w-100">
+                                    <i class="fa-solid fa-rotate-right me-1"></i> Reset
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    </form>
+
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead class="table-light"><tr><th>#</th><th>Teacher Name</th><th>Faculty</th><th>Contact</th><th class="text-end">Action</th></tr></thead>
                             <tbody>
-                                <?php $res = $conn->query("SELECT * FROM teachers ORDER BY id DESC"); $i=1;
-                                while($row = $res->fetch_assoc()): 
-                                    $t_name = $row['teacher_name'] ?? ($row['name'] ?? 'Unknown');
+                                <?php 
+                                $where_sql = "WHERE 1=1";
+                                if (!empty($filter_faculty)) {
+                                    $safe_fac = mysqli_real_escape_string($conn, $filter_faculty);
+                                    // Handle cases where either column might be used
+                                    $check_fcol = mysqli_query($conn, "SHOW COLUMNS FROM teachers LIKE 'faculty_name'");
+                                    if(mysqli_num_rows($check_fcol) > 0) {
+                                        $where_sql .= " AND (faculty = '$safe_fac' OR faculty_name = '$safe_fac')";
+                                    } else {
+                                        $where_sql .= " AND faculty = '$safe_fac'";
+                                    }
+                                }
+                                $res = $conn->query("SELECT * FROM teachers $where_sql ORDER BY id DESC"); 
+                                
+                                if($res && $res->num_rows > 0):
+                                    $i=1;
+                                    while($row = $res->fetch_assoc()): 
+                                        $t_name = $row['teacher_name'] ?? ($row['name'] ?? 'Unknown');
                                 ?>
                                 <tr>
                                     <td><?= $i++ ?></td>
@@ -221,6 +288,14 @@ if (isset($_GET['delete_id'])) {
                                     <td class="text-end"><a href="manage_teachers.php?delete_id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete teacher?');"><i class="fa-solid fa-trash"></i></a></td>
                                 </tr>
                                 <?php endwhile; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            <i class="fa-solid fa-folder-open fs-3 text-secondary mb-2 d-block"></i>
+                                            No teachers found <?= !empty($filter_faculty) ? 'for this faculty' : '' ?>.
+                                        </td>
+                                    </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>

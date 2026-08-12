@@ -252,7 +252,7 @@ $pending_corrections = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) a
                                 <i class="fa-solid fa-bell"></i>
                             </div>
                         </div>
-                        <h5 class="fw-bold text-dark fs-5 mb-2">Attendance Logs</h5>
+                        <h5 class="fw-bold text-dark fs-5 mb-2">Attendance Corrections</h5>
                         <p class="text-muted small mb-4">Review attendance correction requests and pending logs.</p>
                     </div>
                     <a href="manage_corrections.php" class="btn btn-sm btn-outline-dark w-100 fw-semibold py-2 rounded-pill">Open Module <i class="fa-solid fa-arrow-right ms-1"></i></a>

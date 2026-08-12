@@ -3,13 +3,13 @@ include "../db_connect.php";
 session_start();
 
 // 1. Secure the page
-if (!isset($_SESSION['dean_id']) || !isset($_SESSION['dean_name'])) {
+if (!isset($_SESSION['admin_id']) || !isset($_SESSION['admin_name'])) {
     header("Location: ../index.php");
     exit;
 } 
 
-$id = $_SESSION['dean_id'];
-$teacher_name = $_SESSION['dean_name'];
+$id = $_SESSION['admin_id'];
+$teacher_name = $_SESSION['admin_name'];
 
 // Handle Faculty Selection
 if (isset($_POST['faculty_name'])) {
@@ -41,7 +41,146 @@ if (isset($_POST['filter_sem'])) {
 }
 
 // ==========================================
-// 2A. SINGLE ASSIGNMENT PROCESSOR
+// 1B. BULK TAB STATE HANDLING
+// ==========================================
+if (isset($_POST['sample_faculty'])) {
+    $_SESSION['sample_faculty'] = $_POST['sample_faculty'];
+    unset($_SESSION['sample_course']);
+}
+$sample_faculty = $_SESSION['sample_faculty'] ?? '';
+
+if (isset($_POST['sample_course']) && $_POST['sample_course'] !== '') {
+    $_SESSION['sample_course'] = $_POST['sample_course'];
+}
+$sample_course = $_SESSION['sample_course'] ?? '';
+
+// Normalize course matching for inconsistencies between tables
+$clean_course = str_replace(['.', ' '], ['', ''], strtoupper(trim($course_name ?? '')));
+$clean_course = str_replace(['(HONS)', 'HONS', '(H)'], ['H', 'H', 'H'], $clean_course);
+$clean_course = str_replace(['(INTEGRATED)', 'INTEGRATED'], ['INT', 'INT'], $clean_course);
+
+if ($clean_course === 'BCOM') {
+    $student_course_cond = "REPLACE(UPPER(course), '.', '') = 'BCOM'";
+    $subject_course_cond = "REPLACE(UPPER(course_name), '.', '') = 'BCOM'";
+} elseif ($clean_course === 'MCOM') {
+    $student_course_cond = "REPLACE(UPPER(course), '.', '') = 'MCOM'";
+    $subject_course_cond = "REPLACE(UPPER(course_name), '.', '') = 'MCOM'";
+} elseif ($clean_course === 'BCOMH') {
+    $student_course_cond = "REPLACE(UPPER(course), '.', '') LIKE 'BCOM%H%'";
+    $subject_course_cond = "REPLACE(UPPER(course_name), '.', '') LIKE 'BCOM%H%'";
+} elseif ($clean_course === 'MBAINT') {
+    $student_course_cond = "REPLACE(UPPER(course), '.', '') LIKE 'MBA%INT%'";
+    $subject_course_cond = "REPLACE(UPPER(course_name), '.', '') LIKE 'MBA%INT%'";
+} else {
+    $safe_course = mysqli_real_escape_string($conn, $course_name ?? '');
+    $student_course_cond = "TRIM(UPPER(course)) = UPPER('$safe_course')";
+    $subject_course_cond = "TRIM(UPPER(course_name)) = UPPER('$safe_course')";
+}
+
+// ==========================================
+// 2A. SAMPLE CSV GENERATOR
+// ==========================================
+if (isset($_POST['download_sample_csv'])) {
+    if (empty($sample_course)) {
+        echo "<script>alert('Please select a Course first.'); window.location.href='assign_student_subject.php';</script>";
+        exit;
+    }
+    
+    $req_sem = isset($_POST['sample_sem']) ? (int)$_POST['sample_sem'] : 0;
+    $req_year = isset($_POST['sample_year']) ? (int)$_POST['sample_year'] : 1;
+
+    // Normalize course matching for inconsistencies between tables for the bulk export
+    $clean_sample = str_replace(['.', ' '], ['', ''], strtoupper(trim($sample_course ?? '')));
+    $clean_sample = str_replace(['(HONS)', 'HONS', '(H)'], ['H', 'H', 'H'], $clean_sample);
+    $clean_sample = str_replace(['(INTEGRATED)', 'INTEGRATED'], ['INT', 'INT'], $clean_sample);
+
+    if ($clean_sample === 'BCOM') {
+        $sample_course_cond = "REPLACE(UPPER(course), '.', '') = 'BCOM'";
+        $sample_subject_cond = "REPLACE(UPPER(course_name), '.', '') = 'BCOM'";
+    } elseif ($clean_sample === 'MCOM') {
+        $sample_course_cond = "REPLACE(UPPER(course), '.', '') = 'MCOM'";
+        $sample_subject_cond = "REPLACE(UPPER(course_name), '.', '') = 'MCOM'";
+    } elseif ($clean_sample === 'BCOMH') {
+        $sample_course_cond = "REPLACE(UPPER(course), '.', '') LIKE 'BCOM%H%'";
+        $sample_subject_cond = "REPLACE(UPPER(course_name), '.', '') LIKE 'BCOM%H%'";
+    } elseif ($clean_sample === 'MBAINT') {
+        $sample_course_cond = "REPLACE(UPPER(course), '.', '') LIKE 'MBA%INT%'";
+        $sample_subject_cond = "REPLACE(UPPER(course_name), '.', '') LIKE 'MBA%INT%'";
+    } else {
+        $safe_sample = mysqli_real_escape_string($conn, $sample_course ?? '');
+        $sample_course_cond = "TRIM(UPPER(course)) = UPPER('$safe_sample')";
+        $sample_subject_cond = "TRIM(UPPER(course_name)) = UPPER('$safe_sample')";
+    }
+    
+    // Fetch students
+    $students = [];
+    $student_query = "SELECT name, roll_number, enrollment_number FROM `students` WHERE $sample_course_cond";
+    if ($req_sem > 0) {
+        $student_query .= " AND sem = ?";
+    }
+    $student_query .= " ORDER BY name ASC";
+    $stmt_stu = $conn->prepare($student_query);
+    if ($req_sem > 0) {
+        $stmt_stu->bind_param("i", $req_sem);
+    }
+    $stmt_stu->execute();
+    $res_stu = $stmt_stu->get_result();
+    while ($row = $res_stu->fetch_assoc()) {
+        $students[] = $row;
+    }
+    
+    // Fetch subjects
+    $subjects = [];
+    $subject_query = "SELECT DISTINCT subject_name FROM `subjects` WHERE $sample_subject_cond";
+    if ($req_sem > 0) {
+        $subject_query .= " AND semester = ?";
+    }
+    $subject_query .= " ORDER BY subject_name ASC";
+    $stmt_sub = $conn->prepare($subject_query);
+    if ($req_sem > 0) {
+        $stmt_sub->bind_param("i", $req_sem);
+    }
+    $stmt_sub->execute();
+    $res_sub = $stmt_sub->get_result();
+    while ($row = $res_sub->fetch_assoc()) {
+        $subjects[] = $row['subject_name'];
+    }
+    
+    // Generate CSV
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename=sample_bulk_assign_' . preg_replace('/[^a-zA-Z0-9]/', '_', $sample_course) . '_sem' . $req_sem . '.csv');
+    
+    $output = fopen('php://output', 'w');
+    fputcsv($output, ['Roll Number', 'Enrollment Number', 'Subject Name', 'Semester', 'Year']);
+    
+    foreach ($students as $student) {
+        if (!empty($subjects)) {
+            foreach ($subjects as $subject) {
+                fputcsv($output, [
+                    $student['roll_number'],
+                    $student['enrollment_number'],
+                    $subject,
+                    $req_sem,
+                    $req_year
+                ]);
+            }
+        } else {
+            // Output the student even if there are no subjects found
+            fputcsv($output, [
+                $student['roll_number'],
+                $student['enrollment_number'],
+                '',
+                $req_sem,
+                $req_year
+            ]);
+        }
+    }
+    fclose($output);
+    exit;
+}
+
+// ==========================================
+// 2B. SINGLE ASSIGNMENT PROCESSOR
 // ==========================================
 if (isset($_POST['assign_subject'])) {
     $student_id = mysqli_real_escape_string($conn, $_POST['student_id']);
@@ -73,7 +212,7 @@ if (isset($_POST['assign_subject'])) {
             $code_data = mysqli_fetch_assoc($code_result);
             $subject_code = mysqli_real_escape_string($conn, $code_data['subject_code']);
         } else {
-            $sub_fallback = "SELECT subject_code FROM `subjects` WHERE TRIM(subject_name) = '$subject_name' AND course_name = '$course_name' LIMIT 1";
+            $sub_fallback = "SELECT subject_code FROM `subjects` WHERE TRIM(subject_name) = '$subject_name' AND $subject_course_cond LIMIT 1";
             $sub_res = mysqli_query($conn, $sub_fallback);
             if ($sub_res && mysqli_num_rows($sub_res) > 0) {
                 $sub_data = mysqli_fetch_assoc($sub_res);
@@ -81,10 +220,18 @@ if (isset($_POST['assign_subject'])) {
             }
         }
 
+        if (empty($subject_code)) {
+            echo "<script>alert('❌ Wrong Subject: " . addslashes($subject_name) . " was not found for this course.'); window.location.href='assign_student_subject.php';</script>";
+            exit;
+        }
+
         $safe_subject_name = mysqli_real_escape_string($conn, $subject_name);
 
         $check_query = "SELECT id FROM `subjected_student` 
                         WHERE semester = '$s_sem' 
+                        AND year = '$s_year'
+                        AND course = '$s_course'
+                        AND session = '$s_session'
                         AND TRIM(subject_name) = '$safe_subject_name' 
                         AND (
                             ('$s_roll' != '' AND TRIM(roll_number) = '$s_roll') OR 
@@ -181,7 +328,7 @@ if (isset($_POST['bulk_assign_subject'])) {
                     $code_data = mysqli_fetch_assoc($code_result);
                     $subject_code = mysqli_real_escape_string($conn, $code_data['subject_code']);
                 } else {
-                    $sub_fallback = "SELECT subject_code FROM `subjects` WHERE TRIM(subject_name) = '$safe_csv_subject' AND course_name = '$course_name' LIMIT 1";
+                    $sub_fallback = "SELECT subject_code FROM `subjects` WHERE TRIM(subject_name) = '$safe_csv_subject' AND $subject_course_cond LIMIT 1";
                     $sub_res = mysqli_query($conn, $sub_fallback);
                     if ($sub_res && mysqli_num_rows($sub_res) > 0) {
                         $sub_data = mysqli_fetch_assoc($sub_res);
@@ -189,8 +336,18 @@ if (isset($_POST['bulk_assign_subject'])) {
                     }
                 }
 
+                if (empty($subject_code)) {
+                    fclose($handle);
+                    echo "<script>alert('❌ Wrong Subject found in CSV: " . addslashes($csv_subject) . "'); window.location.href='assign_student_subject.php';</script>";
+                    exit;
+                }
+
+                $safe_course_dup = mysqli_real_escape_string($conn, $student['course']);
                 $check_dup = "SELECT id FROM `subjected_student` 
                               WHERE semester = '$final_sem' 
+                              AND year = '$final_year'
+                              AND course = '$safe_course_dup'
+                              AND session = '$student_session'
                               AND TRIM(subject_name) = '$safe_csv_subject'
                               AND (
                                   ('$student_roll' != '' AND TRIM(roll_number) = '$student_roll') OR 
@@ -233,13 +390,16 @@ if (isset($_POST['bulk_assign_subject'])) {
 }
 
 // Fetch Faculty List
-$faculty_list_query = "SELECT DISTINCT faculty_name FROM `courses_list` ORDER BY faculty_name ASC";
+$faculty_list_query = "SELECT DISTINCT faculty_full_name AS faculty_name FROM `faculty` ORDER BY faculty_name ASC";
 $faculty_list_result = mysqli_query($conn, $faculty_list_query);
+
+// Fetch Faculty List specifically for Sample CSV (since we need to re-iterate)
+$sample_faculty_list_result = mysqli_query($conn, $faculty_list_query);
 
 // Fetch Courses for selected Faculty
 $courses_array = [];
 if (!empty($selected_faculty)) {
-    $stmt = $conn->prepare("SELECT course_name FROM `courses_list` WHERE faculty_name = ? ORDER BY course_name ASC");
+    $stmt = $conn->prepare("SELECT course_name FROM `courses_list` WHERE TRIM(faculty_name) = TRIM(?) ORDER BY course_name ASC");
     $stmt->bind_param("s", $selected_faculty);
     $stmt->execute();
     $courses_res = $stmt->get_result();
@@ -248,11 +408,45 @@ if (!empty($selected_faculty)) {
     }
 }
 
-// Fetch Semesters
+// Fetch Courses for selected Sample Faculty
+$sample_courses_array = [];
+if (!empty($sample_faculty)) {
+    $stmt = $conn->prepare("SELECT course_name FROM `courses_list` WHERE TRIM(faculty_name) = TRIM(?) ORDER BY course_name ASC");
+    $stmt->bind_param("s", $sample_faculty);
+    $stmt->execute();
+    $courses_res = $stmt->get_result();
+    while ($row = $courses_res->fetch_assoc()) {
+        $sample_courses_array[] = $row['course_name'];
+    }
+}
+
+// Normalize course matching for inconsistencies between tables
+$clean_course = str_replace(['.', ' '], ['', ''], strtoupper(trim($course_name ?? '')));
+$clean_course = str_replace(['(HONS)', 'HONS', '(H)'], ['H', 'H', 'H'], $clean_course);
+$clean_course = str_replace(['(INTEGRATED)', 'INTEGRATED'], ['INT', 'INT'], $clean_course);
+
+if ($clean_course === 'BCOM') {
+    $student_course_cond = "REPLACE(UPPER(course), '.', '') = 'BCOM'";
+    $subject_course_cond = "REPLACE(UPPER(course_name), '.', '') = 'BCOM'";
+} elseif ($clean_course === 'MCOM') {
+    $student_course_cond = "REPLACE(UPPER(course), '.', '') = 'MCOM'";
+    $subject_course_cond = "REPLACE(UPPER(course_name), '.', '') = 'MCOM'";
+} elseif ($clean_course === 'BCOMH') {
+    $student_course_cond = "REPLACE(UPPER(course), '.', '') LIKE 'BCOM%H%'";
+    $subject_course_cond = "REPLACE(UPPER(course_name), '.', '') LIKE 'BCOM%H%'";
+} elseif ($clean_course === 'MBAINT') {
+    $student_course_cond = "REPLACE(UPPER(course), '.', '') LIKE 'MBA%INT%'";
+    $subject_course_cond = "REPLACE(UPPER(course_name), '.', '') LIKE 'MBA%INT%'";
+} else {
+    $safe_course = mysqli_real_escape_string($conn, $course_name ?? '');
+    $student_course_cond = "TRIM(UPPER(course)) = UPPER('$safe_course')";
+    $subject_course_cond = "TRIM(UPPER(course_name)) = UPPER('$safe_course')";
+}
+
+// Fetch Semesters for Single Assign
 $available_semesters = [];
 if (!empty($course_name)) {
-    $stmt = $conn->prepare("SELECT DISTINCT sem AS semester FROM `students` WHERE course = ? UNION SELECT DISTINCT semester FROM `subjects` WHERE course_name = ? ORDER BY semester ASC");
-    $stmt->bind_param("ss", $course_name, $course_name);
+    $stmt = $conn->prepare("SELECT DISTINCT sem AS semester FROM `students` WHERE $student_course_cond UNION SELECT DISTINCT semester FROM `subjects` WHERE $subject_course_cond ORDER BY semester ASC");
     $stmt->execute();
     $sem_res = $stmt->get_result();
     while ($s_row = $sem_res->fetch_assoc()) {
@@ -262,10 +456,47 @@ if (!empty($course_name)) {
     }
 }
 
+// Fetch Semesters for Sample Export
+$sample_available_semesters = [];
+if (!empty($sample_course)) {
+    // We can reuse the $sample_course_cond built in the download interceptor
+    // But since it exited, we rebuild it for the view rendering
+    $clean_sample = str_replace(['.', ' '], ['', ''], strtoupper(trim($sample_course ?? '')));
+    $clean_sample = str_replace(['(HONS)', 'HONS', '(H)'], ['H', 'H', 'H'], $clean_sample);
+    $clean_sample = str_replace(['(INTEGRATED)', 'INTEGRATED'], ['INT', 'INT'], $clean_sample);
+
+    if ($clean_sample === 'BCOM') {
+        $sample_course_cond_v = "REPLACE(UPPER(course), '.', '') = 'BCOM'";
+        $sample_subject_cond_v = "REPLACE(UPPER(course_name), '.', '') = 'BCOM'";
+    } elseif ($clean_sample === 'MCOM') {
+        $sample_course_cond_v = "REPLACE(UPPER(course), '.', '') = 'MCOM'";
+        $sample_subject_cond_v = "REPLACE(UPPER(course_name), '.', '') = 'MCOM'";
+    } elseif ($clean_sample === 'BCOMH') {
+        $sample_course_cond_v = "REPLACE(UPPER(course), '.', '') LIKE 'BCOM%H%'";
+        $sample_subject_cond_v = "REPLACE(UPPER(course_name), '.', '') LIKE 'BCOM%H%'";
+    } elseif ($clean_sample === 'MBAINT') {
+        $sample_course_cond_v = "REPLACE(UPPER(course), '.', '') LIKE 'MBA%INT%'";
+        $sample_subject_cond_v = "REPLACE(UPPER(course_name), '.', '') LIKE 'MBA%INT%'";
+    } else {
+        $safe_sample = mysqli_real_escape_string($conn, $sample_course ?? '');
+        $sample_course_cond_v = "TRIM(UPPER(course)) = UPPER('$safe_sample')";
+        $sample_subject_cond_v = "TRIM(UPPER(course_name)) = UPPER('$safe_sample')";
+    }
+
+    $stmt = $conn->prepare("SELECT DISTINCT sem AS semester FROM `students` WHERE $sample_course_cond_v UNION SELECT DISTINCT semester FROM `subjects` WHERE $sample_subject_cond_v ORDER BY semester ASC");
+    $stmt->execute();
+    $sem_res = $stmt->get_result();
+    while ($s_row = $sem_res->fetch_assoc()) {
+        if (!empty($s_row['semester'])) {
+            $sample_available_semesters[] = $s_row['semester'];
+        }
+    }
+}
+
 // Fetch Students
 $result = null;
 if (!empty($course_name)) {
-    $student_query = "SELECT * FROM `students` WHERE course = ?";
+    $student_query = "SELECT * FROM `students` WHERE $student_course_cond";
     if (!empty($selected_sem)) {
         $student_query .= " AND sem = ?";
     }
@@ -273,9 +504,7 @@ if (!empty($course_name)) {
     
     $stmt = $conn->prepare($student_query);
     if (!empty($selected_sem)) {
-        $stmt->bind_param("si", $course_name, $selected_sem);
-    } else {
-        $stmt->bind_param("s", $course_name);
+        $stmt->bind_param("s", $selected_sem);
     }
     $stmt->execute();
     $result = $stmt->get_result();
@@ -284,7 +513,7 @@ if (!empty($course_name)) {
 // Fetch Subjects
 $subjects_list = [];
 if (!empty($course_name)) {
-    $subject_query = "SELECT DISTINCT subject_name, semester FROM `subjects` WHERE course_name = ?";
+    $subject_query = "SELECT DISTINCT subject_name, semester FROM `subjects` WHERE $subject_course_cond";
     if (!empty($selected_sem)) {
         $subject_query .= " AND semester = ?";
     }
@@ -292,9 +521,7 @@ if (!empty($course_name)) {
     
     $stmt = $conn->prepare($subject_query);
     if (!empty($selected_sem)) {
-        $stmt->bind_param("si", $course_name, $selected_sem);
-    } else {
-        $stmt->bind_param("s", $course_name);
+        $stmt->bind_param("s", $selected_sem);
     }
     $stmt->execute();
     $subject_result = $stmt->get_result();
@@ -498,10 +725,78 @@ if (!empty($course_name)) {
 
                         <!-- TAB 2: Bulk Assignment -->
                         <div class="tab-pane fade" id="bulk-pane" role="tabpanel" aria-labelledby="bulk-tab" tabindex="0">
+                            <!-- Generate Sample CSV Box -->
+                            <div class="card border-primary mb-4 shadow-sm">
+                                <div class="card-header bg-primary text-white fw-bold">
+                                    <i class="fa-solid fa-file-csv me-2"></i>Generate Sample Data (Cartesian Product)
+                                </div>
+                                <div class="card-body bg-light">
+                                    <p class="small text-muted mb-3">Download a ready-to-upload CSV file mapped to your specific course structure. Just delete any extra rows before uploading!</p>
+                                    
+                                    <form method="POST" action="assign_student_subject.php" class="mb-3 border-bottom pb-3">
+                                        <div class="row g-2">
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold">1. Select Faculty:</label>
+                                                <select class="form-select form-select-sm" name="sample_faculty" onchange="this.form.submit()" required>
+                                                    <option value="" disabled selected>-- Choose Faculty --</option>
+                                                    <?php if ($sample_faculty_list_result): ?>
+                                                        <?php while ($f_row = mysqli_fetch_assoc($sample_faculty_list_result)): ?>
+                                                            <option value="<?= htmlspecialchars($f_row['faculty_name']) ?>" <?= ($sample_faculty == $f_row['faculty_name']) ? 'selected' : '' ?>>
+                                                                <?= htmlspecialchars($f_row['faculty_name']) ?>
+                                                            </option>
+                                                        <?php endwhile; ?>
+                                                    <?php endif; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold">2. Select Course:</label>
+                                                <select class="form-select form-select-sm" name="sample_course" onchange="this.form.submit()" <?= empty($sample_faculty) ? 'disabled' : '' ?> required>
+                                                    <option value="" disabled selected>-- Choose Course --</option>
+                                                    <?php foreach ($sample_courses_array as $c_name): ?>
+                                                        <option value="<?= htmlspecialchars($c_name) ?>" <?= ($sample_course == $c_name) ? 'selected' : '' ?>>
+                                                            <?= htmlspecialchars($c_name) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </form>
+
+                                    <form method="POST" action="assign_student_subject.php">
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold">3. Semester:</label>
+                                                <select class="form-select form-select-sm" name="sample_sem" <?= empty($sample_course) ? 'disabled' : '' ?> required>
+                                                    <option value="" disabled selected>-- Select Semester --</option>
+                                                    <?php foreach ($sample_available_semesters as $sem_val): ?>
+                                                        <option value="<?= $sem_val ?>">Semester <?= $sem_val ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold">4. Academic Year:</label>
+                                                <select class="form-select form-select-sm" name="sample_year" <?= empty($sample_course) ? 'disabled' : '' ?> required>
+                                                    <option value="1">Year 1</option>
+                                                    <option value="2">Year 2</option>
+                                                    <option value="3">Year 3</option>
+                                                    <option value="4">Year 4</option>
+                                                    <option value="5">Year 5</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <button type="submit" name="download_sample_csv" class="btn btn-primary btn-sm w-100 fw-semibold" <?= empty($sample_course) ? 'disabled' : '' ?>>
+                                            <i class="fa-solid fa-download me-1"></i> Download Sample CSV
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            
+                            <hr class="mb-4">
+
                             <?php if (!empty($course_name)): ?>
                                 <div class="alert alert-info small border-info-subtle mb-4">
-                                    <strong><i class="fa-solid fa-circle-info me-1"></i> Selected Course: <?= htmlspecialchars($course_name) ?></strong>
-                                    <div class="mt-2">Upload your CSV file containing columns: Roll Number, Enrollment Number, Subject Name, Semester, Year.</div>
+                                    <strong><i class="fa-solid fa-circle-info me-1"></i> Ready for Upload: <?= htmlspecialchars($course_name) ?></strong>
+                                    <div class="mt-2">Uploading for the course selected in the Single Assign tab. Required columns: Roll Number, Enrollment Number, Subject Name, Semester, Year.</div>
                                 </div>
                                 <form method="POST" action="assign_student_subject.php" enctype="multipart/form-data">
                                     <div class="mb-4">
@@ -530,6 +825,27 @@ if (!empty($course_name)) {
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Restore active tab from localStorage
+            let activeTabId = localStorage.getItem('assign_student_active_tab');
+            if (activeTabId) {
+                let triggerEl = document.querySelector(`button[data-bs-target="${activeTabId}"]`);
+                if (triggerEl) {
+                    let tabInstance = new bootstrap.Tab(triggerEl);
+                    tabInstance.show();
+                }
+            }
+
+            // Save active tab to localStorage on click
+            let tabButtons = document.querySelectorAll('button[data-bs-toggle="tab"]');
+            tabButtons.forEach(function(btn) {
+                btn.addEventListener('shown.bs.tab', function (event) {
+                    localStorage.setItem('assign_student_active_tab', event.target.getAttribute('data-bs-target'));
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
