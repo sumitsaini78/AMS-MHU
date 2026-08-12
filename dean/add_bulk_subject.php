@@ -38,11 +38,12 @@ if (isset($_POST['insert_subject'])) {
         $check_stmt->execute();
         $check_stmt->store_result();
 
-        if ($check_stmt->num_rows > 0) {
+        $is_duplicate = $check_stmt->num_rows > 0;
+        $check_stmt->close();
+
+        if ($is_duplicate) {
             echo "<script>alert('Error: Subject code ($subject_code) already exists!');</script>";
         } else {
-            $check_stmt->close();
-
             $stmt = $conn->prepare("INSERT INTO subjects (course_name, Year, semester, subject_name, faculty_name, subject_code) VALUES (?, ?, ?, ?, ?, ?)");
             $stmt->bind_param("siisss", $course_name, $year, $semester, $subject_name, $faculty_name, $subject_code);
             
@@ -52,10 +53,6 @@ if (isset($_POST['insert_subject'])) {
                 echo "<script>alert('Database Error: " . $stmt->error . "');</script>";
             }
             $stmt->close();
-        }
-        if (isset($check_stmt) && $check_stmt->num_rows > 0) {
-            // Clean close if not already closed
-            @$check_stmt->close();
         }
     } else {
         echo "<script>alert('Please fill in all required fields.');</script>";

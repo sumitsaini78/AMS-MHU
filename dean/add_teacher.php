@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['form_type'])) {
             
             // Check for duplicate entry (by number or same name in same faculty)
             $check_stmt = $conn->prepare("SELECT id FROM `teachers` WHERE number = ? OR (name = ? AND faculty = ?)");
-            $check_stmt->bind_param("iss", $number, $teacher_name, $faculty_name);
+            $check_stmt->bind_param("sss", $number, $teacher_name, $faculty_name);
             $check_stmt->execute();
             $check_stmt->store_result();
 
@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['form_type'])) {
                 $message = "warning|⚠️ Teacher with this name or mobile number already exists!";
             } else {
                 $stmt = $conn->prepare("INSERT INTO `teachers` (name, designation, faculty, number) VALUES (?, ?, ?, ?)");
-                $stmt->bind_param("sssi", $teacher_name, $designation, $faculty_name, $number);
+                $stmt->bind_param("ssss", $teacher_name, $designation, $faculty_name, $number);
                 
                 if ($stmt->execute()) {
                     $message = "success|🎉 Teacher <b>" . htmlspecialchars($teacher_name) . "</b> registered successfully!";
@@ -96,15 +96,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['form_type'])) {
                             if (!empty($t_name) && !empty($t_desig) && !empty($t_num)) {
                                 
                                 // Check if duplicate exists before inserting
-                                $check_stmt = $conn->prepare("SELECT id FROM `teachers` WHERE number = ?");
-                                $check_stmt->bind_param("i", $t_num);
+                                $check_stmt = $conn->prepare("SELECT id FROM `teachers` WHERE number = ? OR (name = ? AND faculty = ?)");
+                                $check_stmt->bind_param("sss", $t_num, $t_name, $faculty_name);
                                 $check_stmt->execute();
                                 $check_stmt->store_result();
 
                                 if ($check_stmt->num_rows > 0) {
                                     $error_count++; // Skip duplicate and count as failed/skipped
                                 } else {
-                                    $stmt->bind_param("sssi", $t_name, $t_desig, $faculty_name, $t_num);
+                                    $stmt->bind_param("ssss", $t_name, $t_desig, $faculty_name, $t_num);
                                     if ($stmt->execute()) {
                                         $success_count++;
                                     } else {

@@ -1,0 +1,84 @@
+course_name,year,semester,subject_name,subject_code,faculty_name
+BBA,1,1,Principles & Practices of Management,BBA25-101T,FOCBS
+BBA,1,1,Financial Accounting,BBA25-102T,FOCBS
+BBA,1,1,Business Environment,BBA25-103T,FOCBS
+BBA,1,1,Indian Knowledge System,BBA25-104T,FOCBS
+BBA,1,1,Business Communication-I,BBA25-105T,FOCBS
+BBA,1,1,General English,BBA25-106T,FOCBS
+BBA,1,1,Vedic Management,BBA25-107T,FOCBS
+BBA,2,3,Cost & Management Accounting,BBA25-301,FOCBS
+BBA,2,3,Human Resource Management,BBA25-302,FOCBS
+BBA,2,3,Operations Management,BBA25-303,FOCBS
+BBA,2,3,Intellectual Property Rights,BBA25-304,FOCBS
+BBA,2,3,Fundamentals of Computer,BBA25-305,FOCBS
+BBA,2,3,Management Paradigm from Bhagwat Geeta,BBA25-306,FOCBS
+BBA,2,3,Management Information System,BBA25-307,FOCBS
+B.Com,1,1,Financial Accounting,BCOM25-101T,FOCBS
+B.Com,1,1,Business Economics,BCOM25-102T,FOCBS
+B.Com,1,1,Indian Knowledge System,BCOM25-103T,FOCBS
+B.Com,1,1,English Language,BCOM25-104T,FOCBS
+B.Com,1,1,Vedic Management,BCOM25-105T,FOCBS
+B.Com,1,1,Business Communication,BCOM25-106T,FOCBS
+B.Com,2,3,Cost Accounting,BCOM25-301T,FOCBS
+B.Com,2,3,Banking & Insurance,BCOM25-302T,FOCBS
+B.Com,2,3,Business Organisation & Management,BCOM25-303T,FOCBS
+B.Com,2,3,Intellectual Property Rights,BCOM25-304T,FOCBS
+B.Com,2,3,Management Paradigm from Bhagwat Geeta,BCOM25-305T,FOCBS
+B.Com,2,3,Computer Application in Business,BCOM25-306T,FOCBS
+MBA,1,1,Financial Accounting & Financial Management,MBA26-101T,FOCBS
+MBA,1,1,Business Environment,MBA26-102T,FOCBS
+MBA,1,1,Business Statistics,MBA26-103T,FOCBS
+MBA,1,1,Managerial Economics,MBA26-104T,FOCBS
+MBA,1,1,Management Information System,MBA26-105T,FOCBS
+MBA,1,1,Business Communication,MBA26-106T,FOCBS
+MBA,2,3,Project Management,MPMBA22-301T,FOCBS
+MBA,2,3,Business Ethics & Corporate Governance,MPMBA22-302T,FOCBS
+MBA,2,3,Strategic Management,MPMBA22-303T,FOCBS
+MBA,2,3,Specialization Group-II Elective - I (Security Analysis & Portfolio Management ),MPMBA22-304 F1,FOCBS
+MBA,2,3,Specialization Group-II Elective - II (Financial Markets & Institutions),MPMBA22-304 F2,FOCBS
+MBA,2,3,Specialization Group-III Elective - III (Industrial Relations &Labour Laws),MPMBA22-304 H1,FOCBS
+MBA,2,3,Specialization Group-III Elective - III(Human Resource Planning & Development),MPMBA22-304 H3,FOCBS
+MBA,2,3,Specialization Group-I Elective - II (Consumer Behavior),MPMBA22-304 M1,FOCBS
+MBA,2,3,Specialization Group-I Elective - I (Marketing of Services),MPMBA22-304 M3,FOCBS
+MBA (Integrated),3,5,Financial Management,MPMBAI24-501,FOCBS
+MBA (Integrated),3,5,Marketing Management,MPMBAI24-502,FOCBS
+MBA (Integrated),3,5,Quantitative Techniques for Managers,MPMBAI24-503,FOCBS
+MBA (Integrated),3,5,Human Resource Management,MPMBAI24-504,FOCBS
+MBA (Integrated),3,5,Indian Constitution,MPMBAI24-505,FOCBS
+M.Com,1,1,Corporate Financial Accounting,MPMOM22-101T,FOCBS
+M.Com,1,1,Management Principles and Practice,MPMOM22-102T,FOCBS
+M.Com,1,1,Business Environment,MPMOM22-103T,FOCBS
+M.Com,1,1,Managerial Economics,MPMOM22-104T,FOCBS
+M.Com,1,1,Constitution of India,MPMOM22-105T,FOCBS
+M.Com,1,1,Computer Applications in Business,MPMOM22-106T,FOCBS
+M.Com,2,3,Quantitative Techniques,MPMOM22-301T,FOCBS
+M.Com,2,3,Management of Financial Services,MPMOM22-302T,FOCBS
+M.Com,2,3,Income Tax Laws & Practice,MPMOM22-303T,FOCBS
+M.Com,2,3,E-Commerce,MPMOM22-304T,FOCBS
+M.Com,2,3,Group B (Financial Management) Financial Markets & Institutions,MPMOM22-305F1,FOCBS
+M.Com,2,3,Security Analysis & Portfolio Management,MPMOM22-305F2,FOCBS
+M.Com,2,3,Group A (Human Resource Management) Industrial Relation Labour Laws,MPMOM22-305H1,FOCBS
+M.Com,2,3,Human Resource Planning & Development,MPMOM22-305H2,FOCBS
+BBA,3,5,Quantitative Techniques,MUBBA22-501T,FOCBS
+BBA,3,5,Legal Aspects of Business,MUBBA22-502T,FOCBS
+BBA,3,5,DSE-1Financial Management Group Working Capital Management,MUBBA22-503F2,FOCBS
+BBA,3,5,Financial Institutions & Markets,MUBBA22-503F3,FOCBS
+BBA,3,5,DSE-3 Financial Management Group Industrial Relations,MUBBA22-503H1,FOCBS
+BBA,3,5,Training & Development,MUBBA22-503H2,FOCBS
+BBA,3,5,DSE-2 Marketing Management Group Customers Relations Management,MUBBA22-503M1,FOCBS
+BBA,3,5,Sales & Distribution Management,MUBBA22-503M3,FOCBS
+B.Com (H),3,5,Management Accounting,MUCOH22-501T,FOCBS
+B.Com (H),3,5,Entrepreneurship & Small Business,MUCOH22-502T,FOCBS
+B.Com (H),3,5,Indian Economy,MUCOH22-503E1,FOCBS
+B.Com (H),3,5,Economics of Regulation of Domestic & Foreign Exchange,MUCOH22-503E2,FOCBS
+B.Com (H),3,5,Financial Markets & Institutions,MUCOH22-503F1,FOCBS
+B.Com (H),3,5,Working Capital Management,MUCOH22-503F2,FOCBS
+B.Com (H),3,5,Industrial laws,MUCOH22-503H1,FOCBS
+B.Com (H),3,5,Training & Development,MUCOH22-503H2,FOCBS
+B.Com (H),3,5,Consumer Behavior,MUCOH22-503M1,FOCBS
+B.Com (H),3,5,Marketing of services,MUCOH22-503M2,FOCBS
+B.Com,3,5,Computerized Accounting System,MUCOM22-501T,FOCBS
+B.Com,3,5,Fundamentals of Financial Management,MUCOM22-502T,FOCBS
+B.Com,3,5,Project Management,MUCOM22-503T,FOCBS
+B.Com,3,5,Entrepreneurship,MUCOM22-504T,FOCBS
+B.Com,3,5,Personality Development Through Applied Philosophy of Ramcharitra Manas,MUCOM22-505T,FOCBS

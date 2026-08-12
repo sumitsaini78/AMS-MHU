@@ -46,9 +46,52 @@ if (isset($_GET['edit_id'])) {
 $subjectsStmt = $pdo->query("SELECT DISTINCT subject_name, year, semester FROM subjected_student WHERE subject_name IS NOT NULL AND subject_name != ''");
 $availableSubjects = $subjectsStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Fetch all subjected students from the database
-$stmt = $pdo->query("SELECT * FROM subjected_student");
-$students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Fetch available courses for filter (normalized to group 'B.Com' and 'BCOM' together)
+$coursesStmt = $pdo->query("SELECT DISTINCT REPLACE(UPPER(course), '.', '') as norm_course, MAX(course) as course FROM subjected_student WHERE course IS NOT NULL AND course != '' GROUP BY norm_course ORDER BY course ASC");
+$availableCourses = $coursesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Filter Logic
+$filter_course = isset($_GET['filter_course']) ? trim($_GET['filter_course']) : '';
+$where_clause = "";
+$params = [];
+if (!empty($filter_course)) {
+    // Check both normalized format to match B.Com with BCOM
+    $where_clause = "WHERE REPLACE(UPPER(course), '.', '') = REPLACE(UPPER(?), '.', '')";
+    $params[] = $filter_course;
+}
+
+// Export Logic
+if (isset($_GET['export'])) {
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename=subjected_students_' . date('Y-m-d') . '.csv');
+    $output = fopen('php://output', 'w');
+    fputcsv($output, ['ID', 'Student Name', 'Subject Name', 'Subject Code', 'Faculty', 'Course', 'Year', 'Semester', 'Roll Number']);
+    
+    $exportStmt = $pdo->prepare("SELECT id, student_name, subject_name, subject_code, faculty, course, year, semester, roll_number FROM subjected_student $where_clause");
+    $exportStmt->execute($params);
+    while ($row = $exportStmt->fetch(PDO::FETCH_ASSOC)) {
+        fputcsv($output, $row);
+    }
+    fclose($output);
+    exit;
+}
+
+// Pagination Logic
+$limit = 50;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) $page = 1;
+$offset = ($page - 1) * $limit;
+
+// Count total records for pagination
+$countStmt = $pdo->prepare("SELECT COUNT(*) FROM subjected_student $where_clause");
+$countStmt->execute($params);
+$total_records = $countStmt->fetchColumn();
+$total_pages = ceil($total_records / $limit);
+
+// Fetch paginated results
+$fetchStmt = $pdo->prepare("SELECT * FROM subjected_student $where_clause LIMIT $limit OFFSET $offset");
+$fetchStmt->execute($params);
+$students = $fetchStmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -126,9 +169,37 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     <?php endif; ?>
 
+    <!-- Filter and Export Options -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body bg-white d-flex flex-wrap justify-content-between align-items-center">
+            <form method="GET" action="dean_subjected_students.php" class="d-flex align-items-center gap-2 mb-2 mb-md-0">
+                <label for="filter_course" class="fw-bold mb-0 text-nowrap">Filter by Course:</label>
+                <select name="filter_course" id="filter_course" class="form-select form-select-sm" style="min-width: 200px;">
+                    <option value="">-- All Courses --</option>
+                    <?php foreach ($availableCourses as $c): ?>
+                        <option value="<?= htmlspecialchars($c['course']) ?>" <?= ($filter_course === $c['course']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($c['course']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                <?php if (!empty($filter_course)): ?>
+                    <a href="dean_subjected_students.php" class="btn btn-outline-secondary btn-sm">Clear</a>
+                <?php endif; ?>
+            </form>
+
+            <a href="dean_subjected_students.php?export=1<?= !empty($filter_course) ? '&filter_course=' . urlencode($filter_course) : '' ?>" class="btn btn-success btn-sm fw-bold">
+                Export to CSV
+            </a>
+        </div>
+    </div>
+
     <!-- Data Table View -->
     <div class="card shadow-sm">
-        <div class="card-header bg-dark text-white">Subjected Students List</div>
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <span>Subjected Students List</span>
+            <span class="badge bg-light text-dark">Total: <?= $total_records ?></span>
+        </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered table-striped align-middle">
@@ -172,6 +243,59 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination Controls -->
+            <?php if ($total_pages > 1): ?>
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center mb-0">
+                        <?php 
+                        $queryString = '';
+                        if (!empty($filter_course)) {
+                            $queryString = '&filter_course=' . urlencode($filter_course);
+                        }
+                        ?>
+                        
+                        <!-- Previous Link -->
+                        <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                            <a class="page-link" href="?page=<?= $page - 1 ?><?= $queryString ?>">Previous</a>
+                        </li>
+                        
+                        <!-- Page Numbers -->
+                        <?php 
+                        // Show max 5 page links around current page
+                        $start_page = max(1, $page - 2);
+                        $end_page = min($total_pages, $page + 2);
+                        
+                        if ($start_page > 1) {
+                            echo '<li class="page-item"><a class="page-link" href="?page=1'.$queryString.'">1</a></li>';
+                            if ($start_page > 2) {
+                                echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                            }
+                        }
+
+                        for ($i = $start_page; $i <= $end_page; $i++): 
+                        ?>
+                            <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
+                                <a class="page-link" href="?page=<?= $i ?><?= $queryString ?>"><?= $i ?></a>
+                            </li>
+                        <?php endfor; ?>
+
+                        <?php
+                        if ($end_page < $total_pages) {
+                            if ($end_page < $total_pages - 1) {
+                                echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                            }
+                            echo '<li class="page-item"><a class="page-link" href="?page='.$total_pages.$queryString.'">'.$total_pages.'</a></li>';
+                        }
+                        ?>
+
+                        <!-- Next Link -->
+                        <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
+                            <a class="page-link" href="?page=<?= $page + 1 ?><?= $queryString ?>">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            <?php endif; ?>
         </div>
     </div>
 </div>
