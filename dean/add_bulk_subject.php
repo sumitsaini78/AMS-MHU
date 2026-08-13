@@ -124,6 +124,7 @@ elseif (isset($_POST['import_csv'])) {
     </style>
 </head>
 <body>
+    <?php include 'dean_navbar.php'; ?>
     <div class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>

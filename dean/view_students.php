@@ -224,21 +224,7 @@ $export_query_string = http_build_query($export_params);
 
         <!-- Pagination Navigation -->
         <?php if ($total_pages > 1): ?>
-        <nav class="mt-4">
-            <ul class="pagination justify-content-center">
-                <?php 
-                $query_params = $_GET;
-                for ($i = 1; $i <= $total_pages; $i++): 
-                    $query_params['page'] = $i;
-                    $queryString = http_build_query($query_params);
-                    $active = ($page == $i) ? 'active' : '';
-                ?>
-                    <li class="page-item <?php echo $active; ?>">
-                        <a class="page-link" href="?<?php echo $queryString; ?>"><?php echo $i; ?></a>
-                    </li>
-                <?php endfor; ?>
-            </ul>
-        </nav>
+        <?php include 'dean_navbar.php'; ?>
         <?php endif; ?>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>

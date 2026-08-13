@@ -72,7 +72,7 @@ if ($clean_course === 'BCOM') {
     $student_course_cond = "REPLACE(UPPER(course), '.', '') LIKE 'MBA%INT%'";
     $subject_course_cond = "REPLACE(UPPER(course_name), '.', '') LIKE 'MBA%INT%'";
 } else {
-    $safe_course = mysqli_real_escape_string($conn, $course_name ?? '');
+    $safe_course = mysqli_real_escape_string($conn, trim($course_name ?? ''));
     $student_course_cond = "TRIM(UPPER(course)) = UPPER('$safe_course')";
     $subject_course_cond = "TRIM(UPPER(course_name)) = UPPER('$safe_course')";
 }
@@ -87,7 +87,8 @@ if (isset($_POST['download_sample_csv'])) {
     }
     
     $req_sem = isset($_POST['sample_sem']) ? (int)$_POST['sample_sem'] : 0;
-    $req_year = isset($_POST['sample_year']) ? (int)$_POST['sample_year'] : 1;
+    $req_year = ceil($req_sem / 2);
+    if ($req_year == 0) $req_year = 1;
 
     // Normalize course matching for inconsistencies between tables for the bulk export
     $clean_sample = str_replace(['.', ' '], ['', ''], strtoupper(trim($sample_course ?? '')));
@@ -107,7 +108,7 @@ if (isset($_POST['download_sample_csv'])) {
         $sample_course_cond = "REPLACE(UPPER(course), '.', '') LIKE 'MBA%INT%'";
         $sample_subject_cond = "REPLACE(UPPER(course_name), '.', '') LIKE 'MBA%INT%'";
     } else {
-        $safe_sample = mysqli_real_escape_string($conn, $sample_course ?? '');
+        $safe_sample = mysqli_real_escape_string($conn, trim($sample_course ?? ''));
         $sample_course_cond = "TRIM(UPPER(course)) = UPPER('$safe_sample')";
         $sample_subject_cond = "TRIM(UPPER(course_name)) = UPPER('$safe_sample')";
     }
@@ -151,7 +152,7 @@ if (isset($_POST['download_sample_csv'])) {
     header('Content-Disposition: attachment; filename=sample_bulk_assign_' . preg_replace('/[^a-zA-Z0-9]/', '_', $sample_course) . '_sem' . $req_sem . '.csv');
     
     $output = fopen('php://output', 'w');
-    fputcsv($output, ['Roll Number', 'Enrollment Number', 'Subject Name', 'Semester', 'Year']);
+    fputcsv($output, ['Roll Number', 'Enrollment Number', 'Subject Name', 'Semester']);
     
     foreach ($students as $student) {
         if (!empty($subjects)) {
@@ -160,8 +161,7 @@ if (isset($_POST['download_sample_csv'])) {
                     $student['roll_number'],
                     $student['enrollment_number'],
                     $subject,
-                    $req_sem,
-                    $req_year
+                    $req_sem
                 ]);
             }
         } else {
@@ -170,8 +170,7 @@ if (isset($_POST['download_sample_csv'])) {
                 $student['roll_number'],
                 $student['enrollment_number'],
                 '',
-                $req_sem,
-                $req_year
+                $req_sem
             ]);
         }
     }
@@ -185,7 +184,7 @@ if (isset($_POST['download_sample_csv'])) {
 if (isset($_POST['assign_subject'])) {
     $student_id = mysqli_real_escape_string($conn, $_POST['student_id']);
     $subject_name = trim($_POST['subject_name']);
-    $course_name = $_SESSION['course_name'] ?? '';
+    $course_name = trim($_POST['course_name']);
 
     $student_info_query = "SELECT name, roll_number, enrollment_number, faculty, course, year, sem, session FROM `students` WHERE id = '$student_id' AND course = '$course_name'";
     $student_info_result = mysqli_query($conn, $student_info_query);
@@ -199,8 +198,9 @@ if (isset($_POST['assign_subject'])) {
 
         $s_faculty = mysqli_real_escape_string($conn, $student_data['faculty']);
         $s_course = mysqli_real_escape_string($conn, $student_data['course']);
-        $s_year = (int) $student_data['year'];
         $s_sem = (int) $student_data['sem'];
+        $s_year = ceil($s_sem / 2);
+        if ($s_year == 0) $s_year = (int) $student_data['year'];
         $s_session = mysqli_real_escape_string($conn, $student_data['session']);
         
         // Fetch subject_code
@@ -270,7 +270,25 @@ if (isset($_POST['bulk_assign_subject'])) {
         $success_count = 0;
         $error_count = 0;
         $first_row = true;
-        $course_name = $_SESSION['course_name'] ?? '';
+        $course_name = trim($_POST['bulk_course_name'] ?? '');
+
+        // Recalculate subject course conditions based on bulk upload dropdown
+        $clean_bulk_course = str_replace(['.', ' '], ['', ''], strtoupper($course_name));
+        $clean_bulk_course = str_replace(['(HONS)', 'HONS', '(H)'], ['H', 'H', 'H'], $clean_bulk_course);
+        $clean_bulk_course = str_replace(['(INTEGRATED)', 'INTEGRATED'], ['INT', 'INT'], $clean_bulk_course);
+
+        if ($clean_bulk_course === 'BCOM') {
+            $subject_course_cond = "REPLACE(UPPER(course_name), '.', '') = 'BCOM'";
+        } elseif ($clean_bulk_course === 'MCOM') {
+            $subject_course_cond = "REPLACE(UPPER(course_name), '.', '') = 'MCOM'";
+        } elseif ($clean_bulk_course === 'BCOMH') {
+            $subject_course_cond = "REPLACE(UPPER(course_name), '.', '') LIKE 'BCOM%H%'";
+        } elseif ($clean_bulk_course === 'MBAINT') {
+            $subject_course_cond = "REPLACE(UPPER(course_name), '.', '') LIKE 'MBA%INT%'";
+        } else {
+            $safe_bulk = mysqli_real_escape_string($conn, $course_name);
+            $subject_course_cond = "TRIM(UPPER(course_name)) = UPPER('$safe_bulk')";
+        }
 
         while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
             if ($first_row || (empty(trim($data[0])) && empty(trim($data[1])))) {
@@ -282,7 +300,6 @@ if (isset($_POST['bulk_assign_subject'])) {
             $csv_enroll = mysqli_real_escape_string($conn, trim($data[1]));
             $csv_subject = isset($data[2]) ? trim($data[2]) : '';
             $csv_semester = isset($data[3]) ? (int) trim($data[3]) : 0;
-            $csv_year = isset($data[4]) ? (int) trim($data[4]) : 0;
 
             if (empty($csv_subject)) {
                 $error_count++;
@@ -317,7 +334,8 @@ if (isset($_POST['bulk_assign_subject'])) {
                 $student_session = mysqli_real_escape_string($conn, $student['session']);
 
                 $final_sem = ($csv_semester > 0) ? $csv_semester : (int) $student['sem'];
-                $final_year = ($csv_year > 0) ? $csv_year : (int) $student['year'];
+                $final_year = ceil($final_sem / 2);
+                if ($final_year == 0) $final_year = (int) $student['year'];
                 $safe_csv_subject = mysqli_real_escape_string($conn, $csv_subject);
 
                 $code_query = "SELECT subject_code FROM `subjected_teacher` WHERE TRIM(subject_name) = '$safe_csv_subject' AND teacher_id = '$id' LIMIT 1";
@@ -574,22 +592,7 @@ if (!empty($course_name)) {
 </head>
 
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-2">
-            <div class="container-fluid">
-                <a class="navbar-brand text-warning fw-bold fs-4 d-flex align-items-center" href="index.php">
-                    <i class="fa-solid fa-graduation-cap me-2"></i>MOTHERHOOD UNIVERSITY
-                </a>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="navbar-text text-white bg-secondary bg-opacity-25 border border-secondary px-3 py-1.5 rounded-pill small d-none d-lg-inline-flex">
-                        <i class="fa-solid fa-user-tie me-2 text-warning"></i> Welcome, <?php echo htmlspecialchars($teacher_name); ?>
-                    </span>
-                    <a href="index.php" class="btn btn-sm btn-outline-info px-3 shadow-sm"><i class="fa-solid fa-house me-1"></i> Dashboard</a>
-                    <a href="../logout.php" class="btn btn-sm btn-danger shadow-sm px-3"><i class="fa-solid fa-power-off me-1"></i> Logout</a>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <?php include 'admin_navbar.php'; ?>
 
     <main class="container py-5">
         <div class="row justify-content-center">
@@ -625,102 +628,58 @@ if (!empty($course_name)) {
                         <!-- TAB 1: Single Assignment -->
                         <div class="tab-pane fade show active" id="single-pane" role="tabpanel" aria-labelledby="single-tab" tabindex="0">
                             
-                            <!-- Step 1: Faculty & Course Selection Form -->
-                            <form method="POST" action="assign_student_subject.php" class="bg-light p-3 rounded-3 border mb-4">
-                                <div class="mb-3">
-                                    <label for="faculty_name" class="form-label fw-semibold text-secondary small text-uppercase">1. Select Faculty:</label>
-                                    <select class="form-select form-select-sm" id="faculty_name" name="faculty_name" onchange="this.form.submit()" required>
-                                        <option value="" disabled selected>-- Choose Faculty --</option>
-                                        <?php if ($faculty_list_result): ?>
-                                            <?php while ($f_row = mysqli_fetch_assoc($faculty_list_result)): ?>
-                                                <option value="<?= htmlspecialchars($f_row['faculty_name']) ?>" <?= ($selected_faculty == $f_row['faculty_name']) ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($f_row['faculty_name']) ?>
-                                                </option>
-                                            <?php endwhile; ?>
-                                        <?php endif; ?>
-                                    </select>
+                            <form method="POST" action="assign_student_subject.php" id="singleAssignForm">
+                                <!-- Step 1 & 2 -->
+                                <div class="bg-light p-3 rounded-3 border mb-4">
+                                    <div class="mb-3">
+                                        <label for="faculty_name" class="form-label fw-semibold text-secondary small text-uppercase">1. Select Faculty:</label>
+                                        <select class="form-select form-select-sm" id="faculty_name" name="faculty_name" required>
+                                            <option value="" disabled selected>-- Choose Faculty --</option>
+                                            <?php if ($faculty_list_result): mysqli_data_seek($faculty_list_result, 0); ?>
+                                                <?php while ($f_row = mysqli_fetch_assoc($faculty_list_result)): ?>
+                                                    <option value="<?= htmlspecialchars($f_row['faculty_name']) ?>"><?= htmlspecialchars($f_row['faculty_name']) ?></option>
+                                                <?php endwhile; ?>
+                                            <?php endif; ?>
+                                        </select>
+                                    </div>
+                                    <div class="mb-0">
+                                        <label for="course_name" class="form-label fw-semibold text-secondary small text-uppercase">2. Select Course:</label>
+                                        <select class="form-select form-select-sm" id="course_name" name="course_name" disabled required>
+                                            <option value="" disabled selected>-- Choose Course --</option>
+                                        </select>
+                                    </div>
                                 </div>
-
-                                <div class="mb-0">
-                                    <label for="course_name" class="form-label fw-semibold text-secondary small text-uppercase">2. Select Course:</label>
-                                    <select class="form-select form-select-sm" id="course_name" name="course_name" onchange="this.form.submit()" <?= empty($selected_faculty) ? 'disabled' : '' ?> required>
-                                        <option value="" disabled selected>-- Choose Course --</option>
-                                        <?php foreach ($courses_array as $c_name): ?>
-                                            <option value="<?= htmlspecialchars($c_name) ?>" <?= ($course_name == $c_name) ? 'selected' : '' ?>>
-                                                <?= htmlspecialchars($c_name) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                            </form>
-
-                            <?php if (!empty($course_name)): ?>
-                                <!-- Optional Semester Filter -->
-                                <form method="POST" action="assign_student_subject.php" class="row g-2 align-items-center mb-3 bg-white p-2 rounded-3 border">
+                                
+                                <!-- Step 3 & 4 Filter -->
+                                <div class="row g-2 align-items-center mb-3 bg-white p-2 rounded-3 border">
                                     <div class="col-12 col-md-4">
                                         <label for="filter_sem" class="form-label fw-semibold text-secondary small mb-0">Filter Sem:</label>
                                     </div>
-                                    <div class="col-12 col-md-6">
-                                        <select class="form-select form-select-sm" id="filter_sem" name="filter_sem" onchange="this.form.submit()">
+                                    <div class="col-12 col-md-8">
+                                        <select class="form-select form-select-sm" id="filter_sem" name="filter_sem">
                                             <option value="">-- All Semesters --</option>
-                                            <?php foreach ($available_semesters as $sem_val): ?>
-                                                <option value="<?= $sem_val ?>" <?= ($selected_sem == $sem_val) ? 'selected' : '' ?>>
-                                                    Semester <?= $sem_val ?>
-                                                </option>
-                                            <?php endforeach; ?>
                                         </select>
                                     </div>
-                                    <div class="col-12 col-md-2">
-                                        <?php if (!empty($selected_sem)): ?>
-                                            <a href="assign_student_subject.php" onclick="document.getElementById('filter_sem').value=''; this.form.submit();" class="btn btn-sm btn-outline-secondary w-100">Reset</a>
-                                        <?php endif; ?>
-                                    </div>
-                                </form>
-
-                                <!-- Step 3 & 4: Subject, Student & Final Assign Form -->
-                                <form method="POST" action="assign_student_subject.php">
-                                    <div class="mb-3">
-                                        <label for="subject" class="form-label fw-semibold text-secondary small text-uppercase">3. Select Subject:</label>
-                                        <select class="form-select" id="subject" name="subject_name" required>
-                                            <option value="" disabled selected>Choose a subject...</option>
-                                            <?php if (!empty($subjects_list)): ?>
-                                                <?php foreach ($subjects_list as $sub_item): ?>
-                                                    <option value="<?= htmlspecialchars($sub_item['subject_name']) ?>">
-                                                        <?= htmlspecialchars($sub_item['subject_name']) ?> (Sem <?= htmlspecialchars($sub_item['semester']) ?>)
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            <?php else: ?>
-                                                <option value="" disabled>No subjects found for this course/semester</option>
-                                            <?php endif; ?>
-                                        </select>
-                                    </div>
-
-                                    <div class="mb-4">
-                                        <label for="student" class="form-label fw-semibold text-secondary small text-uppercase">4. Select Student Profile:</label>
-                                        <select class="form-select" id="student" name="student_id" required>
-                                            <option value="" disabled selected>Choose a student...</option>
-                                            <?php if ($result && mysqli_num_rows($result) > 0): ?>
-                                                <?php while ($row = mysqli_fetch_assoc($result)): ?>
-                                                    <?php $display_id = !empty(trim($row['roll_number'])) ? 'Roll: ' . $row['roll_number'] : 'Enroll: ' . $row['enrollment_number']; ?>
-                                                    <option value="<?= htmlspecialchars($row['id']) ?>">
-                                                        <?= htmlspecialchars($row['name']) ?> — <?= htmlspecialchars($display_id) ?> (Sem <?= htmlspecialchars($row['sem']) ?>)
-                                                    </option>
-                                                <?php endwhile; ?>
-                                            <?php else: ?>
-                                                <option value="" disabled>No students found</option>
-                                            <?php endif; ?>
-                                        </select>
-                                    </div>
-
-                                    <button type="submit" name="assign_subject" class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm">
-                                        <i class="fa-solid fa-circle-plus me-2"></i>Confirm Assignment Mapping
-                                    </button>
-                                </form>
-                            <?php else: ?>
-                                <div class="alert alert-info text-center small mb-0">
-                                    <i class="fa-solid fa-arrow-up me-1"></i> Please select Faculty and Course above to proceed with Subject and Student selection.
                                 </div>
-                            <?php endif; ?>
+
+                                <div class="mb-3">
+                                    <label for="subject" class="form-label fw-semibold text-secondary small text-uppercase">3. Select Subject:</label>
+                                    <select class="form-select" id="subject" name="subject_name" required>
+                                        <option value="" disabled selected>Choose a subject...</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="student" class="form-label fw-semibold text-secondary small text-uppercase">4. Select Student Profile:</label>
+                                    <select class="form-select" id="student" name="student_id" required>
+                                        <option value="" disabled selected>Choose a student...</option>
+                                    </select>
+                                </div>
+
+                                <button type="submit" name="assign_subject" class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm">
+                                    <i class="fa-solid fa-circle-plus me-2"></i>Confirm Assignment Mapping
+                                </button>
+                            </form>
                         </div>
 
                         <!-- TAB 2: Bulk Assignment -->
@@ -737,54 +696,32 @@ if (!empty($course_name)) {
                                         <div class="row g-2">
                                             <div class="col-md-6">
                                                 <label class="form-label small fw-bold">1. Select Faculty:</label>
-                                                <select class="form-select form-select-sm" name="sample_faculty" onchange="this.form.submit()" required>
+                                                <select class="form-select form-select-sm" id="sample_faculty" name="sample_faculty" required>
                                                     <option value="" disabled selected>-- Choose Faculty --</option>
-                                                    <?php if ($sample_faculty_list_result): ?>
+                                                    <?php if ($sample_faculty_list_result): mysqli_data_seek($sample_faculty_list_result, 0); ?>
                                                         <?php while ($f_row = mysqli_fetch_assoc($sample_faculty_list_result)): ?>
-                                                            <option value="<?= htmlspecialchars($f_row['faculty_name']) ?>" <?= ($sample_faculty == $f_row['faculty_name']) ? 'selected' : '' ?>>
-                                                                <?= htmlspecialchars($f_row['faculty_name']) ?>
-                                                            </option>
+                                                            <option value="<?= htmlspecialchars($f_row['faculty_name']) ?>"><?= htmlspecialchars($f_row['faculty_name']) ?></option>
                                                         <?php endwhile; ?>
                                                     <?php endif; ?>
                                                 </select>
                                             </div>
                                             <div class="col-md-6">
                                                 <label class="form-label small fw-bold">2. Select Course:</label>
-                                                <select class="form-select form-select-sm" name="sample_course" onchange="this.form.submit()" <?= empty($sample_faculty) ? 'disabled' : '' ?> required>
+                                                <select class="form-select form-select-sm" id="sample_course" name="sample_course" disabled required>
                                                     <option value="" disabled selected>-- Choose Course --</option>
-                                                    <?php foreach ($sample_courses_array as $c_name): ?>
-                                                        <option value="<?= htmlspecialchars($c_name) ?>" <?= ($sample_course == $c_name) ? 'selected' : '' ?>>
-                                                            <?= htmlspecialchars($c_name) ?>
-                                                        </option>
-                                                    <?php endforeach; ?>
                                                 </select>
                                             </div>
                                         </div>
-                                    </form>
 
-                                    <form method="POST" action="assign_student_subject.php">
-                                        <div class="row g-2 mb-3">
-                                            <div class="col-md-6">
+                                        <div class="row g-2 mt-2 mb-3">
+                                            <div class="col-md-12">
                                                 <label class="form-label small fw-bold">3. Semester:</label>
-                                                <select class="form-select form-select-sm" name="sample_sem" <?= empty($sample_course) ? 'disabled' : '' ?> required>
+                                                <select class="form-select form-select-sm" id="sample_sem" name="sample_sem" disabled required>
                                                     <option value="" disabled selected>-- Select Semester --</option>
-                                                    <?php foreach ($sample_available_semesters as $sem_val): ?>
-                                                        <option value="<?= $sem_val ?>">Semester <?= $sem_val ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label class="form-label small fw-bold">4. Academic Year:</label>
-                                                <select class="form-select form-select-sm" name="sample_year" <?= empty($sample_course) ? 'disabled' : '' ?> required>
-                                                    <option value="1">Year 1</option>
-                                                    <option value="2">Year 2</option>
-                                                    <option value="3">Year 3</option>
-                                                    <option value="4">Year 4</option>
-                                                    <option value="5">Year 5</option>
                                                 </select>
                                             </div>
                                         </div>
-                                        <button type="submit" name="download_sample_csv" class="btn btn-primary btn-sm w-100 fw-semibold" <?= empty($sample_course) ? 'disabled' : '' ?>>
+                                        <button type="submit" name="download_sample_csv" id="btn_sample_csv" class="btn btn-primary btn-sm w-100 fw-semibold" disabled>
                                             <i class="fa-solid fa-download me-1"></i> Download Sample CSV
                                         </button>
                                     </form>
@@ -793,25 +730,26 @@ if (!empty($course_name)) {
                             
                             <hr class="mb-4">
 
-                            <?php if (!empty($course_name)): ?>
-                                <div class="alert alert-info small border-info-subtle mb-4">
-                                    <strong><i class="fa-solid fa-circle-info me-1"></i> Ready for Upload: <?= htmlspecialchars($course_name) ?></strong>
-                                    <div class="mt-2">Uploading for the course selected in the Single Assign tab. Required columns: Roll Number, Enrollment Number, Subject Name, Semester, Year.</div>
+                            <div class="alert alert-info small border-info-subtle mb-4">
+                                <strong><i class="fa-solid fa-circle-info me-1"></i> Ready for Upload</strong>
+                                <div class="mt-2">Required columns: Roll Number, Enrollment Number, Subject Name, Semester. Make sure the subjects match the ones available for the course.</div>
+                            </div>
+                            <form method="POST" action="assign_student_subject.php" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-secondary small">Course (for which you are uploading):</label>
+                                    <select class="form-select form-select-sm" id="bulk_course_name" name="bulk_course_name" required>
+                                        <option value="" disabled selected>-- Select Course --</option>
+                                        <!-- Populated via the same faculty-course AJAX logically or explicitly on form -->
+                                    </select>
                                 </div>
-                                <form method="POST" action="assign_student_subject.php" enctype="multipart/form-data">
-                                    <div class="mb-4">
-                                        <label for="excel_file" class="form-label fw-semibold text-secondary small text-uppercase">Upload Mapped CSV File:</label>
-                                        <input class="form-control form-control-lg" type="file" id="excel_file" name="excel_file" accept=".csv" required>
-                                    </div>
-                                    <button type="submit" name="bulk_assign_subject" class="btn btn-success w-100 py-2.5 fw-bold shadow-sm">
-                                        <i class="fa-solid fa-cloud-arrow-up me-2"></i>Process Bulk Upload
-                                    </button>
-                                </form>
-                            <?php else: ?>
-                                <div class="alert alert-warning text-center small mb-0">
-                                    Please select a Faculty and Course in the "Single Assign" tab first before performing bulk upload.
+                                <div class="mb-4">
+                                    <label for="excel_file" class="form-label fw-semibold text-secondary small text-uppercase">Upload Mapped CSV File:</label>
+                                    <input class="form-control form-control-lg" type="file" id="excel_file" name="excel_file" accept=".csv" required>
                                 </div>
-                            <?php endif; ?>
+                                <button type="submit" name="bulk_assign_subject" class="btn btn-success w-100 py-2.5 fw-bold shadow-sm">
+                                    <i class="fa-solid fa-cloud-arrow-up me-2"></i>Process Bulk Upload
+                                </button>
+                            </form>
                         </div>
 
                     </div>
@@ -844,6 +782,129 @@ if (!empty($course_name)) {
                     localStorage.setItem('assign_student_active_tab', event.target.getAttribute('data-bs-target'));
                 });
             });
+
+            // AJAX Handlers
+            const singleFaculty = document.getElementById('faculty_name');
+            const singleCourse = document.getElementById('course_name');
+            const singleSem = document.getElementById('filter_sem');
+            const singleSubject = document.getElementById('subject');
+            const singleStudent = document.getElementById('student');
+
+            const bulkFaculty = document.getElementById('sample_faculty');
+            const bulkCourse = document.getElementById('sample_course');
+            const bulkSem = document.getElementById('sample_sem');
+            
+            const bulkUploadCourse = document.getElementById('bulk_course_name');
+
+            function populateCourses(facultyVal, targetCourseElem, callback) {
+                if(!facultyVal) return;
+                fetch('ajax_assign.php?action=get_courses&faculty=' + encodeURIComponent(facultyVal))
+                    .then(res => res.json())
+                    .then(data => {
+                        targetCourseElem.innerHTML = '<option value="" disabled selected>-- Choose Course --</option>';
+                        targetCourseElem.disabled = false;
+                        if(data.status === 'success') {
+                            data.courses.forEach(c => {
+                                targetCourseElem.innerHTML += `<option value="${c}">${c}</option>`;
+                            });
+                            // Also sync bulk upload course dropdown to keep it updated globally
+                            if (targetCourseElem === bulkCourse || targetCourseElem === singleCourse) {
+                                bulkUploadCourse.innerHTML = targetCourseElem.innerHTML;
+                                bulkUploadCourse.disabled = false;
+                            }
+                        }
+                        if(callback) callback();
+                    });
+            }
+
+            // Faculty Change (Single)
+            if(singleFaculty) {
+                singleFaculty.addEventListener('change', function() {
+                    populateCourses(this.value, singleCourse, () => {
+                        singleSem.innerHTML = '<option value="">-- All Semesters --</option>';
+                        singleSubject.innerHTML = '<option value="" disabled selected>Choose a subject...</option>';
+                        singleStudent.innerHTML = '<option value="" disabled selected>Choose a student...</option>';
+                    });
+                });
+            }
+
+            // Course Change (Single)
+            if(singleCourse) {
+                singleCourse.addEventListener('change', function() {
+                    fetch('ajax_assign.php?action=get_semesters&course=' + encodeURIComponent(this.value))
+                        .then(res => res.json())
+                        .then(data => {
+                            singleSem.innerHTML = '<option value="">-- All Semesters --</option>';
+                            if(data.status === 'success') {
+                                data.semesters.forEach(s => {
+                                    singleSem.innerHTML += `<option value="${s}">Semester ${s}</option>`;
+                                });
+                            }
+                            loadSubjectsAndStudents();
+                        });
+                });
+            }
+
+            // Semester Change (Single)
+            if(singleSem) {
+                singleSem.addEventListener('change', loadSubjectsAndStudents);
+            }
+
+            function loadSubjectsAndStudents() {
+                const course = singleCourse.value;
+                const sem = singleSem.value;
+                if (!course) return;
+                fetch(`ajax_assign.php?action=get_subjects_and_students&course=${encodeURIComponent(course)}&sem=${encodeURIComponent(sem)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        singleSubject.innerHTML = '<option value="" disabled selected>Choose a subject...</option>';
+                        singleStudent.innerHTML = '<option value="" disabled selected>Choose a student...</option>';
+                        if(data.status === 'success') {
+                            if(data.subjects.length > 0) {
+                                data.subjects.forEach(sub => {
+                                    singleSubject.innerHTML += `<option value="${sub.subject_name}">${sub.subject_name} (Sem ${sub.semester})</option>`;
+                                });
+                            } else {
+                                singleSubject.innerHTML = '<option value="" disabled>No subjects found for this course/semester</option>';
+                            }
+                            if(data.students.length > 0) {
+                                data.students.forEach(st => {
+                                    let display = (st.roll_number && st.roll_number.trim() !== '') ? 'Roll: ' + st.roll_number : 'Enroll: ' + st.enrollment_number;
+                                    singleStudent.innerHTML += `<option value="${st.id}">${st.name} — ${display} (Sem ${st.sem})</option>`;
+                                });
+                            } else {
+                                singleStudent.innerHTML = '<option value="" disabled>No students found</option>';
+                            }
+                        }
+                    });
+            }
+
+            // Bulk assign handlers
+            if(bulkFaculty) {
+                bulkFaculty.addEventListener('change', function() {
+                    populateCourses(this.value, bulkCourse, () => {
+                        if(bulkSem) bulkSem.innerHTML = '<option value="" disabled selected>-- Select Semester --</option>';
+                    });
+                });
+
+                bulkCourse.addEventListener('change', function() {
+                    fetch('ajax_assign.php?action=get_semesters&course=' + encodeURIComponent(this.value))
+                        .then(res => res.json())
+                        .then(data => {
+                            if(bulkSem) {
+                                bulkSem.innerHTML = '<option value="" disabled selected>-- Select Semester --</option>';
+                                bulkSem.disabled = false;
+                                if(data.status === 'success') {
+                                    data.semesters.forEach(s => {
+                                        bulkSem.innerHTML += `<option value="${s}">Semester ${s}</option>`;
+                                    });
+                                }
+                            }
+                            const btn = document.getElementById('btn_sample_csv');
+                            if(btn) btn.disabled = false;
+                        });
+                });
+            }
         });
     </script>
 </body>

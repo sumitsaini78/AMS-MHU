@@ -22,12 +22,7 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     <style>body { background-color: #f4f6f9; font-family: 'Segoe UI', system-ui, sans-serif; }</style>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark shadow-sm py-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="index.php"><i class="fa-solid fa-shield-halved text-danger me-2"></i> MHU-AMS ADMIN</a>
-            <a href="index.php" class="btn btn-sm btn-outline-light"><i class="fa-solid fa-arrow-left me-1"></i> Dashboard</a>
-        </div>
-    </nav>
+    <?php include 'admin_navbar.php'; ?>
     <main class="container py-5">
         <h2 class="fw-bold text-dark mb-4"><i class="fa-solid fa-bell text-danger me-2"></i>Attendance Correction Requests</h2>
         <?php if (!empty($msg)): ?><div class="alert alert-success rounded-4"><?= htmlspecialchars($msg) ?></div><?php endif; ?>

@@ -256,6 +256,20 @@ if ($result && mysqli_num_rows($result) == 1) {
                         class="btn btn-sm btn-outline-danger w-100 mt-2 fw-semibold">Configure Tools</a>
                 </div>
             </div>
+            
+            <div class="col-12 col-md-6 col-lg-3">
+                <div class="action-card card shadow-sm p-3 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span class="p-2 bg-info-subtle text-info rounded-3 fs-4 px-3"><i
+                                class="fa-solid fa-code-pull-request"></i></span>
+                        <span class="text-muted small fw-medium font-monospace">Requests</span>
+                    </div>
+                    <h5 class="fw-bold text-dark">Subject Request</h5>
+                    <p class="text-muted small flex-grow-1">Request a new subject assignment directly from your Dean.</p>
+                    <a href="request_subject.php"
+                        class="btn btn-sm btn-outline-info w-100 mt-2 fw-semibold">Request Subject</a>
+                </div>
+            </div>
         </div>
     </main>
 

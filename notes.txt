@@ -1,5 +1,0 @@
-# Teasting With perameters 
-*dean*
-1. add faculty-  wrking
-2. manage student- wrking
-

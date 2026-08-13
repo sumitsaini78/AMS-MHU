@@ -85,6 +85,7 @@ $pending_corrections = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) a
                 <a href="#students" class="anchor-pill btn btn-sm btn-light text-secondary border rounded-pill px-3 py-1 small">Students</a>
                 <a href="#courses" class="anchor-pill btn btn-sm btn-light text-secondary border rounded-pill px-3 py-1 small">Courses</a>
                 <a href="#subjects" class="anchor-pill btn btn-sm btn-light text-secondary border rounded-pill px-3 py-1 small">Subjects</a>
+                <a href="#subject_codes" class="anchor-pill btn btn-sm btn-light text-secondary border rounded-pill px-3 py-1 small">Subject Codes</a>
                 <a href="#assign_subjects" class="anchor-pill btn btn-sm btn-light text-secondary border rounded-pill px-3 py-1 small">Assign Subjects</a>
                 <a href="#teacher_allotment" class="anchor-pill btn btn-sm btn-light text-secondary border rounded-pill px-3 py-1 small">Teacher Allotment</a>
                 <a href="#corrections" class="anchor-pill btn btn-sm btn-light text-secondary border rounded-pill px-3 py-1 small">Corrections</a>
@@ -210,6 +211,22 @@ $pending_corrections = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) a
                         <p class="text-muted small mb-4">Configure course subjects, semester mappings, and codes.</p>
                     </div>
                     <a href="manage_subjects.php" class="btn btn-sm btn-outline-dark w-100 fw-semibold py-2 rounded-pill">Open Module <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                </div>
+            </div>
+
+            <!-- NEW CARD: Manage Subject Codes -->
+            <div class="col admin-card-item" id="subject_codes">
+                <div class="action-card card h-100 shadow-sm p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="icon-box bg-secondary-subtle text-secondary rounded-3 p-3 fs-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="fa-solid fa-barcode"></i>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold text-dark fs-5 mb-2">Manage Subject Codes</h5>
+                        <p class="text-muted small mb-4">Quickly view and update missing subject codes for all subjects.</p>
+                    </div>
+                    <a href="manage_subject_codes.php" class="btn btn-sm btn-outline-dark w-100 fw-semibold py-2 rounded-pill">Open Module <i class="fa-solid fa-arrow-right ms-1"></i></a>
                 </div>
             </div>
             

@@ -298,30 +298,7 @@ if ($subject_result && mysqli_num_rows($subject_result) > 0) {
 </head>
 
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-2">
-            <div class="container-fluid">
-                <a class="navbar-brand text-warning fw-bold fs-4 d-flex align-items-center" href="index.php">
-                    <i class="fa-solid fa-graduation-cap me-2"></i>MOTHERHOOD UNIVERSITY
-                </a>
-
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardNavbar"
-                    aria-controls="dashboardNavbar" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <div class="collapse navbar-collapse justify-content-end" id="dashboardNavbar">
-                    <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 mt-2 mt-lg-0 w-100 w-lg-auto">
-                        <span class="navbar-text text-white bg-secondary bg-opacity-25 border border-secondary px-3 py-1.5 rounded-pill small d-inline-flex align-items-center justify-content-center">
-                            <i class="fa-solid fa-user-tie me-2 text-warning"></i> Welcome, <?php echo htmlspecialchars($teacher_name); ?>
-                        </span>
-                        <a href="index.php" class="btn btn-sm btn-outline-info px-3 shadow-sm"><i class="fa-solid fa-house me-1"></i> Dashboard</a>
-                        <a href="../logout.php" class="btn btn-sm btn-danger shadow-sm px-3"><i class="fa-solid fa-power-off me-1"></i> Logout</a>
-                    </div>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <?php include 'dean_navbar.php'; ?>
 
     <main class="container py-5">
         <!-- Flash Message Notification -->

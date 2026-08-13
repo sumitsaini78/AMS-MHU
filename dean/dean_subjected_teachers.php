@@ -1,4 +1,5 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 // Temporarily enable error reporting to debug (Remove these 3 lines once it works)
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -21,6 +22,18 @@ $success_message = isset($_GET['success']) ? "Record successfully updated!" : ""
 $editData = null;
 $availableSubjects = [];
 $teachers_list = [];
+
+if (isset($_GET['delete_id'])) {
+    $delete_id = intval($_GET['delete_id']);
+    $del_stmt = $conn->prepare("DELETE FROM subjected_teacher WHERE id = ?");
+    $del_stmt->bind_param("i", $delete_id);
+    if ($del_stmt->execute()) {
+        header("Location: dean_subjected_teachers.php?success=unassigned");
+        exit;
+    } else {
+        $error_message = "Failed to unassign subject: " . $conn->error;
+    }
+}
 
 try {
     // Tell MySQLi to throw exceptions on errors so we can catch them cleanly
@@ -189,6 +202,7 @@ try {
                                     <td><?= htmlspecialchars($row['subject_code']) ?></td>
                                     <td>
                                         <a href="dean_subjected_teachers.php?edit_id=<?= $row['id'] ?>" class="btn btn-sm btn-primary">Edit</a>
+                                        <a href="dean_subjected_teachers.php?delete_id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('Are you sure you want to unassign this subject from the teacher for the next session?');">Unassign</a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

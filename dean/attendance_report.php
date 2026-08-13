@@ -259,17 +259,7 @@ $years = [2024, 2025, 2026, 2027];
     </style>
 </head>
 <body>
-    <header class="navbar navbar-dark bg-dark shadow-sm py-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold fs-5" href="index.php">
-                <i class="fa-solid fa-user-tie text-info me-2"></i> Dean Portal &bull; Attendance Reports
-            </a>
-            <div class="d-flex align-items-center gap-3">
-                <span class="text-white small"><i class="fa-solid fa-user-shield me-1 text-info"></i><strong><?= htmlspecialchars($dean_name) ?></strong></span>
-                <a href="../logout.php" class="btn btn-sm btn-outline-danger px-3"><i class="fa-solid fa-power-off"></i></a>
-            </div>
-        </div>
-    </header>
+    <?php include 'dean_navbar.php'; ?>
 
     <main class="container py-5">
         <div class="row mb-4">

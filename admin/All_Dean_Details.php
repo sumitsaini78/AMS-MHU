@@ -16,15 +16,7 @@ include "../db_connect.php";
 </head>
 
 <body>
-    <header>
-        <nav class="navbar navbar-dark bg-dark shadow">
-            <div class="container-fluid">
-                <span class="navbar-brand mb-0 h1 fs-3 fw-bold">Mhu-AMS</span>
-                <a href="index.php" class="--bs-body-bg">Home</a>
-                <div class="right"><a href=""></a></div>
-            </div>
-        </nav>
-    </header>
+    <?php include 'admin_navbar.php'; ?>
     <div class="row border m-4 w-50">
         <div class="col"> <?php
         $query = "SELECT dean_name FROM `deans`";

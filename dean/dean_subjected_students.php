@@ -1,4 +1,5 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 // Database configuration based on your provided schema
 $host = '127.0.0.1';
 $dbname = 'mhu-ams';
@@ -246,58 +247,12 @@ $students = $fetchStmt->fetchAll(PDO::FETCH_ASSOC);
 
             <!-- Pagination Controls -->
             <?php if ($total_pages > 1): ?>
-                <nav aria-label="Page navigation" class="mt-4">
-                    <ul class="pagination justify-content-center mb-0">
-                        <?php 
-                        $queryString = '';
-                        if (!empty($filter_course)) {
-                            $queryString = '&filter_course=' . urlencode($filter_course);
-                        }
-                        ?>
-                        
-                        <!-- Previous Link -->
-                        <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-                            <a class="page-link" href="?page=<?= $page - 1 ?><?= $queryString ?>">Previous</a>
-                        </li>
-                        
-                        <!-- Page Numbers -->
-                        <?php 
-                        // Show max 5 page links around current page
-                        $start_page = max(1, $page - 2);
-                        $end_page = min($total_pages, $page + 2);
-                        
-                        if ($start_page > 1) {
-                            echo '<li class="page-item"><a class="page-link" href="?page=1'.$queryString.'">1</a></li>';
-                            if ($start_page > 2) {
-                                echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
-                            }
-                        }
-
-                        for ($i = $start_page; $i <= $end_page; $i++): 
-                        ?>
-                            <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
-                                <a class="page-link" href="?page=<?= $i ?><?= $queryString ?>"><?= $i ?></a>
-                            </li>
-                        <?php endfor; ?>
-
-                        <?php
-                        if ($end_page < $total_pages) {
-                            if ($end_page < $total_pages - 1) {
-                                echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
-                            }
-                            echo '<li class="page-item"><a class="page-link" href="?page='.$total_pages.$queryString.'">'.$total_pages.'</a></li>';
-                        }
-                        ?>
-
-                        <!-- Next Link -->
-                        <li class="page-item <?= ($page >= $total_pages) ? 'disabled' : '' ?>">
-                            <a class="page-link" href="?page=<?= $page + 1 ?><?= $queryString ?>">Next</a>
-                        </li>
-                    </ul>
-                </nav>
+                <?php include 'dean_navbar.php'; ?>
             <?php endif; ?>
         </div>
     </div>
 </div>
 </body>
 </html>
+
+

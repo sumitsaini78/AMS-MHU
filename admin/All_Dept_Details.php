@@ -19,15 +19,7 @@ include "../db_connect.php";
     </head>
 
     <body>
-       <header>
-        <nav class="navbar navbar-dark bg-dark shadow">
-            <div class="container-fluid">
-                <span class="navbar-brand mb-0 h1 fs-3 fw-bold">Mhu-AMS</span>
-                <a href="index.php" class="--bs-body-bg">Home</a>
-                <div class="right"><a href=""></a></div>
-            </div>
-        </nav>
-    </header>
+       <?php include 'admin_navbar.php'; ?>
            <?php
                         $query = "SELECT faculty_name FROM `faculty`";
                         $result = mysqli_query($conn, $query);
@@ -44,3 +36,4 @@ include "../db_connect.php";
         ></script>
     </body>
 </html>
+

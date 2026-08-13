@@ -195,22 +195,7 @@ $pending_count = ($pending_requests) ? mysqli_num_rows($pending_requests) : 0;
 </head>
 
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-2">
-            <div class="container-fluid">
-                <a class="navbar-brand text-white fw-bold fs-4 d-flex align-items-center" href="index.php">
-                    <i class="fa-solid fa-graduation-cap text-warning me-2"></i>MHU-AMS <sub class="text-primary text-uppercase ms-1 fw-semibold">Dean</sub>
-                </a>
-                
-                <div class="d-flex align-items-center gap-2">
-                    <span class="navbar-text text-white bg-secondary bg-opacity-25 border border-secondary border-opacity-50 px-3 py-1.5 rounded-pill small">
-                        <i class="fa-solid fa-user-tie me-1 text-warning"></i> Welcome, <span class="fw-semibold"><?php echo htmlspecialchars($dean_name); ?></span>
-                    </span>
-                    <a href="index.php" class="btn btn-sm btn-outline-light px-3"><i class="fa-solid fa-arrow-left me-1"></i> Dashboard</a>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <?php include 'dean_navbar.php'; ?>
 
     <main class="container py-5">
         <div class="row mb-4 align-items-center">

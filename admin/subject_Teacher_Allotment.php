@@ -164,12 +164,7 @@ if (isset($_POST['bulk_upload']) && isset($_FILES['csv_file'])) {
 
 <body class="bg-light">
 
-    <nav class="navbar navbar-dark bg-dark shadow-sm">
-        <div class="container">
-            <span class="navbar-brand fw-bold">Mhu-AMS <span class="text-primary">Admin</span></span>
-            <a href="index.php" class="btn btn-outline-light btn-sm">Home</a>
-        </div>
-    </nav>
+    <?php include 'admin_navbar.php'; ?>
 
     <main class="container mt-5">
         <div class="row justify-content-center">

@@ -93,16 +93,7 @@ if (isset($_GET['export']) && $_GET['export'] == 'teachers') {
     </head>
 
     <body>  
-        <header>
-            <nav class="navbar navbar-dark bg-dark shadow-sm py-3">
-                <div class="container-fluid px-4">
-                    <span class="navbar-brand mb-0 h1 fs-4 fw-bold tracking-wide"><i class="fa-solid fa-graduation-cap me-2"></i>Mhu-AMS</span>
-                    <div class="d-flex align-items-center gap-3">
-                        <a href="index.php" class="text-white text-decoration-none fw-semibold"><i class="fa-solid fa-house me-1"></i> Home</a>
-                    </div>
-                </div>
-            </nav>
-        </header>
+        <?php include 'dean_navbar.php'; ?>
 
         <main class="container my-5">
             <!-- Flash Message Display -->

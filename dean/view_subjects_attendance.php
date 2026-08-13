@@ -1,4 +1,5 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) { session_start(); }
 include "../db_connect.php";
 // Note: Ensure your database connection ($conn) is included at the top of this file
 
@@ -139,6 +140,7 @@ $today_date = (int)date('dmy');
     </style>
 </head>
 <body>
+    <?php include 'dean_navbar.php'; ?>
 
 <div class="table-container">
     <table class="styled-table">
@@ -198,3 +200,5 @@ $today_date = (int)date('dmy');
 
 </body>
 </html>
+
+

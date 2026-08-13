@@ -86,12 +86,7 @@ $sessions_res = $conn->query("SELECT DISTINCT session FROM students WHERE sessio
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark shadow-sm py-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="index.php"><i class="fa-solid fa-shield-halved text-danger me-2"></i> MHU-AMS ADMIN</a>
-            <a href="index.php" class="btn btn-sm btn-outline-light"><i class="fa-solid fa-arrow-left me-1"></i> Dashboard</a>
-        </div>
-    </nav>
+    <?php include 'dean_navbar.php'; ?>
 
     <main class="container py-5">
         <h2 class="fw-bold text-dark mb-4"><i class="fa-solid fa-id-card text-warning me-2"></i>Update Roll & Enrollment Numbers</h2>

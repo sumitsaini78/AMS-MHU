@@ -84,12 +84,7 @@ if (isset($_POST['Allocate_Subject'])) {
 
 <body class="bg-light">
 
-    <nav class="navbar navbar-dark bg-dark shadow-sm">
-        <div class="container">
-            <span class="navbar-brand fw-bold">Mhu-AMS <span class="text-primary">Dean</span></span>
-            <a href="index.php" class="btn btn-outline-light btn-sm">Home</a>
-        </div>
-    </nav>
+    <?php include 'dean_navbar.php'; ?>
 
     <main class="container mt-5">
         <div class="row justify-content-center">

@@ -252,21 +252,7 @@ if (isset($_POST['export_excel']) && $is_range_search) {
 </head>
 
 <body>
-    <header>
-        <nav class="navbar navbar-dark bg-dark shadow-sm">
-            <div class="container-fluid">
-                <span class="navbar-brand mb-0 h1 fs-3 fw-bold" id="mhu-text"> MHU-AMS <sub>Calendar-View</sub></span>
-                <div class="d-flex align-items-center">
-                    <span class="navbar-text text-light small me-3">
-                        <i class="fa-solid fa-user-tie me-1 text-muted"></i> Welcome, <?php echo htmlspecialchars($_SESSION['dean_name'] ?? 'Dean'); ?>
-                    </span>
-                    <a href="student_attendence.php" class="btn btn-sm btn-outline-info me-2">
-                        <i class="fa-solid fa-arrow-left me-1"></i> Back to List
-                    </a>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <?php include 'dean_navbar.php'; ?>
 
     <main class="container py-4">
         <!-- Overview Dashboard Section Header Layout Grid -->

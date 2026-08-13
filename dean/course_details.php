@@ -150,6 +150,7 @@ $list_res = $stmt->get_result();
 </head>
 
 <body>
+    <?php include 'dean_navbar.php'; ?>
     <div class="container py-4">
 
         <!-- Header Section -->
