@@ -132,7 +132,7 @@ if (isset($_POST['download_sample_csv'])) {
     
     // Fetch subjects
     $subjects = [];
-    $subject_query = "SELECT DISTINCT subject_name FROM `subjects` WHERE $sample_subject_cond";
+    $subject_query = "SELECT DISTINCT subject_name, semester FROM `subjects` WHERE $sample_subject_cond";
     if ($req_sem > 0) {
         $subject_query .= " AND semester = ?";
     }
@@ -157,7 +157,7 @@ if (isset($_POST['download_sample_csv'])) {
     foreach ($students as $student) {
         if (!empty($subjects)) {
             foreach ($subjects as $subject) {
-                fputcsv($output, [
+                fputcsv($output, [  
                     $student['roll_number'],
                     $student['enrollment_number'],
                     $subject,
